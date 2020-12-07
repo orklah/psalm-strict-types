@@ -81,10 +81,7 @@ class StmtsAnalyzer
         }
 
         if ($stmt instanceof Class_) {
-            //handle properties
-            //handle methods
-            //what is inside $stmt->stmts?
-            // TODO: do that
+            self::analyzeStatements($stmt->getMethods());
             return;
         }
 
@@ -94,7 +91,6 @@ class StmtsAnalyzer
         }
 
         if ($stmt instanceof ClassMethod) {
-            // TODO: check other properties
             self::analyzeStatements($stmt->stmts);
             return;
         }
@@ -212,17 +208,17 @@ class StmtsAnalyzer
         }
 
         if ($stmt instanceof Namespace_) {
-            // noop
+            //noop
             return;
         }
 
         if ($stmt instanceof Nop) {
-            // noop
+            //noop
             return;
         }
 
         if ($stmt instanceof Property) {
-            // TODO: check impact
+            //noop
             return;
         }
 
@@ -271,9 +267,7 @@ class StmtsAnalyzer
 
         if ($stmt instanceof TryCatch) {
             self::analyzeStatements($stmt->stmts);
-            foreach($stmt->catches as $catch){
-                self::analyzeStatement($catch);
-            }
+            self::analyzeStatements($stmt->catches);
             if($stmt->finally !== null){
                 self::analyzeStatement($stmt->finally);
             }
