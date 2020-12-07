@@ -68,6 +68,7 @@ class ExprsAnalyzer
 
     public static function analyzeExpr(Expr $expr): void
     {
+        //var_dump('saw a '.get_class($expr));
         if ($expr instanceof Array_) {
             //noop
             return;
@@ -92,15 +93,7 @@ class ExprsAnalyzer
             return;
         }
 
-        if ($expr instanceof AssignOp) {
-            return;
-        }
-
         if ($expr instanceof AssignRef) {
-            return;
-        }
-
-        if ($expr instanceof BinaryOp) {
             return;
         }
 
@@ -109,10 +102,6 @@ class ExprsAnalyzer
         }
 
         if ($expr instanceof BooleanNot) {
-            return;
-        }
-
-        if ($expr instanceof Cast) {
             return;
         }
 
@@ -161,6 +150,7 @@ class ExprsAnalyzer
         }
 
         if ($expr instanceof Include_) {
+            self::analyzeExpr($expr->expr);
             return;
         }
 
@@ -235,6 +225,11 @@ class ExprsAnalyzer
         }
 
         if ($expr instanceof Ternary) {
+            ExprsAnalyzer::analyzeExpr($expr->cond);
+            if($expr->if !== null) {
+                ExprsAnalyzer::analyzeExpr($expr->if);
+            }
+            ExprsAnalyzer::analyzeExpr($expr->else);
             return;
         }
 
@@ -263,162 +258,242 @@ class ExprsAnalyzer
         }
 
         if ($expr instanceof AssignOp\BitwiseAnd) {
+            self::analyzeExpr($expr->var);
+            self::analyzeExpr($expr->expr);
             return;
         }
 
         if ($expr instanceof AssignOp\BitwiseOr) {
+            self::analyzeExpr($expr->var);
+            self::analyzeExpr($expr->expr);
             return;
         }
 
         if ($expr instanceof AssignOp\BitwiseXor) {
+            self::analyzeExpr($expr->var);
+            self::analyzeExpr($expr->expr);
             return;
         }
 
         if ($expr instanceof AssignOp\Coalesce) {
+            self::analyzeExpr($expr->var);
+            self::analyzeExpr($expr->expr);
             return;
         }
 
         if ($expr instanceof AssignOp\Concat) {
+            self::analyzeExpr($expr->var);
+            self::analyzeExpr($expr->expr);
             return;
         }
 
         if ($expr instanceof AssignOp\Div) {
+            self::analyzeExpr($expr->var);
+            self::analyzeExpr($expr->expr);
             return;
         }
 
         if ($expr instanceof AssignOp\Minus) {
+            self::analyzeExpr($expr->var);
+            self::analyzeExpr($expr->expr);
             return;
         }
 
         if ($expr instanceof AssignOp\Mod) {
+            self::analyzeExpr($expr->var);
+            self::analyzeExpr($expr->expr);
             return;
         }
 
         if ($expr instanceof AssignOp\Mul) {
+            self::analyzeExpr($expr->var);
+            self::analyzeExpr($expr->expr);
             return;
         }
 
         if ($expr instanceof AssignOp\Plus) {
+            self::analyzeExpr($expr->var);
+            self::analyzeExpr($expr->expr);
             return;
         }
 
         if ($expr instanceof AssignOp\Pow) {
+            self::analyzeExpr($expr->var);
+            self::analyzeExpr($expr->expr);
             return;
         }
 
         if ($expr instanceof AssignOp\ShiftLeft) {
+            self::analyzeExpr($expr->var);
+            self::analyzeExpr($expr->expr);
             return;
         }
 
         if ($expr instanceof AssignOp\ShiftRight) {
+            self::analyzeExpr($expr->var);
+            self::analyzeExpr($expr->expr);
             return;
         }
 
         if ($expr instanceof BinaryOp\BitwiseAnd) {
+            self::analyzeExpr($expr->left);
+            self::analyzeExpr($expr->right);
             return;
         }
 
         if ($expr instanceof BinaryOp\BitwiseOr) {
+            self::analyzeExpr($expr->left);
+            self::analyzeExpr($expr->right);
             return;
         }
 
         if ($expr instanceof BinaryOp\BitwiseXor) {
+            self::analyzeExpr($expr->left);
+            self::analyzeExpr($expr->right);
             return;
         }
 
         if ($expr instanceof BinaryOp\BooleanAnd) {
+            self::analyzeExpr($expr->left);
+            self::analyzeExpr($expr->right);
             return;
         }
 
         if ($expr instanceof BinaryOp\BooleanOr) {
+            self::analyzeExpr($expr->left);
+            self::analyzeExpr($expr->right);
             return;
         }
 
         if ($expr instanceof BinaryOp\Coalesce) {
+            self::analyzeExpr($expr->left);
+            self::analyzeExpr($expr->right);
             return;
         }
 
         if ($expr instanceof BinaryOp\Concat) {
+            self::analyzeExpr($expr->left);
+            self::analyzeExpr($expr->right);
             return;
         }
 
         if ($expr instanceof BinaryOp\Div) {
+            self::analyzeExpr($expr->left);
+            self::analyzeExpr($expr->right);
             return;
         }
 
         if ($expr instanceof BinaryOp\Equal) {
+            self::analyzeExpr($expr->left);
+            self::analyzeExpr($expr->right);
             return;
         }
 
         if ($expr instanceof BinaryOp\Greater) {
+            self::analyzeExpr($expr->left);
+            self::analyzeExpr($expr->right);
             return;
         }
 
         if ($expr instanceof BinaryOp\GreaterOrEqual) {
+            self::analyzeExpr($expr->left);
+            self::analyzeExpr($expr->right);
             return;
         }
 
         if ($expr instanceof BinaryOp\Identical) {
+            self::analyzeExpr($expr->left);
+            self::analyzeExpr($expr->right);
             return;
         }
 
         if ($expr instanceof BinaryOp\LogicalAnd) {
+            self::analyzeExpr($expr->left);
+            self::analyzeExpr($expr->right);
             return;
         }
 
         if ($expr instanceof BinaryOp\LogicalOr) {
+            self::analyzeExpr($expr->left);
+            self::analyzeExpr($expr->right);
             return;
         }
 
         if ($expr instanceof BinaryOp\LogicalXor) {
+            self::analyzeExpr($expr->left);
+            self::analyzeExpr($expr->right);
             return;
         }
 
         if ($expr instanceof BinaryOp\Minus) {
+            self::analyzeExpr($expr->left);
+            self::analyzeExpr($expr->right);
             return;
         }
 
         if ($expr instanceof BinaryOp\Mod) {
+            self::analyzeExpr($expr->left);
+            self::analyzeExpr($expr->right);
             return;
         }
 
         if ($expr instanceof BinaryOp\Mul) {
+            self::analyzeExpr($expr->left);
+            self::analyzeExpr($expr->right);
             return;
         }
 
         if ($expr instanceof BinaryOp\NotEqual) {
+            self::analyzeExpr($expr->left);
+            self::analyzeExpr($expr->right);
             return;
         }
 
         if ($expr instanceof BinaryOp\NotIdentical) {
+            self::analyzeExpr($expr->left);
+            self::analyzeExpr($expr->right);
             return;
         }
 
         if ($expr instanceof BinaryOp\Plus) {
+            self::analyzeExpr($expr->left);
+            self::analyzeExpr($expr->right);
             return;
         }
 
         if ($expr instanceof BinaryOp\Pow) {
+            self::analyzeExpr($expr->left);
+            self::analyzeExpr($expr->right);
             return;
         }
 
         if ($expr instanceof BinaryOp\ShiftLeft) {
+            self::analyzeExpr($expr->left);
+            self::analyzeExpr($expr->right);
             return;
         }
 
         if ($expr instanceof BinaryOp\ShiftRight) {
+            self::analyzeExpr($expr->left);
+            self::analyzeExpr($expr->right);
             return;
         }
 
         if ($expr instanceof BinaryOp\Smaller) {
+            self::analyzeExpr($expr->left);
+            self::analyzeExpr($expr->right);
             return;
         }
 
         if ($expr instanceof BinaryOp\SmallerOrEqual) {
+            self::analyzeExpr($expr->left);
+            self::analyzeExpr($expr->right);
             return;
         }
 
         if ($expr instanceof BinaryOp\Spaceship) {
+            self::analyzeExpr($expr->left);
+            self::analyzeExpr($expr->right);
             return;
         }
 
