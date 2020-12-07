@@ -1,6 +1,6 @@
 {
     "name": "orklah/psalm-strict-types",
-    "description": "Add declaration of strict_types in empty class",
+    "description": "Adds strict_types declaration when the file is provably safe",
     "type": "psalm-plugin",
     "minimum-stability": "stable",
     "license": "MIT",

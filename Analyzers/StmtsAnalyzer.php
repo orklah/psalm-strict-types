@@ -187,7 +187,7 @@ class StmtsAnalyzer
         }
 
         if ($stmt instanceof If_) {
-            ExprsAnalyzer::analyzeExprs($stmt->cond);
+            ExprsAnalyzer::analyzeExpr($stmt->cond);
             self::analyzeStatements($stmt->stmts);
             return;
         }
