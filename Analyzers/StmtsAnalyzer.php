@@ -70,7 +70,9 @@ class StmtsAnalyzer
         }
 
         if ($stmt instanceof Case_) {
-            ExprsAnalyzer::analyzeExpr($stmt->cond);
+            if($stmt->cond !== null) {
+                ExprsAnalyzer::analyzeExpr($stmt->cond);
+            }
             self::analyzeStatements($stmt->stmts);
             return;
         }
