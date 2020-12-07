@@ -93,7 +93,9 @@ class StmtsAnalyzer
         }
 
         if ($stmt instanceof ClassMethod) {
-            self::analyzeStatements($stmt->stmts);
+            if($stmt->stmts !== null) {
+                self::analyzeStatements($stmt->stmts);
+            }
             return;
         }
 
@@ -109,7 +111,9 @@ class StmtsAnalyzer
 
         if ($stmt instanceof Declare_) {
             // oh god, declare can be a block...
-            self::analyzeStatements($stmt->stmts);
+            if($stmt->stmts !== null) {
+                self::analyzeStatements($stmt->stmts);
+            }
             return;
         }
 
@@ -135,7 +139,7 @@ class StmtsAnalyzer
         }
 
         if ($stmt instanceof ElseIf_) {
-            ExprsAnalyzer::analyzeExprs($stmt->cond);
+            ExprsAnalyzer::analyzeExpr($stmt->cond);
             self::analyzeStatements($stmt->stmts);
             return;
         }
@@ -230,7 +234,9 @@ class StmtsAnalyzer
         }
 
         if ($stmt instanceof Return_) {
-            ExprsAnalyzer::analyzeExpr($stmt->expr);
+            if($stmt->expr !== null) {
+                ExprsAnalyzer::analyzeExpr($stmt->expr);
+            }
             return;
         }
 
@@ -278,7 +284,7 @@ class StmtsAnalyzer
 
         if ($stmt instanceof Unset_) {
             //not sur what could happen in here
-            self::analyzeStatements($catch->stmts);
+            ExprsAnalyzer::analyzeExprs($stmt->vars);
             return;
         }
 

@@ -8,6 +8,8 @@
     xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
 >
     <projectFiles>
+        <directory name="Analyzers" />
+        <directory name="Hooks" />
         <file name="sandbox.php"/>
     </projectFiles>
     <plugins>

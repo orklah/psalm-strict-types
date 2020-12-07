@@ -66,7 +66,7 @@ class ExprsAnalyzer
         }
     }
 
-    public static function analyzeExpr(Expr $expr)
+    public static function analyzeExpr(Expr $expr): void
     {
         if ($expr instanceof Array_) {
             //noop
