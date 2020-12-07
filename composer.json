@@ -1,0 +1,29 @@
+{
+    "name": "orklah/psalm-strict-types",
+    "description": "Add declaration of strict_types in empty class",
+    "type": "psalm-plugin",
+    "minimum-stability": "stable",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "orklah"
+        }
+    ],
+    "extra": {
+        "psalm" : {
+            "pluginClass": "Orklah\\StrictTypes\\Plugin"
+        }
+    },
+    "require": {
+        "php": "^7.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "Orklah\\StrictTypes\\": ["."]
+        }
+    },
+    "require-dev": {
+        "vimeo/psalm": "^4.0",
+        "nikic/php-parser": "^4.0"
+    }
+}
