@@ -2,6 +2,7 @@
 
 namespace Orklah\StrictTypes\Analyzers;
 
+use Orklah\StrictTypes\Hooks\NonStrictUsageException;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Break_;
 use PhpParser\Node\Stmt\Case_;
@@ -234,6 +235,7 @@ class StmtsAnalyzer
         }
 
         if ($stmt instanceof Return_) {
+            throw new NonStrictUsageException('Found Return_');
             if($stmt->expr !== null) {
                 ExprsAnalyzer::analyzeExpr($stmt->expr);
             }
