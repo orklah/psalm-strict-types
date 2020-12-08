@@ -70,7 +70,9 @@ class ExprsAnalyzer
     {
         //var_dump('saw a '.get_class($expr));
         if ($expr instanceof Array_) {
-            //noop
+            if($expr->items !== null){
+                self::analyzeExprs($expr->items);
+            }
             return;
         }
 
@@ -80,7 +82,10 @@ class ExprsAnalyzer
         }
 
         if ($expr instanceof ArrayItem) {
-            //what's that?
+            self::analyzeExpr($expr->value);
+            if($expr->key !== null){
+                self::analyzeExpr($expr->key);
+            }
             return;
         }
 
