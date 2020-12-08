@@ -90,7 +90,7 @@ class ExprsAnalyzer
         }
 
         if ($expr instanceof ArrowFunction) {
-            // TODO: probably something to do here
+            throw new NonStrictUsageException('Found ArrowFunction');
             return;
         }
 
