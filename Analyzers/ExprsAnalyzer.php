@@ -95,6 +95,9 @@ class ExprsAnalyzer
         }
 
         if ($expr instanceof Assign) {
+            //TODO: probably handle here property assignment
+            self::analyzeExpr($expr->var);
+            self::analyzeExpr($expr->expr);
             return;
         }
 
@@ -226,6 +229,7 @@ class ExprsAnalyzer
         }
 
         if ($expr instanceof StaticPropertyFetch) {
+            throw new NonStrictUsageException('Found StaticPropertyFetch');
             return;
         }
 
