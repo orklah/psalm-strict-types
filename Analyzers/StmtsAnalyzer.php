@@ -71,6 +71,7 @@ class StmtsAnalyzer
      */
     public static function analyzeStatement(Stmt $stmt, array $history): void
     {
+        //var_dump('seen '.get_class($stmt));
         $history[] = $stmt;
         self::customStmtHandling($stmt, $history);
 

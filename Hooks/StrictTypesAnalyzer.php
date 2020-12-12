@@ -57,7 +57,8 @@ class StrictTypesAnalyzer implements AfterFileAnalysisInterface
         }
 
         //var_dump($stmts);
-        die('eligible to strict types');
+        echo('eligible to strict types');
+        return;
         //If there wasn't issue, put the strict type declaration
         $file_contents = file_get_contents($file_storage->file_path);
         $new_file_contents = str_replace('<?php', '<?php declare(strict_types=1);', $file_contents);

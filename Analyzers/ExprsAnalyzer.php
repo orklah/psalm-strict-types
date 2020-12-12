@@ -56,6 +56,7 @@ use PhpParser\Node\Expr\YieldFrom;
 use PhpParser\Node\Scalar;
 use PhpParser\Node\Scalar\MagicConst;
 use PhpParser\Node\Stmt;
+use function count;
 
 class ExprsAnalyzer
 {
@@ -75,6 +76,7 @@ class ExprsAnalyzer
      */
     public static function analyzeExpr(Expr $expr, array $history): void
     {
+        //var_dump('seen ' . get_class($expr));
         $history[] = $expr;
         self::customExprHandling($expr, $history);
 
@@ -608,21 +610,31 @@ class ExprsAnalyzer
         }
 
         if ($expr instanceof FuncCall) {
-            //identify function, identify params
+            if(count($expr->args) === 0){
+                //no params. Easy
+                return;
+            }
+
             $namespace_stmt = NodeNavigator::getLastNodeByType($history, Stmt\Namespace_::class);
             $namespace_id = $namespace_stmt->name->parts[0] ?? '';
             $function_id = $expr->name->parts[0];
 
-            $has_at_least_one_typed_param = false;
-            foreach(StrictTypesAnalyzer::$file_storage->functions[$namespace_id.'\\'.$function_id]->params as $param){
-                if($param->type !== null && $param->type->from_docblock === false){
-                    //TODO: check with actual types
-                    $has_at_least_one_typed_param = true;
+            //The function called was in the same file. This is lucky. Otherwise I don't know where I could fetch the function
+            if (isset(StrictTypesAnalyzer::$file_storage->functions[$namespace_id . '\\' . $function_id])) {
+                $has_at_least_one_typed_param = false;
+                foreach (StrictTypesAnalyzer::$file_storage->functions[$namespace_id . '\\' . $function_id]->params as $param) {
+                    if ($param->type !== null && $param->type->from_docblock === false) {
+                        //TODO: check with actual types
+                        $has_at_least_one_typed_param = true;
+                    }
+                }
+
+                if (!$has_at_least_one_typed_param) {
+                    return;
                 }
             }
-
-            if(!$has_at_least_one_typed_param){
-                return;
+            else{
+                //TODO: find where the function could be stored and check with actual params
             }
 
             throw new NonStrictUsageException('Found FuncCall');
