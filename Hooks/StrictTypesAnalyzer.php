@@ -42,7 +42,7 @@ class StrictTypesAnalyzer implements AfterFileAnalysisInterface
             $codebase->php_major_version . '.' . $codebase->php_minor_version
         );
 
-        $maybe_declare = $stmts[0];
+        $maybe_declare = $stmts[0] ?? null;
         if ($maybe_declare instanceof Declare_) {
             //assume this is strict_types. Will have to refine that later
             return;

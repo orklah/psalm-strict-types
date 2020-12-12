@@ -326,7 +326,7 @@ class StmtsAnalyzer
             $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
 
             $declared_return_type = StrictTypesAnalyzer::$codebase->classlike_storage_provider->get($class_stmt->name->name)->methods[$method_stmt->name->name]->return_type;
-            if ($declared_return_type === null) {
+            if ($declared_return_type === null || $declared_return_type->from_docblock === true) {
                 //This is not interesting, if there is no declared type, this can't be wrong with strict_types
                 return;
             }
