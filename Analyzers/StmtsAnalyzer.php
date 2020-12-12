@@ -224,7 +224,7 @@ class StmtsAnalyzer
         }
 
         if ($stmt instanceof Namespace_) {
-            //noop
+            self::analyzeStatements($stmt->stmts, $history);
             return;
         }
 
@@ -329,6 +329,8 @@ class StmtsAnalyzer
                 //This is not interesting, if there is no declared type, this can't be wrong with strict_types
                 return;
             }
+
+            //TODO: retrieve the type somehow and check compatibility
             //$inferred_return_type = StrictTypesAnalyzer::$statement_source->getFunctionLikeAnalyzer(new MethodIdentifier('A', 'test'))->getNodeTypeProvider();
             //var_dump($inferred_return_type);
             //var_dump('-'.spl_object_id($stmt));

@@ -3,6 +3,8 @@
 namespace Orklah\StrictTypes\Analyzers;
 
 use Orklah\StrictTypes\Hooks\NonStrictUsageException;
+use Orklah\StrictTypes\Hooks\StrictTypesAnalyzer;
+use Orklah\StrictTypes\Utils\NodeNavigator;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\ArrayDimFetch;
@@ -592,7 +594,6 @@ class ExprsAnalyzer
         if ($expr instanceof MagicConst\Trait_) {
             return;
         }
-
     }
 
     /**
@@ -602,29 +603,49 @@ class ExprsAnalyzer
     {
         //custom plugin code here
         if ($expr instanceof ArrowFunction) {
+            //identify closure, identify params
             throw new NonStrictUsageException('Found ArrowFunction');
         }
 
         if ($expr instanceof FuncCall) {
+            //identify function, identify params
+            $namespace_stmt = NodeNavigator::getLastNodeByType($history, Stmt\Namespace_::class);
+            $namespace_id = $namespace_stmt->name->parts[0] ?? '';
+            $function_id = $expr->name->parts[0];
+
+            $has_at_least_one_typed_param = false;
+            foreach(StrictTypesAnalyzer::$file_storage->functions[$namespace_id.'\\'.$function_id]->params as $param){
+                if($param->type !== null && $param->type->from_docblock === false){
+                    //TODO: check with actual types
+                    $has_at_least_one_typed_param = true;
+                }
+            }
+
+            if(!$has_at_least_one_typed_param){
+                return;
+            }
+
             throw new NonStrictUsageException('Found FuncCall');
         }
 
         if ($expr instanceof MethodCall) {
+            //identify object, identify method, identify params
             throw new NonStrictUsageException('Found MethodCall');
         }
 
         if ($expr instanceof NullsafeMethodCall) {
+            //identify object, identify method, identify params
             throw new NonStrictUsageException('Found NullsafeMethodCall');
         }
 
         if ($expr instanceof StaticCall) {
+            //identify object, identify method, identify params
             throw new NonStrictUsageException('Found StaticCall');
         }
 
         if ($expr instanceof StaticPropertyFetch) {
+            // TODO: assignment through static?
             throw new NonStrictUsageException('Found StaticPropertyFetch');
         }
-
-
     }
 }

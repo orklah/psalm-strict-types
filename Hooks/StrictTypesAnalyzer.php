@@ -18,6 +18,7 @@ class StrictTypesAnalyzer implements AfterFileAnalysisInterface
     /** @var FileAnalyzer */
     public static $statement_source;
     public static $file_context;
+    /** @var FileStorage */
     public static $file_storage;
     /** @var Codebase */
     public static $codebase;
