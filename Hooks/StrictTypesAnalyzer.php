@@ -54,6 +54,11 @@ class StrictTypesAnalyzer implements AfterFileAnalysisInterface
             // create an issue and show why each file can't be strict?
             var_dump($e->getMessage() . ' in ' . $file_storage->file_path);
             return;
+        } catch (Exception $e) {
+            // handle exceptions returned by Psalm. It should be handled sooner (probably in custom methods) but I'm not sure this is stable.
+            // handling it here allow psalm to continue working in case of error on one file
+            var_dump($e->getMessage());
+            return;
         }
 
         //var_dump($stmts);
