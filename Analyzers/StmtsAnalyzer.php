@@ -328,14 +328,18 @@ class StmtsAnalyzer
 
             if($method_stmt !== null){
                 $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
-                $method_storage = StrictTypesAnalyzer::$codebase->classlike_storage_provider->get($class_stmt->name->name)->methods[$method_stmt->name->name];
+                $class_storage = StrictTypesAnalyzer::$codebase->classlike_storage_provider->get($class_stmt->name->name);
+                $method_storage = $class_storage->methods[strtolower($method_stmt->name->name)];
+                if($method_storage === null){
+                    //weird.
+                    return;
+                }
                 $has_signature_return_type = $method_storage->signature_return_type !== null;
             }
             else{
                 $function_stmt = NodeNavigator::getLastNodeByType($history, Function_::class);
                 //TODO: handle function case
-                $declared_return_type = 'unknown';
-                $has_signature_return_type = true;
+                return;
             }
 
             if (!$has_signature_return_type) {
