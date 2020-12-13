@@ -105,7 +105,6 @@ class ExprsAnalyzer
         }
 
         if ($expr instanceof Assign) {
-            //TODO: probably handle here property assignment
             self::analyzeExpr($expr->var, $history);
             self::analyzeExpr($expr->expr, $history);
             return;
@@ -688,23 +687,47 @@ class ExprsAnalyzer
         }
 
         if ($expr instanceof MethodCall) {
+            if(count($expr->args) === 0){
+                //no params. Easy
+                return;
+            }
+
             //identify object, identify method, identify params
             throw new NonStrictUsageException('Found MethodCall');
         }
 
         if ($expr instanceof NullsafeMethodCall) {
+            if(count($expr->args) === 0){
+                //no params. Easy
+                return;
+            }
+
             //identify object, identify method, identify params
             throw new NonStrictUsageException('Found NullsafeMethodCall');
         }
 
         if ($expr instanceof StaticCall) {
+            if(count($expr->args) === 0){
+                //no params. Easy
+                return;
+            }
+
             //identify object, identify method, identify params
             throw new NonStrictUsageException('Found StaticCall');
         }
 
-        if ($expr instanceof StaticPropertyFetch) {
-            // TODO: assignment through static?
-            throw new NonStrictUsageException('Found StaticPropertyFetch');
+        if ($expr instanceof Assign) {
+            //TODO: possible false positive: this doesn't handle the __set() magic method
+            if(
+                !$expr->var instanceof StaticPropertyFetch &&
+                !$expr->var instanceof PropertyFetch
+            ){
+                // only properties can be typed
+                return;
+            }
+
+            //find the class and check if the property have a type, then compare with given type
+            throw new NonStrictUsageException('Found Assign with StaticPropertyFetch');
         }
     }
 }
