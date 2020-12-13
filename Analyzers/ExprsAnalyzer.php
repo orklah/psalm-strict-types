@@ -606,24 +606,24 @@ class ExprsAnalyzer
         if ($expr instanceof ArrowFunction) {
             $has_params = false;
             //$has_at_least_one_typed_param = false;
-            if(count($expr->params) !== 0){
+            if (count($expr->params) !== 0) {
                 $has_params = true;
                 /** Checking this seems difficult. Aborting for now
-                $has_at_least_one_typed_param = true;
-                foreach($expr->params as $param) {
-                    var_dump($param->type);
-                    if ($param->type !== null && $param->type->from_docblock === false) {
-                        //TODO: check with actual types
-                        $has_at_least_one_typed_param = true;
-                    }
-                }
-                */
+                 * $has_at_least_one_typed_param = true;
+                 * foreach($expr->params as $param) {
+                 *    var_dump($param->type);
+                 *     if ($param->type !== null && $param->type->from_docblock === false) {
+                 *         //TODO: check with actual types
+                 *         $has_at_least_one_typed_param = true;
+                 *     }
+                 * }
+                 */
             }
 
             $has_return = $expr->returnType !== null;
             /** Checking this seems difficult. Aborting for now
-            $has_typed_return = $expr->returnType->from_docblock === false;
-            */
+             * $has_typed_return = $expr->returnType->from_docblock === false;
+             */
             if (!$has_params && !$has_return) {
                 return;
             }
@@ -634,18 +634,18 @@ class ExprsAnalyzer
         if ($expr instanceof Closure) {
             $has_params = false;
             //$has_at_least_one_typed_param = false;
-            if(count($expr->params) !== 0){
+            if (count($expr->params) !== 0) {
                 $has_params = true;
                 /** Checking this seems difficult. Aborting for now
-                $has_at_least_one_typed_param = true;
-                foreach($expr->params as $param) {
-                    var_dump($param->type);
-                    if ($param->type !== null && $param->type->from_docblock === false) {
-                        //TODO: check with actual types
-                        $has_at_least_one_typed_param = true;
-                    }
-                }
-                */
+                 * $has_at_least_one_typed_param = true;
+                 * foreach($expr->params as $param) {
+                 *    var_dump($param->type);
+                 *     if ($param->type !== null && $param->type->from_docblock === false) {
+                 *         //TODO: check with actual types
+                 *         $has_at_least_one_typed_param = true;
+                 *     }
+                 * }
+                 */
             }
 
             if (!$has_params) {
@@ -656,7 +656,7 @@ class ExprsAnalyzer
         }
 
         if ($expr instanceof FuncCall) {
-            if(count($expr->args) === 0){
+            if (count($expr->args) === 0) {
                 //no params. Easy
                 return;
             }
@@ -678,8 +678,7 @@ class ExprsAnalyzer
                 if (!$has_at_least_one_typed_param) {
                     return;
                 }
-            }
-            else{
+            } else {
                 //TODO: find where the function could be stored and check with actual params
             }
 
@@ -687,7 +686,7 @@ class ExprsAnalyzer
         }
 
         if ($expr instanceof MethodCall) {
-            if(count($expr->args) === 0){
+            if (count($expr->args) === 0) {
                 //no params. Easy
                 return;
             }
@@ -697,7 +696,7 @@ class ExprsAnalyzer
         }
 
         if ($expr instanceof NullsafeMethodCall) {
-            if(count($expr->args) === 0){
+            if (count($expr->args) === 0) {
                 //no params. Easy
                 return;
             }
@@ -707,7 +706,7 @@ class ExprsAnalyzer
         }
 
         if ($expr instanceof StaticCall) {
-            if(count($expr->args) === 0){
+            if (count($expr->args) === 0) {
                 //no params. Easy
                 return;
             }
@@ -718,16 +717,26 @@ class ExprsAnalyzer
 
         if ($expr instanceof Assign) {
             //TODO: possible false positive: this doesn't handle the __set() magic method
-            if(
+            if (
                 !$expr->var instanceof StaticPropertyFetch &&
                 !$expr->var instanceof PropertyFetch
-            ){
+            ) {
                 // only properties can be typed
                 return;
             }
 
             //find the class and check if the property have a type, then compare with given type
             throw new NonStrictUsageException('Found Assign with StaticPropertyFetch');
+        }
+
+        if ($expr instanceof New_) {
+            if (count($expr->args) === 0) {
+                //no params. Easy
+                return;
+            }
+
+            //identify object, identify constructor, identify params
+            throw new NonStrictUsageException('Found New_');
         }
     }
 }
