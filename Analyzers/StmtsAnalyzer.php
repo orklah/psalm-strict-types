@@ -338,8 +338,12 @@ class StmtsAnalyzer
             }
             else{
                 $function_stmt = NodeNavigator::getLastNodeByType($history, Function_::class);
-                //TODO: handle function case
-                return;
+                $function_storage = StrictTypesAnalyzer::$file_storage->functions[strtolower($function_stmt->name->name)];
+                if($function_storage === null){
+                    //weird.
+                    return;
+                }
+                $has_signature_return_type = $function_storage->signature_return_type !== null;
             }
 
             if (!$has_signature_return_type) {
