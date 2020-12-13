@@ -38,10 +38,7 @@ class StrictTypesAnalyzer implements AfterFileAnalysisInterface
         self::$file_storage = $file_storage;
         self::$codebase = $codebase;
 
-        $stmts = $codebase->statements_provider->getStatementsForFile(
-            $file_storage->file_path,
-            $codebase->php_major_version . '.' . $codebase->php_minor_version
-        );
+        $stmts = $codebase->getStatementsForFile($file_storage->file_path);
 
         $maybe_declare = $stmts[0] ?? null;
         if ($maybe_declare instanceof Declare_) {
