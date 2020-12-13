@@ -67,7 +67,9 @@ class ExprsAnalyzer
     public static function analyzeExprs(array $exprs, array $history): void
     {
         foreach ($exprs as $expr) {
-            self::analyzeExpr($expr, $history);
+            if($expr !== null) {
+                self::analyzeExpr($expr, $history);
+            }
         }
     }
 
@@ -669,7 +671,7 @@ class ExprsAnalyzer
             if (isset(StrictTypesAnalyzer::$file_storage->functions[$namespace_id . '\\' . $function_id])) {
                 $has_at_least_one_typed_param = false;
                 foreach (StrictTypesAnalyzer::$file_storage->functions[$namespace_id . '\\' . $function_id]->params as $param) {
-                    if ($param->type !== null && $param->type->from_docblock === false) {
+                    if ($param->signature_type !== null) {
                         //TODO: check with actual types
                         $has_at_least_one_typed_param = true;
                     }
