@@ -2,6 +2,7 @@
 
 namespace Orklah\StrictTypes\Hooks;
 
+use Error;
 use Exception;
 use Orklah\StrictTypes\Analyzers\StmtsAnalyzer;
 use PhpParser\Node\Stmt\Declare_;
@@ -57,6 +58,10 @@ class StrictTypesAnalyzer implements AfterFileAnalysisInterface
         } catch (Exception $e) {
             // handle exceptions returned by Psalm. It should be handled sooner (probably in custom methods) but I'm not sure this is stable.
             // handling it here allow psalm to continue working in case of error on one file
+            var_dump($e->getMessage());
+            return;
+        } catch (Error $e) {
+            // I must have done something reeaaally bad. But we can't allow that to disrupt psalm's analysis
             var_dump($e->getMessage());
             return;
         }

@@ -121,6 +121,7 @@ class ExprsAnalyzer
         }
 
         if ($expr instanceof BooleanNot) {
+            self::analyzeExpr($expr->expr, $history);
             return;
         }
 
