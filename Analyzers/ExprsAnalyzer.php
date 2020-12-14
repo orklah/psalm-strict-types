@@ -103,6 +103,7 @@ class ExprsAnalyzer
         }
 
         if ($expr instanceof ArrowFunction) {
+            self::analyzeExpr($expr->expr, $history);
             return;
         }
 
@@ -113,10 +114,13 @@ class ExprsAnalyzer
         }
 
         if ($expr instanceof AssignRef) {
+            self::analyzeExpr($expr->var, $history);
+            self::analyzeExpr($expr->expr, $history);
             return;
         }
 
         if ($expr instanceof BitwiseNot) {
+            self::analyzeExpr($expr->expr, $history);
             return;
         }
 
@@ -130,14 +134,17 @@ class ExprsAnalyzer
         }
 
         if ($expr instanceof Clone_) {
+            self::analyzeExpr($expr->expr, $history);
             return;
         }
 
         if ($expr instanceof Closure) {
+            StmtsAnalyzer::analyzeStatements($expr->stmts, $history);
             return;
         }
 
         if ($expr instanceof ClosureUse) {
+            self::analyzeExpr($expr->var, $history);
             return;
         }
 
@@ -146,6 +153,7 @@ class ExprsAnalyzer
         }
 
         if ($expr instanceof Empty_) {
+            self::analyzeExpr($expr->expr, $history);
             return;
         }
 
@@ -154,14 +162,17 @@ class ExprsAnalyzer
         }
 
         if ($expr instanceof ErrorSuppress) {
+            self::analyzeExpr($expr->expr, $history);
             return;
         }
 
         if ($expr instanceof Eval_) {
+            self::analyzeExpr($expr->expr, $history);
             return;
         }
 
         if ($expr instanceof Exit_) {
+            self::analyzeExpr($expr->expr, $history);
             return;
         }
 
@@ -175,10 +186,12 @@ class ExprsAnalyzer
         }
 
         if ($expr instanceof Instanceof_) {
+            self::analyzeExpr($expr->expr, $history);
             return;
         }
 
         if ($expr instanceof Isset_) {
+            self::analyzeExprs($expr->vars, $history);
             return;
         }
 
@@ -187,10 +200,12 @@ class ExprsAnalyzer
         }
 
         if ($expr instanceof Match_) {
+            self::analyzeExpr($expr->cond, $history);
             return;
         }
 
         if ($expr instanceof MethodCall) {
+            self::analyzeExpr($expr->var, $history);
             return;
         }
 
@@ -199,34 +214,42 @@ class ExprsAnalyzer
         }
 
         if ($expr instanceof NullsafeMethodCall) {
+            self::analyzeExpr($expr->var, $history);
             return;
         }
 
         if ($expr instanceof NullsafePropertyFetch) {
+            self::analyzeExpr($expr->var, $history);
             return;
         }
 
         if ($expr instanceof PostDec) {
+            self::analyzeExpr($expr->var, $history);
             return;
         }
 
         if ($expr instanceof PostInc) {
+            self::analyzeExpr($expr->var, $history);
             return;
         }
 
         if ($expr instanceof PreDec) {
+            self::analyzeExpr($expr->var, $history);
             return;
         }
 
         if ($expr instanceof PreInc) {
+            self::analyzeExpr($expr->var, $history);
             return;
         }
 
         if ($expr instanceof Print_) {
+            self::analyzeExpr($expr->expr, $history);
             return;
         }
 
         if ($expr instanceof PropertyFetch) {
+            self::analyzeExpr($expr->var, $history);
             return;
         }
 
@@ -252,14 +275,17 @@ class ExprsAnalyzer
         }
 
         if ($expr instanceof Throw_) {
+            self::analyzeExpr($expr->expr, $history);
             return;
         }
 
         if ($expr instanceof UnaryMinus) {
+            self::analyzeExpr($expr->expr, $history);
             return;
         }
 
         if ($expr instanceof UnaryPlus) {
+            self::analyzeExpr($expr->expr, $history);
             return;
         }
 
@@ -272,6 +298,7 @@ class ExprsAnalyzer
         }
 
         if ($expr instanceof YieldFrom) {
+            self::analyzeExpr($expr->expr, $history);
             return;
         }
 
@@ -548,6 +575,7 @@ class ExprsAnalyzer
         }
 
         if ($expr instanceof Scalar\Encapsed) {
+            self::analyzeExprs($expr->parts, $history);
             return;
         }
 
