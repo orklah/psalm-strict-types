@@ -28,7 +28,8 @@ class StrictTypesAnalyzer implements AfterFileAnalysisInterface
         StatementsSource $statements_source,
         Context $file_context,
         FileStorage $file_storage,
-        Codebase $codebase
+        Codebase $codebase,
+        $stmts
     ): void
     {
         assert($statements_source instanceof FileAnalyzer);
@@ -38,7 +39,7 @@ class StrictTypesAnalyzer implements AfterFileAnalysisInterface
         self::$file_storage = $file_storage;
         self::$codebase = $codebase;
 
-        $stmts = $codebase->getStatementsForFile($file_storage->file_path);
+        //$stmts = $codebase->getStatementsForFile($file_storage->file_path);
 
         $maybe_declare = $stmts[0] ?? null;
         if ($maybe_declare instanceof Declare_) {
