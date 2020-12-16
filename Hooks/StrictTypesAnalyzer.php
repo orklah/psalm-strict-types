@@ -29,7 +29,7 @@ class StrictTypesAnalyzer implements AfterFileAnalysisInterface
         Context $file_context,
         FileStorage $file_storage,
         Codebase $codebase,
-        $stmts
+        array $stmts
     ): void
     {
         assert($statements_source instanceof FileAnalyzer);
