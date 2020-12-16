@@ -781,6 +781,11 @@ class ExprsAnalyzer
                     if(!StrictUnionsChecker::strictUnionCheck($param->signature_type, $arg_type)){
                         throw new NonStrictUsageException('Found MethodCall10 with argument '.($i_param+1).' mismatching');
                     }
+
+                    if($arg_type->from_docblock === true){
+                        //not trustworthy enough
+                        throw new NonStrictUsageException('Found MethodCall8');
+                    }
                 }
             }
 
