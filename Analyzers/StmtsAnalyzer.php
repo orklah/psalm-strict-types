@@ -3,6 +3,7 @@
 namespace Orklah\StrictTypes\Analyzers;
 
 use Orklah\StrictTypes\Hooks\NonStrictUsageException;
+use Orklah\StrictTypes\Hooks\ShouldNotHappenException;
 use Orklah\StrictTypes\Hooks\StrictTypesAnalyzer;
 use Orklah\StrictTypes\Utils\NodeNavigator;
 use PhpParser\Node\Expr;
@@ -332,7 +333,7 @@ class StmtsAnalyzer
                 $method_storage = $class_storage->methods[strtolower($method_stmt->name->name)];
                 if($method_storage === null){
                     //weird.
-                    throw new NonStrictUsageException('Found Return_');
+                    throw new ShouldNotHappenException('Found Return_');
                 }
                 $has_signature_return_type = $method_storage->signature_return_type !== null;
             }
@@ -341,7 +342,7 @@ class StmtsAnalyzer
                 $function_storage = StrictTypesAnalyzer::$file_storage->functions[strtolower($function_stmt->name->name)];
                 if($function_storage === null){
                     //weird.
-                    throw new NonStrictUsageException('Found Return_');
+                    throw new ShouldNotHappenException('Found Return_');
                 }
                 $has_signature_return_type = $function_storage->signature_return_type !== null;
             }

@@ -51,7 +51,19 @@ class StrictTypesAnalyzer implements AfterFileAnalysisInterface
             StmtsAnalyzer::analyzeStatements($stmts, []);
         } catch (NonStrictUsageException $e) {
             // create an issue and show why each file can't be strict?
+            //var_dump($e->getMessage() . ' in ' . $file_storage->file_path);
+            return;
+        } catch (NonVerifiableStrictUsageException $e) {
+            // This is not safe enough to do automatically
+            //var_dump($e->getMessage() . ' in ' . $file_storage->file_path);
+            return;
+        } catch (ShouldNotHappenException $e) {
+            // This is probably a bug I left
             var_dump($e->getMessage() . ' in ' . $file_storage->file_path);
+            return;
+        } catch (NeedRefinementException $e) {
+            // This could be safe but it's not yet ready
+            //var_dump($e->getMessage() . ' in ' . $file_storage->file_path);
             return;
         } catch (Exception $e) {
             // handle exceptions returned by Psalm. It should be handled sooner (probably in custom methods) but I'm not sure this is stable.
@@ -75,5 +87,17 @@ class StrictTypesAnalyzer implements AfterFileAnalysisInterface
 }
 
 class NonStrictUsageException extends Exception
+{
+}
+
+class NonVerifiableStrictUsageException extends Exception
+{
+}
+
+class ShouldNotHappenException extends Exception
+{
+}
+
+class NeedRefinementException extends Exception
 {
 }

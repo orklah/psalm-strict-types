@@ -2,7 +2,10 @@
 
 namespace Orklah\StrictTypes\Analyzers;
 
+use Orklah\StrictTypes\Hooks\NeedRefinementException;
 use Orklah\StrictTypes\Hooks\NonStrictUsageException;
+use Orklah\StrictTypes\Hooks\NonVerifiableStrictUsageException;
+use Orklah\StrictTypes\Hooks\ShouldNotHappenException;
 use Orklah\StrictTypes\Hooks\StrictTypesAnalyzer;
 use Orklah\StrictTypes\Utils\NodeNavigator;
 use Orklah\StrictTypes\Utils\StrictUnionsChecker;
@@ -729,25 +732,25 @@ class ExprsAnalyzer
 
             if(!$expr->name instanceof Identifier){
                 //can't handle this for now TODO: refine this
-                throw new NonStrictUsageException('Found MethodCall1');
+                throw new NeedRefinementException('Found MethodCall1');
             }
 
             $object = StrictTypesAnalyzer::$statement_source->getNodeTypeProvider()->getType($expr->var);
 
             if($object === null){
                 //unable to identify object. Throw
-                throw new NonStrictUsageException('Found MethodCall2');
+                throw new ShouldNotHappenException('Found MethodCall2');
             }
 
             if(!$object->isSingle()){
                 //multiple object/types. Throw for now, but may be refined
                 //TODO: try to refine (object with common parents, same parameters etc...)
-                throw new NonStrictUsageException('Found MethodCall3');
+                throw new NeedRefinementException('Found MethodCall3');
             }
 
             if(!$object->isObjectType()){
                 //How is that even possible? TODO: Find out if cases exists
-                throw new NonStrictUsageException('Found MethodCall4');
+                throw new NeedRefinementException('Found MethodCall4');
             }
 
             //we may remove null safely, this is not what we're checking here
@@ -756,7 +759,7 @@ class ExprsAnalyzer
             $object_type = array_pop($object_types);
             if(!$object_type instanceof TNamedObject){
                 //TODO: check if we could refine it with TObject or TTemplateParam
-                throw new NonStrictUsageException('Found MethodCall5');
+                throw new NeedRefinementException('Found MethodCall5');
             }
 
             //Ok, we have a single object here. Time to fetch parameters from method
@@ -764,7 +767,7 @@ class ExprsAnalyzer
             $method_storage = $class_storage->methods[strtolower($expr->name->name)];
             if($method_storage === null){
                 //weird.
-                throw new NonStrictUsageException('Found MethodCall6');
+                throw new ShouldNotHappenException('Found MethodCall6');
             }
 
             $method_params = $method_storage->params;
@@ -777,7 +780,7 @@ class ExprsAnalyzer
                     $arg_type = StrictTypesAnalyzer::$statement_source->getNodeTypeProvider()->getType($arg->value);
                     if($arg_type === null){
                         //weird
-                        throw new NonStrictUsageException('Found MethodCall7');
+                        throw new ShouldNotHappenException('Found MethodCall7');
                     }
 
                     if(!StrictUnionsChecker::strictUnionCheck($param->signature_type, $arg_type)){
@@ -786,7 +789,7 @@ class ExprsAnalyzer
 
                     if($arg_type->from_docblock === true){
                         //not trustworthy enough
-                        throw new NonStrictUsageException('Found MethodCall8');
+                        throw new NonVerifiableStrictUsageException('Found MethodCall8');
                     }
                 }
             }
