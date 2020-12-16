@@ -332,7 +332,7 @@ class StmtsAnalyzer
                 $method_storage = $class_storage->methods[strtolower($method_stmt->name->name)];
                 if($method_storage === null){
                     //weird.
-                    return;
+                    throw new NonStrictUsageException('Found Return_');
                 }
                 $has_signature_return_type = $method_storage->signature_return_type !== null;
             }
@@ -341,7 +341,7 @@ class StmtsAnalyzer
                 $function_storage = StrictTypesAnalyzer::$file_storage->functions[strtolower($function_stmt->name->name)];
                 if($function_storage === null){
                     //weird.
-                    return;
+                    throw new NonStrictUsageException('Found Return_');
                 }
                 $has_signature_return_type = $function_storage->signature_return_type !== null;
             }
@@ -350,6 +350,9 @@ class StmtsAnalyzer
                 //This is not interesting, if there is no declared type, this can't be wrong with strict_types
                 return;
             }
+
+            //$type = StrictTypesAnalyzer::$statement_source->getNodeTypeProvider()->getType($stmt->expr);
+            //var_dump($type);
 
             //TODO: retrieve the type somehow and check compatibility
             //$inferred_return_type = StrictTypesAnalyzer::$statement_source->getFunctionLikeAnalyzer(new MethodIdentifier('A', 'test'))->getNodeTypeProvider();
