@@ -14,7 +14,7 @@ class NodeNavigator
      * @param class-string<T>  $nodeType
      * @return T|null
      */
-    public static function getLastNodeByType($history, $nodeType)
+    public static function getLastNodeByType(array $history, string $nodeType)
     {
         while ($node = array_pop($history)) {
             if ($node instanceof $nodeType) {

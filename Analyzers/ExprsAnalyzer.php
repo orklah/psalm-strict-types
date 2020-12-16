@@ -5,6 +5,7 @@ namespace Orklah\StrictTypes\Analyzers;
 use Orklah\StrictTypes\Hooks\NonStrictUsageException;
 use Orklah\StrictTypes\Hooks\StrictTypesAnalyzer;
 use Orklah\StrictTypes\Utils\NodeNavigator;
+use Orklah\StrictTypes\Utils\StrictUnionsChecker;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\ArrayDimFetch;
@@ -53,9 +54,11 @@ use PhpParser\Node\Expr\UnaryPlus;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Expr\Yield_;
 use PhpParser\Node\Expr\YieldFrom;
+use PhpParser\Node\Identifier;
 use PhpParser\Node\Scalar;
 use PhpParser\Node\Scalar\MagicConst;
 use PhpParser\Node\Stmt;
+use Psalm\Type\Atomic\TNamedObject;
 use function count;
 
 class ExprsAnalyzer
@@ -722,8 +725,67 @@ class ExprsAnalyzer
                 return;
             }
 
-            //identify object, identify method, identify params
-            throw new NonStrictUsageException('Found MethodCall');
+            if(!$expr->name instanceof Identifier){
+                //can't handle this for now TODO: refine this
+                throw new NonStrictUsageException('Found MethodCall1');
+            }
+
+            $object = StrictTypesAnalyzer::$statement_source->getNodeTypeProvider()->getType($expr->var);
+
+            if($object === null){
+                //unable to identify object. Throw
+                throw new NonStrictUsageException('Found MethodCall2');
+            }
+
+            if(!$object->isSingle()){
+                //multiple object/types. Throw for now, but may be refined
+                //TODO: try to refine (object with common parents, same parameters etc...)
+                throw new NonStrictUsageException('Found MethodCall3');
+            }
+
+            if(!$object->isObjectType()){
+                //How is that even possible? TODO: Find out if cases exists
+                throw new NonStrictUsageException('Found MethodCall4');
+            }
+
+            //we may remove null safely, this is not what we're checking here
+            $object->removeType('null');
+            $object_types = $object->getAtomicTypes();
+            $object_type = array_pop($object_types);
+            if(!$object_type instanceof TNamedObject){
+                //TODO: check if we could refine it with TObject or TTemplateParam
+                throw new NonStrictUsageException('Found MethodCall5');
+            }
+
+            //Ok, we have a single object here. Time to fetch parameters from method
+            $class_storage = StrictTypesAnalyzer::$codebase->classlike_storage_provider->get($object_type->value);
+            $method_storage = $class_storage->methods[strtolower($expr->name->name)];
+            if($method_storage === null){
+                //weird.
+                throw new NonStrictUsageException('Found MethodCall6');
+            }
+
+            $method_params = $method_storage->params;
+            for($i_param = 0, $i_paramMax = count($method_params); $i_param < $i_paramMax; $i_param++){
+                $param = $method_params[$i_param];
+                if ($param->signature_type !== null) {
+
+                    //TODO: beware of named params
+                    $arg = $expr->args[$i_param];
+                    $arg_type = StrictTypesAnalyzer::$statement_source->getNodeTypeProvider()->getType($arg->value);
+                    if($arg_type === null){
+                        //weird
+                        throw new NonStrictUsageException('Found MethodCall7');
+                    }
+
+                    if(!StrictUnionsChecker::strictUnionCheck($param->signature_type, $arg_type)){
+                        throw new NonStrictUsageException('Found MethodCall10 with argument '.($i_param+1).' mismatching');
+                    }
+                }
+            }
+
+            //every potential mismatch would have been handled earlier
+            return;
         }
 
         if ($expr instanceof NullsafeMethodCall) {
