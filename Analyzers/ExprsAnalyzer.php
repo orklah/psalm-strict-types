@@ -175,7 +175,9 @@ class ExprsAnalyzer
         }
 
         if ($expr instanceof Exit_) {
-            self::analyzeExpr($expr->expr, $history);
+            if($expr->expr !== null) {
+                self::analyzeExpr($expr->expr, $history);
+            }
             return;
         }
 
