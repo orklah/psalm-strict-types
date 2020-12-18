@@ -738,38 +738,60 @@ class ExprsAnalyzer
                 throw new NeedRefinementException('Found MethodCall1');
             }
 
+
             $method_stmt = NodeNavigator::getLastNodeByType($history, ClassMethod::class);
             $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
+            if($class_stmt !== null && $method_stmt !== null){
+                //object context, we fetch the node type provider
+                $node_provider = StrictTypesAnalyzer::$statement_source->class_analyzers_to_analyze[$class_stmt->name->name]->type_providers[$method_stmt->name->name];
+                if($node_provider === null){
+                    //unable to fetch node provider. Throw
+                    throw new ShouldNotHappenException('Found MethodCall1.5');
+                }
 
-            $object = StrictTypesAnalyzer::$statement_source->class_analyzers_to_analyze[$class_stmt->name->name]->type_providers[$method_stmt->name->name]->getType($expr->var);
+                $object_type = $node_provider->getType($expr->var);
+            }
+            else{
+                //outside of object context, standard node type provider should be enough
+                $node_provider = StrictTypesAnalyzer::$statement_source->getNodeTypeProvider();
 
-            if($object === null){
+                $object_type = $node_provider->getType($expr->var);
+            }
+
+            if($object_type === null){
+                //unable to fetch object type. Throw
+                throw new ShouldNotHappenException('Found MethodCall1.75');
+            }
+
+
+
+            if($object_type === null){
                 //unable to identify object. Throw
                 throw new ShouldNotHappenException('Found MethodCall2');
             }
 
-            if(!$object->isSingle()){
+            if(!$object_type->isSingle()){
                 //multiple object/types. Throw for now, but may be refined
                 //TODO: try to refine (object with common parents, same parameters etc...)
                 throw new NeedRefinementException('Found MethodCall3');
             }
 
-            if(!$object->isObjectType()){
+            if(!$object_type->isObjectType()){
                 //How is that even possible? TODO: Find out if cases exists
                 throw new NeedRefinementException('Found MethodCall4');
             }
 
             //we may remove null safely, this is not what we're checking here
-            $object->removeType('null');
-            $object_types = $object->getAtomicTypes();
-            $object_type = array_pop($object_types);
-            if(!$object_type instanceof TNamedObject){
+            $object_type->removeType('null');
+            $object_types = $object_type->getAtomicTypes();
+            $atomic_object_type = array_pop($object_types);
+            if(!$atomic_object_type instanceof TNamedObject){
                 //TODO: check if we could refine it with TObject or TTemplateParam
                 throw new NeedRefinementException('Found MethodCall5');
             }
 
             //Ok, we have a single object here. Time to fetch parameters from method
-            $class_storage = StrictTypesAnalyzer::$codebase->classlike_storage_provider->get($object_type->value);
+            $class_storage = StrictTypesAnalyzer::$codebase->classlike_storage_provider->get($atomic_object_type->value);
             $method_storage = $class_storage->methods[strtolower($expr->name->name)];
             if($method_storage === null){
                 //weird.
@@ -783,7 +805,7 @@ class ExprsAnalyzer
 
                     //TODO: beware of named params
                     $arg = $expr->args[$i_param];
-                    $arg_type = StrictTypesAnalyzer::$statement_source->getNodeTypeProvider()->getType($arg->value);
+                    $arg_type = $node_provider->getType($arg->value);
                     if($arg_type === null){
                         //weird
                         throw new ShouldNotHappenException('Found MethodCall7');
