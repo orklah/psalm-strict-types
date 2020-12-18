@@ -61,6 +61,9 @@ use PhpParser\Node\Identifier;
 use PhpParser\Node\Scalar;
 use PhpParser\Node\Scalar\MagicConst;
 use PhpParser\Node\Stmt;
+use PhpParser\Node\Stmt\Class_;
+use PhpParser\Node\Stmt\ClassMethod;
+use Psalm\Internal\MethodIdentifier;
 use Psalm\Type\Atomic\TNamedObject;
 use function count;
 
@@ -735,7 +738,10 @@ class ExprsAnalyzer
                 throw new NeedRefinementException('Found MethodCall1');
             }
 
-            $object = StrictTypesAnalyzer::$statement_source->getNodeTypeProvider()->getType($expr->var);
+            $method_stmt = NodeNavigator::getLastNodeByType($history, ClassMethod::class);
+            $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
+
+            $object = StrictTypesAnalyzer::$statement_source->class_analyzers_to_analyze[$class_stmt->name->name]->type_providers[$method_stmt->name->name]->getType($expr->var);
 
             if($object === null){
                 //unable to identify object. Throw
