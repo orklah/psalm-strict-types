@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Orklah\StrictTypes\Utils;
 
@@ -67,5 +68,7 @@ class StrictUnionsChecker
         if($container instanceof Atomic\TArray){
             return $content instanceof Atomic\TArray;
         }
+
+        return false;
     }
 }

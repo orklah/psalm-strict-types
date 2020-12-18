@@ -2,7 +2,8 @@
     "name": "orklah/psalm-strict-types",
     "description": "Adds strict_types declaration when the file is provably safe",
     "type": "psalm-plugin",
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "license": "MIT",
     "authors": [
         {
@@ -15,15 +16,15 @@
         }
     },
     "require": {
-        "php": "^7.3"
+        "php": "^7.3",
+        "vimeo/psalm": "master"
     },
     "autoload": {
         "psr-4": {
-            "Orklah\\StrictTypes\\": ["."]
+            "Orklah\\StrictTypes\\": ["./src"]
         }
     },
     "require-dev": {
-        "vimeo/psalm": "^4.0",
         "nikic/php-parser": "^4.0"
     }
 }

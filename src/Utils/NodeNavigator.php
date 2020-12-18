@@ -2,9 +2,10 @@
 
 namespace Orklah\StrictTypes\Utils;
 
-use Orklah\StrictTypes\Hooks\StrictTypesAnalyzer;
+use Orklah\StrictTypes\Hooks\StrictTypesHooks;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Stmt;
+use PhpParser\NodeAbstract;
 use Psalm\Storage\MethodStorage;
 
 class NodeNavigator
@@ -15,7 +16,7 @@ class NodeNavigator
      * @param class-string<T>  $nodeType
      * @return T|null
      */
-    public static function getLastNodeByType(array $history, string $nodeType)
+    public static function getLastNodeByType(array $history, string $nodeType): ?NodeAbstract
     {
         while ($node = array_pop($history)) {
             if ($node instanceof $nodeType) {
@@ -26,7 +27,7 @@ class NodeNavigator
     }
 
     public static function getMethodStorageFromName(string $class_id, string $method_id): ?MethodStorage{
-        $class_storage = StrictTypesAnalyzer::$codebase->classlike_storage_provider->get($class_id);
+        $class_storage = StrictTypesHooks::$codebase->classlike_storage_provider->get($class_id);
         $method_storage = $class_storage->methods[$method_id] ?? null;
         if($method_storage === null){
             //We try on the parent

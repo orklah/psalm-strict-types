@@ -1,0 +1,118 @@
+<?php declare(strict_types=1);
+
+namespace Orklah\StrictTypes\Analyzers\Exprs;
+
+use Orklah\StrictTypes\Exceptions\NeedRefinementException;
+use Orklah\StrictTypes\Exceptions\NonStrictUsageException;
+use Orklah\StrictTypes\Exceptions\NonVerifiableStrictUsageException;
+use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
+use Orklah\StrictTypes\Hooks\StrictTypesHooks;
+use Orklah\StrictTypes\Utils\NodeNavigator;
+use Orklah\StrictTypes\Utils\StrictUnionsChecker;
+use PhpParser\Node\Expr;
+use PhpParser\Node\Identifier;
+use PhpParser\Node\Stmt\Class_;
+use PhpParser\Node\Stmt\ClassMethod;
+use Psalm\Type\Atomic\TNamedObject;
+use function count;
+
+class MethodCallAnalyzer{
+
+    /**
+     * @param array<Expr> $history
+     * @throws NeedRefinementException
+     * @throws NonStrictUsageException
+     * @throws NonVerifiableStrictUsageException
+     * @throws ShouldNotHappenException
+     */
+    public static function analyze(Expr $expr, array $history): void
+    {
+        if (count($expr->args) === 0) {
+            //no params. Easy
+            return;
+        }
+
+        if(!$expr->name instanceof Identifier){
+            //can't handle this for now TODO: refine this
+            throw new NeedRefinementException('Found MethodCall1');
+        }
+
+
+        $method_stmt = NodeNavigator::getLastNodeByType($history, ClassMethod::class);
+        $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
+        if($class_stmt !== null && $method_stmt !== null){
+            //object context, we fetch the node type provider
+            $node_provider = StrictTypesHooks::$statement_source->class_analyzers_to_analyze[$class_stmt->name->name]->type_providers[$method_stmt->name->name];
+            if($node_provider === null){
+                //unable to fetch node provider. Throw
+                throw new ShouldNotHappenException('Found MethodCall1.5');
+            }
+
+            $object_type = $node_provider->getType($expr->var);
+        }
+        else{
+            //outside of object context, standard node type provider should be enough
+            $node_provider = StrictTypesHooks::$statement_source->getNodeTypeProvider();
+
+            $object_type = $node_provider->getType($expr->var);
+        }
+
+        if($object_type === null){
+            //unable to identify object. Throw
+            throw new ShouldNotHappenException('Found MethodCall2');
+        }
+
+        if(!$object_type->isSingle()){
+            //multiple object/types. Throw for now, but may be refined
+            //TODO: try to refine (object with common parents, same parameters etc...)
+            throw new NeedRefinementException('Found MethodCall3');
+        }
+
+        if(!$object_type->isObjectType()){
+            //How is that even possible? TODO: Find out if cases exists
+            throw new NeedRefinementException('Found MethodCall4');
+        }
+
+        //we may remove null safely, this is not what we're checking here
+        $object_type->removeType('null');
+        $object_types = $object_type->getAtomicTypes();
+        $atomic_object_type = array_pop($object_types);
+        if(!$atomic_object_type instanceof TNamedObject){
+            //TODO: check if we could refine it with TObject or TTemplateParam
+            throw new NeedRefinementException('Found MethodCall5');
+        }
+
+        //Ok, we have a single object here. Time to fetch parameters from method
+        $method_storage = NodeNavigator::getMethodStorageFromName(strtolower($atomic_object_type->value), strtolower($expr->name->name));
+        if($method_storage === null){
+            //weird.
+            throw new ShouldNotHappenException('Found MethodCall6');
+        }
+
+        $method_params = $method_storage->params;
+        for($i_param = 0, $i_paramMax = count($method_params); $i_param < $i_paramMax; $i_param++){
+            $param = $method_params[$i_param];
+            if ($param->signature_type !== null) {
+
+                //TODO: beware of named params
+                $arg = $expr->args[$i_param];
+                $arg_type = $node_provider->getType($arg->value);
+                if($arg_type === null){
+                    //weird
+                    throw new ShouldNotHappenException('Found MethodCall7');
+                }
+
+                if(!StrictUnionsChecker::strictUnionCheck($param->signature_type, $arg_type)){
+                    throw new NonStrictUsageException('Found MethodCall10 with argument '.($i_param+1).' mismatching');
+                }
+
+                if($arg_type->from_docblock === true){
+                    //not trustworthy enough
+                    throw new NonVerifiableStrictUsageException('Found MethodCall8');
+                }
+            }
+        }
+
+        //every potential mismatch would have been handled earlier
+    }
+}
