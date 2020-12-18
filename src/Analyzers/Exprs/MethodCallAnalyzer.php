@@ -10,7 +10,9 @@ use Orklah\StrictTypes\Hooks\StrictTypesHooks;
 use Orklah\StrictTypes\Utils\NodeNavigator;
 use Orklah\StrictTypes\Utils\StrictUnionsChecker;
 use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Identifier;
+use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 use Psalm\Type\Atomic\TNamedObject;
@@ -19,13 +21,13 @@ use function count;
 class MethodCallAnalyzer{
 
     /**
-     * @param array<Expr> $history
+     * @param array<Expr|Stmt> $history
      * @throws NeedRefinementException
      * @throws NonStrictUsageException
      * @throws NonVerifiableStrictUsageException
      * @throws ShouldNotHappenException
      */
-    public static function analyze(Expr $expr, array $history): void
+    public static function analyze(MethodCall $expr, array $history): void
     {
         if (count($expr->args) === 0) {
             //no params. Easy
@@ -34,7 +36,7 @@ class MethodCallAnalyzer{
 
         if(!$expr->name instanceof Identifier){
             //can't handle this for now TODO: refine this
-            throw new NeedRefinementException('Found MethodCall1');
+            throw new NeedRefinementException('Unable to analyze a non-literal method');
         }
 
 
@@ -42,10 +44,10 @@ class MethodCallAnalyzer{
         $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
         if($class_stmt !== null && $method_stmt !== null){
             //object context, we fetch the node type provider
-            $node_provider = StrictTypesHooks::$statement_source->class_analyzers_to_analyze[$class_stmt->name->name]->type_providers[$method_stmt->name->name];
+            $node_provider = StrictTypesHooks::$node_type_providers_map[StrictTypesHooks::$file_storage->file_path][$class_stmt->name->name][$method_stmt->name->name] ?? null;
             if($node_provider === null){
                 //unable to fetch node provider. Throw
-                throw new ShouldNotHappenException('Found MethodCall1.5');
+                throw new ShouldNotHappenException('Unable to retrieve Node Type Provider');
             }
 
             $object_type = $node_provider->getType($expr->var);
@@ -59,7 +61,7 @@ class MethodCallAnalyzer{
 
         if($object_type === null){
             //unable to identify object. Throw
-            throw new ShouldNotHappenException('Found MethodCall2');
+            throw new ShouldNotHappenException('Unable to retrieve object type');
         }
 
         if(!$object_type->isSingle()){

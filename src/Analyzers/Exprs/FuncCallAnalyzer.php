@@ -6,16 +6,17 @@ use Orklah\StrictTypes\Exceptions\NonStrictUsageException;
 use Orklah\StrictTypes\Hooks\StrictTypesHooks;
 use Orklah\StrictTypes\Utils\NodeNavigator;
 use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Stmt;
 use function count;
 
 class FuncCallAnalyzer{
 
     /**
-     * @param array<Expr> $history
+     * @param array<Expr|Stmt> $history
      * @throws NonStrictUsageException
      */
-    public static function analyze(Expr $expr, array $history): void
+    public static function analyze(FuncCall $expr, array $history): void
     {
         if (count($expr->args) === 0) {
             //no params. Easy

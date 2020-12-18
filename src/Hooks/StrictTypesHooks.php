@@ -10,6 +10,7 @@ use Orklah\StrictTypes\Exceptions\NonVerifiableStrictUsageException;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
 use Orklah\StrictTypes\Traversers\StmtsTraverser;
 use PhpParser\Node;
+use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Declare_;
 use Psalm\Codebase;
 use Psalm\Context;
@@ -27,14 +28,18 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
 {
     /** @var FileAnalyzer */
     public static $statement_source;
+    /** @var Context|null */
     public static $file_context;
     /** @var FileStorage */
     public static $file_storage;
     /** @var Codebase */
     public static $codebase;
-    /** @var array<string, array<lowercase-string, NodeTypeProvider>> */
+    /** @var array<string, array<lowercase-string, array<lowercase-string, NodeTypeProvider>>> */
     public static $node_type_providers_map = [];
 
+    /**
+     * @param list<Stmt> $stmts
+     */
     public static function afterAnalyzeFile(
         StatementsSource $statements_source,
         Context $file_context,
@@ -104,17 +109,21 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
         StatementsSource $statements_source,
         Codebase $codebase,
         array &$file_replacements = []
-    ): ?bool {
+    ): ?bool
+    {
         assert($statements_source instanceof FunctionLikeAnalyzer);
 
         // This will only serve to store NodeTypeProviders for later
-        if(!isset(self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()])){
+        if (!isset(self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()])) {
             self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()] = [];
         }
-        if(!isset(self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()])){
-            self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()] = $statements_source->getNodeTypeProvider();
+        if (!isset(self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()])) {
+            self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()] = [];
+        }
+        if(!isset(self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()][$statements_source->getMethodName()])){
+            self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()][$statements_source->getMethodName()] = $statements_source->type_provider;
         }
 
-        return true;
+        return null;
     }
 }

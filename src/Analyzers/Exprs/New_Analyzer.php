@@ -4,15 +4,17 @@ namespace Orklah\StrictTypes\Analyzers\Exprs;
 
 use Orklah\StrictTypes\Exceptions\NonStrictUsageException;
 use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\New_;
+use PhpParser\Node\Stmt;
 use function count;
 
 class New_Analyzer{
 
     /**
-     * @param array<Expr> $history
+     * @param array<Expr|Stmt> $history
      * @throws NonStrictUsageException
      */
-    public static function analyze(Expr $expr, array $history): void
+    public static function analyze(New_ $expr, array $history): void
     {
         if (count($expr->args) === 0) {
             //no params. Easy

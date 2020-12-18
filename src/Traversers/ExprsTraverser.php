@@ -62,7 +62,7 @@ use PhpParser\Node\Stmt;
 class ExprsTraverser
 {
     /**
-     * @param Expr[]          $exprs
+     * @param array<Expr|null>          $exprs
      * @param list<Stmt|Expr> $history
      * @throws NeedRefinementException
      * @throws NonStrictUsageException
@@ -92,9 +92,7 @@ class ExprsTraverser
         ExprsAnalyzer::customExprHandling($expr, $history);
 
         if ($expr instanceof Array_) {
-            if ($expr->items !== null) {
-                self::traverseExprs($expr->items, $history);
-            }
+            self::traverseExprs($expr->items, $history);
             return;
         }
 

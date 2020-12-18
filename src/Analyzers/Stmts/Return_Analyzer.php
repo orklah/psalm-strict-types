@@ -6,26 +6,28 @@ use Orklah\StrictTypes\Exceptions\NonStrictUsageException;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
 use Orklah\StrictTypes\Hooks\StrictTypesHooks;
 use Orklah\StrictTypes\Utils\NodeNavigator;
+use PhpParser\Node\Expr;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Function_;
+use PhpParser\Node\Stmt\Return_;
 
 class Return_Analyzer{
 
     /**
-     * @param array<Stmt> $history
+     * @param array<Expr|Stmt> $history
      * @throws NonStrictUsageException
      * @throws ShouldNotHappenException
      */
-    public static function analyze(Stmt $stmt, array $history): void
+    public static function analyze(Return_ $stmt, array $history): void
     {
         $method_stmt = NodeNavigator::getLastNodeByType($history, ClassMethod::class);
 
         if($method_stmt !== null){
             $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
             $class_storage = StrictTypesHooks::$codebase->classlike_storage_provider->get($class_stmt->name->name);
-            $method_storage = $class_storage->methods[strtolower($method_stmt->name->name)];
+            $method_storage = $class_storage->methods[strtolower($method_stmt->name->name)] ?? null;
             if($method_storage === null){
                 //weird.
                 throw new ShouldNotHappenException('Found Return_');
@@ -34,7 +36,7 @@ class Return_Analyzer{
         }
         else{
             $function_stmt = NodeNavigator::getLastNodeByType($history, Function_::class);
-            $function_storage = StrictTypesHooks::$file_storage->functions[strtolower($function_stmt->name->name)];
+            $function_storage = StrictTypesHooks::$file_storage->functions[strtolower((string)$function_stmt->name->name)] ?? null;
             if($function_storage === null){
                 //weird.
                 throw new ShouldNotHappenException('Found Return_');

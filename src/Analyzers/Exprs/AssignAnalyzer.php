@@ -4,16 +4,18 @@ namespace Orklah\StrictTypes\Analyzers\Exprs;
 
 use Orklah\StrictTypes\Exceptions\NonStrictUsageException;
 use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\PropertyFetch;
 use PhpParser\Node\Expr\StaticPropertyFetch;
+use PhpParser\Node\Stmt;
 
 class AssignAnalyzer{
 
     /**
-     * @param array<Expr> $history
+     * @param array<Expr|Stmt> $history
      * @throws NonStrictUsageException
      */
-    public static function analyze(Expr $expr, array $history): void
+    public static function analyze(Assign $expr, array $history): void
     {
         //TODO: possible false positive: this doesn't handle the __set() magic method
         if (

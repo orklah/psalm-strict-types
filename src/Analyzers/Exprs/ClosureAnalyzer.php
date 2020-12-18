@@ -4,15 +4,17 @@ namespace Orklah\StrictTypes\Analyzers\Exprs;
 
 use Orklah\StrictTypes\Exceptions\NonStrictUsageException;
 use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\Closure;
+use PhpParser\Node\Stmt;
 use function count;
 
 class ClosureAnalyzer{
 
     /**
-     * @param array<Expr> $history
+     * @param array<Expr|Stmt> $history
      * @throws NonStrictUsageException
      */
-    public static function analyze(Expr $expr, array $history): void
+    public static function analyze(Closure $expr, array $history): void
     {
         $has_params = false;
         //$has_at_least_one_typed_param = false;
