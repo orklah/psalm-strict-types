@@ -791,8 +791,7 @@ class ExprsAnalyzer
             }
 
             //Ok, we have a single object here. Time to fetch parameters from method
-            $class_storage = StrictTypesAnalyzer::$codebase->classlike_storage_provider->get($atomic_object_type->value);
-            $method_storage = $class_storage->methods[strtolower($expr->name->name)];
+            $method_storage = NodeNavigator::getMethodStorageFromName(strtolower($atomic_object_type->value), strtolower($expr->name->name));
             if($method_storage === null){
                 //weird.
                 throw new ShouldNotHappenException('Found MethodCall6');
