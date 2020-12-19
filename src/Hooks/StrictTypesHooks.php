@@ -115,8 +115,10 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
     {
         assert($statements_source instanceof FunctionLikeAnalyzer);
 
+
         // This will only serve to store NodeTypeProviders for later
         if (!isset(self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()])) {
+            self::$node_type_providers_map = []; // Clear array when changing file
             self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()] = [];
         }
         if (!isset(self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()])) {
@@ -127,6 +129,7 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
         }
 
         if (!isset(self::$context_map[$statements_source->getFileAnalyzer()->getFilePath()])) {
+            self::$context_map = []; // Clear array when changing file
             self::$context_map[$statements_source->getFileAnalyzer()->getFilePath()] = [];
         }
         if (!isset(self::$context_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()])) {
