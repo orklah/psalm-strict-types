@@ -18,7 +18,8 @@ use PhpParser\Node\Stmt\ClassMethod;
 use Psalm\Type\Atomic\TNamedObject;
 use function count;
 
-class MethodCallAnalyzer{
+class MethodCallAnalyzer
+{
 
     /**
      * @param array<Expr|Stmt> $history
@@ -34,7 +35,7 @@ class MethodCallAnalyzer{
             return;
         }
 
-        if(!$expr->name instanceof Identifier){
+        if (!$expr->name instanceof Identifier) {
             //can't handle this for now TODO: refine this
             throw new NeedRefinementException('Unable to analyze a non-literal method');
         }
@@ -42,35 +43,42 @@ class MethodCallAnalyzer{
 
         $method_stmt = NodeNavigator::getLastNodeByType($history, ClassMethod::class);
         $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
-        if($class_stmt !== null && $method_stmt !== null){
-            //object context, we fetch the node type provider
-            $node_provider = StrictTypesHooks::$node_type_providers_map[StrictTypesHooks::$file_storage->file_path][$class_stmt->name->name][$method_stmt->name->name] ?? null;
-            if($node_provider === null){
-                //unable to fetch node provider. Throw
-                throw new ShouldNotHappenException('Unable to retrieve Node Type Provider');
+        if ($class_stmt !== null && $method_stmt !== null) {
+            //object context, we fetch the node type provider or the context if the variable is $this
+            if (is_string($expr->var->name) && $expr->var->name === 'this') {
+                $context = StrictTypesHooks::$context_map[StrictTypesHooks::$file_storage->file_path][$class_stmt->name->name][$method_stmt->name->name] ?? null;
+                if ($context === null) {
+                    //unable to context. Throw
+                    throw new ShouldNotHappenException('Unable to retrieve Context');
+                }
+                $object_type = $context->vars_in_scope['$this'];
+            } else {
+                $node_provider = StrictTypesHooks::$node_type_providers_map[StrictTypesHooks::$file_storage->file_path][$class_stmt->name->name][$method_stmt->name->name] ?? null;
+                if ($node_provider === null) {
+                    //unable to fetch node provider. Throw
+                    throw new ShouldNotHappenException('Unable to retrieve Node Type Provider');
+                }
+                $object_type = $node_provider->getType($expr->var);
             }
-
-            $object_type = $node_provider->getType($expr->var);
-        }
-        else{
+        } else {
             //outside of object context, standard node type provider should be enough
             $node_provider = StrictTypesHooks::$statement_source->getNodeTypeProvider();
 
             $object_type = $node_provider->getType($expr->var);
         }
 
-        if($object_type === null){
+        if ($object_type === null) {
             //unable to identify object. Throw
             throw new ShouldNotHappenException('Unable to retrieve object type');
         }
 
-        if(!$object_type->isSingle()){
+        if (!$object_type->isSingle()) {
             //multiple object/types. Throw for now, but may be refined
             //TODO: try to refine (object with common parents, same parameters etc...)
             throw new NeedRefinementException('Found MethodCall3');
         }
 
-        if(!$object_type->isObjectType()){
+        if (!$object_type->isObjectType()) {
             //How is that even possible? TODO: Find out if cases exists
             throw new NeedRefinementException('Found MethodCall4');
         }
@@ -79,38 +87,38 @@ class MethodCallAnalyzer{
         $object_type->removeType('null');
         $object_types = $object_type->getAtomicTypes();
         $atomic_object_type = array_pop($object_types);
-        if(!$atomic_object_type instanceof TNamedObject){
+        if (!$atomic_object_type instanceof TNamedObject) {
             //TODO: check if we could refine it with TObject or TTemplateParam
             throw new NeedRefinementException('Found MethodCall5');
         }
 
         //Ok, we have a single object here. Time to fetch parameters from method
         $method_storage = NodeNavigator::getMethodStorageFromName(strtolower($atomic_object_type->value), strtolower($expr->name->name));
-        if($method_storage === null){
+        if ($method_storage === null) {
             //weird.
             throw new ShouldNotHappenException('Found MethodCall6');
         }
 
         $method_params = $method_storage->params;
-        for($i_param = 0, $i_paramMax = count($method_params); $i_param < $i_paramMax; $i_param++){
+        for ($i_param = 0, $i_paramMax = count($method_params); $i_param < $i_paramMax; $i_param++) {
             $param = $method_params[$i_param];
             if ($param->signature_type !== null) {
                 //TODO: beware of named params
-                if(!isset($expr->args[$i_param])){
-                    throw new ShouldNotHappenException('Parameter '.$i_param.' does not exists on '.$atomic_object_type->value.'::'.$expr->name->name);
+                if (!isset($expr->args[$i_param])) {
+                    throw new ShouldNotHappenException('Parameter ' . $i_param . ' does not exists on ' . $atomic_object_type->value . '::' . $expr->name->name);
                 }
                 $arg = $expr->args[$i_param];
                 $arg_type = $node_provider->getType($arg->value);
-                if($arg_type === null){
+                if ($arg_type === null) {
                     //weird
                     throw new ShouldNotHappenException('Found MethodCall7');
                 }
 
-                if(!StrictUnionsChecker::strictUnionCheck($param->signature_type, $arg_type)){
-                    throw new NonStrictUsageException('Found MethodCall10 with argument '.($i_param+1).' mismatching');
+                if (!StrictUnionsChecker::strictUnionCheck($param->signature_type, $arg_type)) {
+                    throw new NonStrictUsageException('Found MethodCall10 with argument ' . ($i_param + 1) . ' mismatching');
                 }
 
-                if($arg_type->from_docblock === true){
+                if ($arg_type->from_docblock === true) {
                     //not trustworthy enough
                     throw new NonVerifiableStrictUsageException('Found MethodCall8');
                 }

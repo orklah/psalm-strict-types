@@ -26,6 +26,8 @@ use function assert;
 
 class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeAnalysisInterface
 {
+    /** @var array<string, array<lowercase-string, array<lowercase-string, Context>>>  */
+    public static $context_map = [];
     /** @var FileAnalyzer */
     public static $statement_source;
     /** @var Context|null */
@@ -122,6 +124,16 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
         }
         if(!isset(self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()][$statements_source->getMethodName()])){
             self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()][$statements_source->getMethodName()] = $statements_source->getNodeTypeProvider();
+        }
+
+        if (!isset(self::$context_map[$statements_source->getFileAnalyzer()->getFilePath()])) {
+            self::$context_map[$statements_source->getFileAnalyzer()->getFilePath()] = [];
+        }
+        if (!isset(self::$context_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()])) {
+            self::$context_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()] = [];
+        }
+        if(!isset(self::$context_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()][$statements_source->getMethodName()])){
+            self::$context_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()][$statements_source->getMethodName()] = $statements_source->context;
         }
 
         return null;
