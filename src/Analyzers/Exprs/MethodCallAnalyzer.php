@@ -46,6 +46,11 @@ class MethodCallAnalyzer
         if ($class_stmt !== null && $method_stmt !== null) {
             //object context, we fetch the node type provider or the context if the variable is $this
             if (is_string($expr->var->name) && $expr->var->name === 'this') {
+                $node_provider = StrictTypesHooks::$node_type_providers_map[StrictTypesHooks::$file_storage->file_path][$class_stmt->name->name][$method_stmt->name->name] ?? null;
+                if ($node_provider === null) {
+                    //unable to fetch node provider. Throw
+                    throw new ShouldNotHappenException('Unable to retrieve Node Type Provider');
+                }
                 $context = StrictTypesHooks::$context_map[StrictTypesHooks::$file_storage->file_path][$class_stmt->name->name][$method_stmt->name->name] ?? null;
                 if ($context === null) {
                     //unable to context. Throw
