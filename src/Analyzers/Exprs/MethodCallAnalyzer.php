@@ -110,7 +110,8 @@ class MethodCallAnalyzer
             if ($param->signature_type !== null) {
                 //TODO: beware of named params
                 if (!isset($expr->args[$i_param])) {
-                    throw new ShouldNotHappenException('Parameter ' . $i_param . ' does not exists on ' . $atomic_object_type->value . '::' . $expr->name->name);
+                    // A param in signature is not specified in a call. Probably an optional param, if not, we don't care!
+                    continue;
                 }
                 $arg = $expr->args[$i_param];
                 $arg_type = $node_provider->getType($arg->value);
