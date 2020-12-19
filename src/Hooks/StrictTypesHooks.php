@@ -75,7 +75,7 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
             return;
         } catch (ShouldNotHappenException $e) {
             // This is probably a bug I left
-            var_dump($e->getMessage() . ' in ' . $file_storage->file_path);
+            var_dump($e->getMessage() . ' in ' . $file_storage->file_path) ."\n";
             return;
         } catch (NeedRefinementException $e) {
             // This could be safe but it's not yet ready
@@ -84,18 +84,18 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
         } catch (Exception $e) {
             // handle exceptions returned by Psalm. It should be handled sooner (probably in custom methods) but I'm not sure this is stable.
             // handling it here allow psalm to continue working in case of error on one file
-            var_dump($e->getMessage());
-            echo $e->getTraceAsString();
+            var_dump($e->getMessage()) ."\n";
+            echo $e->getTraceAsString() ."\n";
             return;
         } catch (Error $e) {
             // I must have done something reeaaally bad. But we can't allow that to disrupt psalm's analysis
-            var_dump($e->getMessage());
-            echo $e->getTraceAsString();
+            var_dump($e->getMessage()) ."\n";
+            echo $e->getTraceAsString() ."\n";
             return;
         }
 
         //var_dump($stmts);
-        echo('eligible to strict types');
+        echo("eligible to strict types\n");
         return;
         //If there wasn't issue, put the strict type declaration
         $file_contents = file_get_contents($file_storage->file_path);
@@ -121,7 +121,7 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
             self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()] = [];
         }
         if(!isset(self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()][$statements_source->getMethodName()])){
-            self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()][$statements_source->getMethodName()] = $statements_source->type_provider;
+            self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()][$statements_source->getMethodName()] = $statements_source->getNodeTypeProvider();
         }
 
         return null;

@@ -95,8 +95,10 @@ class MethodCallAnalyzer{
         for($i_param = 0, $i_paramMax = count($method_params); $i_param < $i_paramMax; $i_param++){
             $param = $method_params[$i_param];
             if ($param->signature_type !== null) {
-
                 //TODO: beware of named params
+                if(!isset($expr->args[$i_param])){
+                    throw new ShouldNotHappenException('Parameter '.$i_param.' does not exists on '.$atomic_object_type->value.'::'.$expr->name->name);
+                }
                 $arg = $expr->args[$i_param];
                 $arg_type = $node_provider->getType($arg->value);
                 if($arg_type === null){
