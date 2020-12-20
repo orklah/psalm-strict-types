@@ -30,7 +30,7 @@ class Return_Analyzer{
             $method_storage = $class_storage->methods[strtolower($method_stmt->name->name)] ?? null;
             if($method_storage === null){
                 //weird.
-                throw new ShouldNotHappenException('Found Return_');
+                throw new ShouldNotHappenException('Could not find Method Storage for '.$method_stmt->name->name);
             }
             $has_signature_return_type = $method_storage->signature_return_type !== null;
         }
@@ -39,7 +39,7 @@ class Return_Analyzer{
             $function_storage = StrictTypesHooks::$file_storage->functions[strtolower((string)$function_stmt->name->name)] ?? null;
             if($function_storage === null){
                 //weird.
-                throw new ShouldNotHappenException('Found Return_');
+                throw new ShouldNotHappenException('Could not find Function Storage for '.$function_stmt->name->name);
             }
             $has_signature_return_type = $function_storage->signature_return_type !== null;
         }
