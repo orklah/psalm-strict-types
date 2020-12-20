@@ -3,9 +3,11 @@
 namespace Orklah\StrictTypes\Analyzers\Stmts;
 
 use Orklah\StrictTypes\Exceptions\NonStrictUsageException;
+use Orklah\StrictTypes\Exceptions\NonVerifiableStrictUsageException;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
 use Orklah\StrictTypes\Hooks\StrictTypesHooks;
 use Orklah\StrictTypes\Utils\NodeNavigator;
+use Orklah\StrictTypes\Utils\StrictUnionsChecker;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Class_;
@@ -19,6 +21,7 @@ class Return_Analyzer{
      * @param array<Expr|Stmt> $history
      * @throws NonStrictUsageException
      * @throws ShouldNotHappenException
+     * @throws NonVerifiableStrictUsageException
      */
     public static function analyze(Return_ $stmt, array $history): void
     {
@@ -32,7 +35,14 @@ class Return_Analyzer{
                 //weird.
                 throw new ShouldNotHappenException('Could not find Method Storage for '.$method_stmt->name->name);
             }
-            $has_signature_return_type = $method_storage->signature_return_type !== null;
+            $signature_return_type = $method_storage->signature_return_type;
+
+            $node_provider = StrictTypesHooks::$node_type_providers_map[StrictTypesHooks::$file_storage->file_path][$class_stmt->name->name][$method_stmt->name->name] ?? null;
+            if ($node_provider === null) {
+                //unable to fetch node provider. Throw
+                throw new ShouldNotHappenException('Unable to retrieve Node Type Provider');
+            }
+            $statement_return_type = $node_provider->getType($stmt->expr);
         }
         else{
             $function_stmt = NodeNavigator::getLastNodeByType($history, Function_::class);
@@ -41,23 +51,29 @@ class Return_Analyzer{
                 //weird.
                 throw new ShouldNotHappenException('Could not find Function Storage for '.$function_stmt->name->name);
             }
-            $has_signature_return_type = $function_storage->signature_return_type !== null;
+            $signature_return_type = $function_storage->signature_return_type;
+            //TODO: retrieve return type for function
+            $statement_return_type = null;
         }
 
-        if (!$has_signature_return_type) {
+        if ($signature_return_type === null) {
             //This is not interesting, if there is no declared type, this can't be wrong with strict_types
             return;
         }
 
-        //$type = StrictTypesHooks::$statement_source->getNodeTypeProvider()->getType($stmt->expr);
-        //var_dump($type);
+        if ($statement_return_type === null) {
+            throw new ShouldNotHappenException('Could not find Statement Return Type');
+        }
 
-        //TODO: retrieve the type somehow and check compatibility
-        //$inferred_return_type = StrictTypesHooks::$statement_source->getFunctionLikeAnalyzer(new MethodIdentifier('A', 'test'))->getNodeTypeProvider();
-        //var_dump($inferred_return_type);
-        //var_dump('-'.spl_object_id($stmt));
-        //$inferred_return_type= $inferred_return_type->getType($stmt);
-        //var_dump($inferred_return_type);
-        throw new NonStrictUsageException('Found Return_');
+        if (!StrictUnionsChecker::strictUnionCheck($signature_return_type, $statement_return_type)) {
+            throw new NonStrictUsageException('Found return statement mismatching between '.$signature_return_type->getKey().' and '.$statement_return_type->getKey());
+        }
+
+        if ($statement_return_type->from_docblock === true) {
+            //not trustworthy enough
+            throw new NonVerifiableStrictUsageException('Found correct type but from docblock');
+        }
+
+        //every potential mismatch would have been handled earlier
     }
 }
