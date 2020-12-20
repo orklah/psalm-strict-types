@@ -126,7 +126,7 @@ class MethodCallAnalyzer
 
                 if ($arg_type->from_docblock === true) {
                     //not trustworthy enough
-                    throw new NonVerifiableStrictUsageException('Found MethodCall8');
+                    throw new NonVerifiableStrictUsageException('Found correct type but from docblock');
                 }
             }
         }

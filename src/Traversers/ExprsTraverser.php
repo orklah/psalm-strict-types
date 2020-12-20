@@ -186,6 +186,9 @@ class ExprsTraverser
         }
 
         if ($expr instanceof FuncCall) {
+            foreach ($expr->args as $arg) {
+                self::traverseExpr($arg->value, $history);
+            }
             return;
         }
 
@@ -215,6 +218,9 @@ class ExprsTraverser
 
         if ($expr instanceof MethodCall) {
             self::traverseExpr($expr->var, $history);
+            foreach ($expr->args as $arg) {
+                self::traverseExpr($arg->value, $history);
+            }
             return;
         }
 
@@ -224,6 +230,9 @@ class ExprsTraverser
 
         if ($expr instanceof NullsafeMethodCall) {
             self::traverseExpr($expr->var, $history);
+            foreach ($expr->args as $arg) {
+                self::traverseExpr($arg->value, $history);
+            }
             return;
         }
 
@@ -267,6 +276,9 @@ class ExprsTraverser
         }
 
         if ($expr instanceof StaticCall) {
+            foreach ($expr->args as $arg) {
+                self::traverseExpr($arg->value, $history);
+            }
             return;
         }
 
