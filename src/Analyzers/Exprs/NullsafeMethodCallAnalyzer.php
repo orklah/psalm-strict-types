@@ -18,7 +18,8 @@ use PhpParser\Node\Stmt\ClassMethod;
 use Psalm\Type\Atomic\TNamedObject;
 use function count;
 
-class NullsafeMethodCallAnalyzer{
+class NullsafeMethodCallAnalyzer
+{
 
     /**
      * @param array<Expr|Stmt> $history
@@ -96,7 +97,7 @@ class NullsafeMethodCallAnalyzer{
         $method_storage = NodeNavigator::getMethodStorageFromName(strtolower($atomic_object_type->value), strtolower($expr->name->name));
         if ($method_storage === null) {
             //weird.
-            throw new ShouldNotHappenException('Could not find Method Storage for '.$atomic_object_type->value.'::'.$expr->name->name);
+            throw new ShouldNotHappenException('Could not find Method Storage for ' . $atomic_object_type->value . '::' . $expr->name->name);
         }
 
         $method_params = $method_storage->params;
@@ -112,11 +113,11 @@ class NullsafeMethodCallAnalyzer{
                 $arg_type = $node_provider->getType($arg->value);
                 if ($arg_type === null) {
                     //weird
-                    throw new ShouldNotHappenException('Could not retrieve argument '.$i_param.' for '.$method_storage->cased_name);
+                    throw new ShouldNotHappenException('Could not retrieve argument ' . ($i_param + 1) . ' for ' . $method_storage->cased_name);
                 }
 
                 if (!StrictUnionsChecker::strictUnionCheck($param->signature_type, $arg_type)) {
-                    throw new NonStrictUsageException('Found argument ' . ($i_param + 1) . ' mismatching between '.$param->signature_type->getKey().' and '.$arg_type->getKey());
+                    throw new NonStrictUsageException('Found argument ' . ($i_param + 1) . ' mismatching between ' . $param->signature_type->getKey() . ' and ' . $arg_type->getKey());
                 }
 
                 if ($arg_type->from_docblock === true) {
