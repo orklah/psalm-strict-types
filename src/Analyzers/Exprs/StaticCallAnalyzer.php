@@ -43,7 +43,7 @@ class StaticCallAnalyzer
         $method_stmt = NodeNavigator::getLastNodeByType($history, ClassMethod::class);
         $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
         if ($class_stmt !== null && $method_stmt !== null) {
-            //object context, we fetch the node type provider or the context if the variable is $this
+            //object context, we fetch the node type provider
             $node_provider = StrictTypesHooks::$node_type_providers_map[StrictTypesHooks::$file_storage->file_path][$class_stmt->name->name][$method_stmt->name->name] ?? null;
             if ($node_provider === null) {
                 //unable to fetch node provider. Throw

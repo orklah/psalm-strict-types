@@ -48,7 +48,7 @@ class Return_Analyzer{
             $function_stmt = NodeNavigator::getLastNodeByType($history, Function_::class);
             $function_storage = StrictTypesHooks::$file_storage->functions[strtolower((string)$function_stmt->name->name)] ?? null;
             if($function_storage === null){
-                //weird.
+                //weird. possibly when function is not in current file?
                 throw new ShouldNotHappenException('Could not find Function Storage for '.$function_stmt->name->name);
             }
             $signature_return_type = $function_storage->signature_return_type;
