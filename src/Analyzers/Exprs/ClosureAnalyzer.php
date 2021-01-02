@@ -2,6 +2,7 @@
 
 namespace Orklah\StrictTypes\Analyzers\Exprs;
 
+use Orklah\StrictTypes\Exceptions\NeedRefinementException;
 use Orklah\StrictTypes\Exceptions\NonStrictUsageException;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Closure;
@@ -36,6 +37,6 @@ class ClosureAnalyzer{
             return;
         }
 
-        throw new NonStrictUsageException('Found Closure');
+        throw NeedRefinementException::createWithNode('Found Closure', $expr);
     }
 }

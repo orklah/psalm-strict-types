@@ -5,6 +5,6 @@ namespace Orklah\StrictTypes\Exceptions;
 
 use Exception;
 
-class NeedRefinementException extends Exception
+class NeedRefinementException extends NodeException
 {
 }

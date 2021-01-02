@@ -5,6 +5,6 @@ namespace Orklah\StrictTypes\Exceptions;
 
 use Exception;
 
-class NonStrictUsageException extends Exception
+class NonStrictUsageException extends NodeException
 {
 }

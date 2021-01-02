@@ -34,7 +34,7 @@ class NullsafeMethodCallAnalyzer
 
         if (!$expr->name instanceof Identifier) {
             //can't handle this for now TODO: refine this
-            throw new NeedRefinementException('Unable to analyze a non-literal method');
+            throw NeedRefinementException::createWithNode('Unable to analyze a non-literal method', $expr);
         }
 
         $method_stmt = NodeNavigator::getLastNodeByType($history, ClassMethod::class);
@@ -76,12 +76,12 @@ class NullsafeMethodCallAnalyzer
         if (!$object_type->isSingle()) {
             //multiple object/types. Throw for now, but may be refined
             //TODO: try to refine (object with common parents, same parameters etc...)
-            throw new NeedRefinementException('Found MethodCall3');
+            throw NeedRefinementException::createWithNode('Found MethodCall3', $expr);
         }
 
         if (!$object_type->isObjectType()) {
             //How is that even possible? TODO: Find out if cases exists
-            throw new NeedRefinementException('Found MethodCall4');
+            throw NeedRefinementException::createWithNode('Found MethodCall4', $expr);
         }
 
         //we may remove null safely, this is not what we're checking here
@@ -90,7 +90,7 @@ class NullsafeMethodCallAnalyzer
         $atomic_object_type = array_pop($object_types);
         if (!$atomic_object_type instanceof TNamedObject) {
             //TODO: check if we could refine it with TObject or TTemplateParam
-            throw new NeedRefinementException('Found MethodCall5');
+            throw NeedRefinementException::createWithNode('Found MethodCall5', $expr);
         }
 
         //Ok, we have a single object here. Time to fetch parameters from method
@@ -117,12 +117,12 @@ class NullsafeMethodCallAnalyzer
                 }
 
                 if (!StrictUnionsChecker::strictUnionCheck($param->signature_type, $arg_type)) {
-                    throw new NonStrictUsageException('Found argument ' . ($i_param + 1) . ' mismatching between ' . $param->signature_type->getKey() . ' and ' . $arg_type->getKey());
+                    throw NonStrictUsageException::createWithNode('Found argument ' . ($i_param + 1) . ' mismatching between ' . $param->signature_type->getKey() . ' and ' . $arg_type->getKey(), $expr);
                 }
 
                 if ($arg_type->from_docblock === true) {
                     //not trustworthy enough
-                    throw new NonVerifiableStrictUsageException('Found correct type but from docblock');
+                    throw NonVerifiableStrictUsageException::createWithNode('Found correct type but from docblock', $expr);
                 }
             }
         }

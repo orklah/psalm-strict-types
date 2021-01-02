@@ -8,14 +8,18 @@ use Orklah\StrictTypes\Exceptions\NeedRefinementException;
 use Orklah\StrictTypes\Exceptions\NonStrictUsageException;
 use Orklah\StrictTypes\Exceptions\NonVerifiableStrictUsageException;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
+use Orklah\StrictTypes\Issues\NonStrictUsageIssue;
+use Orklah\StrictTypes\Issues\NonVerifiableStrictUsage;
 use Orklah\StrictTypes\Traversers\StmtsTraverser;
 use PhpParser\Node;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Declare_;
 use Psalm\Codebase;
+use Psalm\CodeLocation;
 use Psalm\Context;
 use Psalm\Internal\Analyzer\FileAnalyzer;
 use Psalm\Internal\Analyzer\FunctionLikeAnalyzer;
+use Psalm\IssueBuffer;
 use Psalm\NodeTypeProvider;
 use Psalm\Plugin\Hook\AfterFileAnalysisInterface;
 use Psalm\Plugin\Hook\AfterFunctionLikeAnalysisInterface;
@@ -68,12 +72,19 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
         try {
             StmtsTraverser::traverseStatements($stmts, []);
         } catch (NonStrictUsageException $e) {
-            // create an issue and show why each file can't be strict?
-            //var_dump($e->getMessage() . ' in ' . $file_storage->file_path);
+            $issue = new NonStrictUsageIssue($e->getMessage(),
+                new CodeLocation($statements_source, $e->getNode())
+            );
+
+            IssueBuffer::accepts($issue, $statements_source->getSuppressedIssues());
             return;
         } catch (NonVerifiableStrictUsageException $e) {
             // This is not safe enough to do automatically
-            //var_dump($e->getMessage() . ' in ' . $file_storage->file_path);
+            $issue = new NonVerifiableStrictUsage($e->getMessage(),
+                new CodeLocation($statements_source, $e->getNode())
+            );
+
+            IssueBuffer::accepts($issue, $statements_source->getSuppressedIssues());
             return;
         } catch (ShouldNotHappenException $e) {
             // This is probably a bug I left
@@ -81,7 +92,7 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
             return;
         } catch (NeedRefinementException $e) {
             // This could be safe but it's not yet ready
-            //var_dump($e->getMessage() . ' in ' . $file_storage->file_path);
+            var_dump($e->getMessage() . ' in ' . $file_storage->file_path);
             return;
         } catch (Exception $e) {
             // handle exceptions returned by Psalm. It should be handled sooner (probably in custom methods) but I'm not sure this is stable.
@@ -97,7 +108,7 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
         }
 
         //var_dump($stmts);
-        echo("eligible to strict types\n");
+        //echo("eligible to strict types\n");
         return;
         //If there wasn't issue, put the strict type declaration
         $file_contents = file_get_contents($file_storage->file_path);

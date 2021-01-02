@@ -40,6 +40,6 @@ class ArrowFunctionAnalyzer{
             return;
         }
 
-        throw new NonStrictUsageException('Found ArrowFunction');
+        throw NonStrictUsageException::createWithNode('Found ArrowFunction', $expr);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Orklah\StrictTypes\Analyzers\Exprs;
 
+use Orklah\StrictTypes\Exceptions\NeedRefinementException;
 use Orklah\StrictTypes\Exceptions\NonStrictUsageException;
 use Orklah\StrictTypes\Hooks\StrictTypesHooks;
 use Orklah\StrictTypes\Utils\NodeNavigator;
@@ -44,6 +45,6 @@ class FuncCallAnalyzer{
             //TODO: find where the function could be stored and check with actual params
         }
 
-        throw new NonStrictUsageException('Found FuncCall');
+        throw NeedRefinementException::createWithNode('Found FuncCall', $expr);
     }
 }

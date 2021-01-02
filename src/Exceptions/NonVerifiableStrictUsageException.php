@@ -5,6 +5,6 @@ namespace Orklah\StrictTypes\Exceptions;
 
 use Exception;
 
-class NonVerifiableStrictUsageException extends Exception
+class NonVerifiableStrictUsageException extends NodeException
 {
 }

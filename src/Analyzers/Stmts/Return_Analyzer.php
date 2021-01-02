@@ -66,12 +66,12 @@ class Return_Analyzer{
         }
 
         if (!StrictUnionsChecker::strictUnionCheck($signature_return_type, $statement_return_type)) {
-            throw new NonStrictUsageException('Found return statement mismatching between '.$signature_return_type->getKey().' and '.$statement_return_type->getKey());
+            throw NonStrictUsageException::createWithNode('Found return statement mismatching between '.$signature_return_type->getKey().' and '.$statement_return_type->getKey(), $stmt);
         }
 
         if ($statement_return_type->from_docblock === true) {
             //not trustworthy enough
-            throw new NonVerifiableStrictUsageException('Found correct type but from docblock');
+            throw NonVerifiableStrictUsageException::createWithNode('Found correct type but from docblock', $stmt);
         }
 
         //every potential mismatch would have been handled earlier
