@@ -66,7 +66,6 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
         if ($maybe_declare instanceof Declare_) {
             //assume this is strict_types. Will have to refine that later
             $have_declare_statement = true;
-            return;
         }
 
         try {
