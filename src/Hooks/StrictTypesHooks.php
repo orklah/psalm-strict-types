@@ -95,29 +95,27 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
             return;
         } catch (ShouldNotHappenException $e) {
             // This is probably a bug I left
-            var_dump($e->getMessage() . ' in ' . $file_storage->file_path) ."\n";
+            var_dump(get_class($e), $e->getMessage() . ' in ' . $file_storage->file_path) ."\n";
             return;
         } catch (NeedRefinementException $e) {
             // This could be safe but it's not yet ready
-            var_dump($e->getMessage() . ' in ' . $file_storage->file_path);
+            var_dump(get_class($e), $e->getMessage() . ' in ' . $file_storage->file_path);
             return;
         } catch (Exception $e) {
             // handle exceptions returned by Psalm. It should be handled sooner (probably in custom methods) but I'm not sure this is stable.
             // handling it here allow psalm to continue working in case of error on one file
-            //var_dump($e->getMessage()) ."\n";
+            var_dump(get_class($e), $e->getMessage()) ."\n";
             //echo $e->getTraceAsString() ."\n";
             return;
         } catch (Error $e) {
             // I must have done something reeaaally bad. But we can't allow that to disrupt psalm's analysis
-            //var_dump($e->getMessage()) ."\n";
+            var_dump(get_class($e), $e->getMessage()) ."\n";
             //echo $e->getTraceAsString() ."\n";
             return;
         }
 
-        //var_dump($stmts);
-        //echo("eligible to strict types\n");
         $issue = new StrictDeclarationToAddIssue('This file can have a strict declaration added',
-            new CodeLocation($statements_source, $stmts[0])
+            new CodeLocation($statements_source, new Declare_([]))
         );
 
         IssueBuffer::accepts($issue, $statements_source->getSuppressedIssues());
