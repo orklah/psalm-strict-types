@@ -74,7 +74,7 @@ class MethodCallAnalyzer
 
         if ($object_type === null) {
             //unable to identify object. Throw
-            throw new ShouldNotHappenException('Unable to retrieve object type');
+            throw new ShouldNotHappenException('Unable to retrieve object type for "'.$expr->var.'"');
         }
 
         if (!$object_type->isSingle()) {
