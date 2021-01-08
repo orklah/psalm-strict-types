@@ -10,7 +10,7 @@ use Orklah\StrictTypes\Exceptions\NonVerifiableStrictUsageException;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
 use Orklah\StrictTypes\Issues\NonStrictUsageIssue;
 use Orklah\StrictTypes\Issues\NonStrictUsageOnStrictFileIssue;
-use Orklah\StrictTypes\Issues\NonVerifiableStrictUsage;
+use Orklah\StrictTypes\Issues\NonVerifiableStrictUsageIssue;
 use Orklah\StrictTypes\Traversers\StmtsTraverser;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Declare_;
@@ -86,7 +86,7 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
             return;
         } catch (NonVerifiableStrictUsageException $e) {
             // This is not safe enough to do automatically
-            $issue = new NonVerifiableStrictUsage($e->getMessage(),
+            $issue = new NonVerifiableStrictUsageIssue($e->getMessage(),
                 new CodeLocation($statements_source, $e->getNode())
             );
 
