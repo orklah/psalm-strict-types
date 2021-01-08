@@ -11,6 +11,7 @@ use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
 use Orklah\StrictTypes\Issues\NonStrictUsageIssue;
 use Orklah\StrictTypes\Issues\NonStrictUsageOnStrictFileIssue;
 use Orklah\StrictTypes\Issues\NonVerifiableStrictUsageIssue;
+use Orklah\StrictTypes\Issues\StrictDeclarationToAddIssue;
 use Orklah\StrictTypes\Traversers\StmtsTraverser;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Declare_;
@@ -115,6 +116,11 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
 
         //var_dump($stmts);
         //echo("eligible to strict types\n");
+        $issue = new StrictDeclarationToAddIssue('This file can have a strict declaration added',
+            new CodeLocation($statements_source, $stmts[0])
+        );
+
+        IssueBuffer::accepts($issue, $statements_source->getSuppressedIssues());
         return;
         //If there wasn't issue, put the strict type declaration
         $file_contents = file_get_contents($file_storage->file_path);
