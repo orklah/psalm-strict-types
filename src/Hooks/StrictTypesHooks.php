@@ -103,13 +103,13 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
         } catch (Exception $e) {
             // handle exceptions returned by Psalm. It should be handled sooner (probably in custom methods) but I'm not sure this is stable.
             // handling it here allow psalm to continue working in case of error on one file
-            var_dump($e->getMessage()) ."\n";
-            echo $e->getTraceAsString() ."\n";
+            //var_dump($e->getMessage()) ."\n";
+            //echo $e->getTraceAsString() ."\n";
             return;
         } catch (Error $e) {
             // I must have done something reeaaally bad. But we can't allow that to disrupt psalm's analysis
-            var_dump($e->getMessage()) ."\n";
-            echo $e->getTraceAsString() ."\n";
+            //var_dump($e->getMessage()) ."\n";
+            //echo $e->getTraceAsString() ."\n";
             return;
         }
 
