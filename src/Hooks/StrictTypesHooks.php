@@ -9,6 +9,7 @@ use Orklah\StrictTypes\Exceptions\NonStrictUsageException;
 use Orklah\StrictTypes\Exceptions\NonVerifiableStrictUsageException;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
 use Orklah\StrictTypes\Issues\NonStrictUsageIssue;
+use Orklah\StrictTypes\Issues\NonStrictUsageOnStrictFileIssue;
 use Orklah\StrictTypes\Issues\NonVerifiableStrictUsage;
 use Orklah\StrictTypes\Traversers\StmtsTraverser;
 use PhpParser\Node\Stmt;
@@ -60,20 +61,27 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
         self::$file_storage = $file_storage;
         self::$codebase = $codebase;
 
-        //$stmts = $codebase->getStatementsForFile($file_storage->file_path);
-
+        $have_declare_statement = false;
         $maybe_declare = $stmts[0] ?? null;
         if ($maybe_declare instanceof Declare_) {
             //assume this is strict_types. Will have to refine that later
+            $have_declare_statement = true;
             return;
         }
 
         try {
             StmtsTraverser::traverseStatements($stmts, []);
         } catch (NonStrictUsageException $e) {
-            $issue = new NonStrictUsageIssue($e->getMessage(),
-                new CodeLocation($statements_source, $e->getNode())
-            );
+            if($have_declare_statement){
+                $issue = new NonStrictUsageOnStrictFileIssue($e->getMessage(),
+                    new CodeLocation($statements_source, $e->getNode())
+                );
+            }
+            else{
+                $issue = new NonStrictUsageIssue($e->getMessage(),
+                    new CodeLocation($statements_source, $e->getNode())
+                );
+            }
 
             IssueBuffer::accepts($issue, $statements_source->getSuppressedIssues());
             return;
