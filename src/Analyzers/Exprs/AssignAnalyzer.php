@@ -76,10 +76,10 @@ class AssignAnalyzer
         }
 
         $property_storage = $class_storage->properties[$property_name_atomic_type->value];
-        if ($property_storage === null) {
+        /*if ($property_storage === null) {
             //weird.
             throw new ShouldNotHappenException('Unable to retrieve property storage');
-        }
+        }*/
 
         if ($property_storage->signature_type === null) {
             //not interested

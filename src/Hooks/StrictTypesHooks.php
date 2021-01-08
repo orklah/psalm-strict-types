@@ -11,7 +11,6 @@ use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
 use Orklah\StrictTypes\Issues\NonStrictUsageIssue;
 use Orklah\StrictTypes\Issues\NonVerifiableStrictUsage;
 use Orklah\StrictTypes\Traversers\StmtsTraverser;
-use PhpParser\Node;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Declare_;
 use Psalm\Codebase;
@@ -21,11 +20,11 @@ use Psalm\Internal\Analyzer\FileAnalyzer;
 use Psalm\Internal\Analyzer\FunctionLikeAnalyzer;
 use Psalm\IssueBuffer;
 use Psalm\NodeTypeProvider;
-use Psalm\Plugin\Hook\AfterFileAnalysisInterface;
-use Psalm\Plugin\Hook\AfterFunctionLikeAnalysisInterface;
-use Psalm\StatementsSource;
+use Psalm\Plugin\EventHandler\AfterFileAnalysisInterface;
+use Psalm\Plugin\EventHandler\AfterFunctionLikeAnalysisInterface;
+use Psalm\Plugin\EventHandler\Event\AfterFileAnalysisEvent;
+use Psalm\Plugin\EventHandler\Event\AfterFunctionLikeAnalysisEvent;
 use Psalm\Storage\FileStorage;
-use Psalm\Storage\FunctionLikeStorage;
 use function assert;
 
 class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeAnalysisInterface
@@ -46,14 +45,14 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
     /**
      * @param list<Stmt> $stmts
      */
-    public static function afterAnalyzeFile(
-        StatementsSource $statements_source,
-        Context $file_context,
-        FileStorage $file_storage,
-        Codebase $codebase,
-        array $stmts
-    ): void
+    public static function afterAnalyzeFile(AfterFileAnalysisEvent $event): void
     {
+        $statements_source = $event->getStatementsSource();
+        $file_context = $event->getFileContext();
+        $file_storage = $event->getFileStorage();
+        $codebase = $event->getCodebase();
+        $stmts = $event->getStmts();
+
         assert($statements_source instanceof FileAnalyzer);
 
         self::$statement_source = $statements_source;
@@ -116,14 +115,12 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
         file_put_contents($file_storage->file_path, $new_file_contents);
     }
 
-    public static function afterStatementAnalysis(
-        Node\FunctionLike $stmt,
-        FunctionLikeStorage $classlike_storage,
-        StatementsSource $statements_source,
-        Codebase $codebase,
-        array &$file_replacements = []
-    ): ?bool
+    public static function afterStatementAnalysis(AfterFunctionLikeAnalysisEvent $event): ?bool
     {
+        $statements_source = $event->getStatementsSource();
+        $node_type_provider = $event->getNodeTypeProvider();
+        $context = $event->getContext();
+
         assert($statements_source instanceof FunctionLikeAnalyzer);
 
 
@@ -136,7 +133,7 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
             self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()] = [];
         }
         if(!isset(self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()][$statements_source->getMethodName()])){
-            self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()][$statements_source->getMethodName()] = $statements_source->getNodeTypeProvider();
+            self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()][$statements_source->getMethodName()] = $node_type_provider;
         }
 
         if (!isset(self::$context_map[$statements_source->getFileAnalyzer()->getFilePath()])) {
@@ -147,7 +144,7 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
             self::$context_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()] = [];
         }
         if(!isset(self::$context_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()][$statements_source->getMethodName()])){
-            self::$context_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()][$statements_source->getMethodName()] = $statements_source->context;
+            self::$context_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()][$statements_source->getMethodName()] = $context;
         }
 
         return null;
