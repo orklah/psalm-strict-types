@@ -19,7 +19,7 @@ class NodeException extends Exception
    }
 
     public static function createWithNode(string $message, Node $node): self{
-        $exception = new self($message);
+        $exception = new static($message);
         $exception->node = $node;
         return $exception;
     }
