@@ -29,8 +29,7 @@ class Return_Analyzer{
 
         if($method_stmt !== null){
             $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
-            $class_storage = StrictTypesHooks::$codebase->classlike_storage_provider->get($class_stmt->name->name);
-            $method_storage = $class_storage->methods[strtolower($method_stmt->name->name)] ?? null;
+            $method_storage = NodeNavigator::getMethodStorageFromName(strtolower($class_stmt->name->name), strtolower($method_stmt->name->name));
             if($method_storage === null){
                 //weird.
                 throw new ShouldNotHappenException('Could not find Method Storage for '.$method_stmt->name->name);
