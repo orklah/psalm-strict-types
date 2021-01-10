@@ -79,7 +79,10 @@ class FuncCallAnalyzer
         }
         $function_id = strtolower($function_id);
 
-        $function_storage = StrictTypesHooks::$codebase->functions->getAllStubbedFunctions()[$function_id] ?? StrictTypesHooks::$function_storage_map[$function_id];
+        $function_storage = StrictTypesHooks::$codebase->functions->getAllStubbedFunctions()[$function_id] ?? StrictTypesHooks::$function_storage_map[$function_id] ?? null;
+        if($function_storage === null) {
+            throw new ShouldNotHappenException('Could not retrieve function storage for ' . $function_id);
+        }
         $function_params = $function_storage->params;
 
         $node_provider = StrictTypesHooks::$statement_source->getNodeTypeProvider();
