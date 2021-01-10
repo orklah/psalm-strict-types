@@ -70,7 +70,7 @@ class NullsafeMethodCallAnalyzer
 
         if ($object_type === null) {
             //unable to identify object. Throw
-            throw new ShouldNotHappenException('Unable to retrieve object type for "'.$expr->var.'"');
+            throw new ShouldNotHappenException('Unable to retrieve object type for "'.$expr->var->name.'"');
         }
 
         if (!$object_type->isSingle()) {
