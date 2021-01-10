@@ -114,7 +114,7 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
         } catch (Error $e) {
             // I must have done something reeaaally bad. But we can't allow that to disrupt psalm's analysis
             var_dump(get_class($e), $e->getMessage()) . "\n";
-            //echo $e->getTraceAsString() ."\n";
+            echo $e->getTraceAsString() ."\n";
             return;
         }
 
