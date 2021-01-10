@@ -14,7 +14,9 @@ use Orklah\StrictTypes\Issues\NonVerifiableStrictUsageIssue;
 use Orklah\StrictTypes\Issues\StrictDeclarationToAddIssue;
 use Orklah\StrictTypes\Traversers\StmtsTraverser;
 use PhpParser\Node\Stmt;
+use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Declare_;
+use PhpParser\Node\Stmt\Function_;
 use Psalm\Codebase;
 use Psalm\CodeLocation;
 use Psalm\Context;
@@ -27,11 +29,12 @@ use Psalm\Plugin\EventHandler\AfterFunctionLikeAnalysisInterface;
 use Psalm\Plugin\EventHandler\Event\AfterFileAnalysisEvent;
 use Psalm\Plugin\EventHandler\Event\AfterFunctionLikeAnalysisEvent;
 use Psalm\Storage\FileStorage;
+use Psalm\Storage\FunctionStorage;
 use function assert;
 
 class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeAnalysisInterface
 {
-    /** @var array<string, array<lowercase-string, array<lowercase-string, Context>>>  */
+    /** @var array<string, array<lowercase-string, array<lowercase-string, Context>>> */
     public static $context_map = [];
     /** @var FileAnalyzer */
     public static $statement_source;
@@ -43,6 +46,8 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
     public static $codebase;
     /** @var array<string, array<lowercase-string, array<lowercase-string, NodeTypeProvider>>> */
     public static $node_type_providers_map = [];
+    /** @var array<lowercase-string, FunctionStorage> */
+    public static $function_storage_map = [];
 
     /**
      * @param list<Stmt> $stmts
@@ -72,12 +77,11 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
         try {
             StmtsTraverser::traverseStatements($stmts, []);
         } catch (NonStrictUsageException $e) {
-            if($have_declare_statement){
+            if ($have_declare_statement) {
                 $issue = new NonStrictUsageOnStrictFileIssue($e->getMessage(),
                     new CodeLocation($statements_source, $e->getNode())
                 );
-            }
-            else{
+            } else {
                 $issue = new NonStrictUsageIssue($e->getMessage(),
                     new CodeLocation($statements_source, $e->getNode())
                 );
@@ -95,7 +99,7 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
             return;
         } catch (ShouldNotHappenException $e) {
             // This is probably a bug I left
-            var_dump(get_class($e), $e->getMessage() . ' in ' . $file_storage->file_path) ."\n";
+            var_dump(get_class($e), $e->getMessage() . ' in ' . $file_storage->file_path) . "\n";
             return;
         } catch (NeedRefinementException $e) {
             // This could be safe but it's not yet ready
@@ -104,12 +108,12 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
         } catch (Exception $e) {
             // handle exceptions returned by Psalm. It should be handled sooner (probably in custom methods) but I'm not sure this is stable.
             // handling it here allow psalm to continue working in case of error on one file
-            var_dump(get_class($e), $e->getMessage()) ."\n";
+            var_dump(get_class($e), $e->getMessage()) . "\n";
             //echo $e->getTraceAsString() ."\n";
             return;
         } catch (Error $e) {
             // I must have done something reeaaally bad. But we can't allow that to disrupt psalm's analysis
-            var_dump(get_class($e), $e->getMessage()) ."\n";
+            var_dump(get_class($e), $e->getMessage()) . "\n";
             //echo $e->getTraceAsString() ."\n";
             return;
         }
@@ -131,31 +135,39 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
         $statements_source = $event->getStatementsSource();
         $node_type_provider = $event->getNodeTypeProvider();
         $context = $event->getContext();
+        $stmt = $event->getStmt();
+        $class_like_storage = $event->getClasslikeStorage();
 
         assert($statements_source instanceof FunctionLikeAnalyzer);
 
+        if ($stmt instanceof ClassMethod) {
+            // This will only serve to store NodeTypeProviders for later
+            if (!isset(self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()])) {
+                self::$node_type_providers_map = []; // Clear array when changing file
+                self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()] = [];
+            }
+            if (!isset(self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()])) {
+                self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()] = [];
+            }
+            if (!isset(self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()][$statements_source->getMethodName()])) {
+                self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()][$statements_source->getMethodName()] = $node_type_provider;
+            }
 
-        // This will only serve to store NodeTypeProviders for later
-        if (!isset(self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()])) {
-            self::$node_type_providers_map = []; // Clear array when changing file
-            self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()] = [];
-        }
-        if (!isset(self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()])) {
-            self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()] = [];
-        }
-        if(!isset(self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()][$statements_source->getMethodName()])){
-            self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()][$statements_source->getMethodName()] = $node_type_provider;
-        }
+            if (!isset(self::$context_map[$statements_source->getFileAnalyzer()->getFilePath()])) {
+                self::$context_map = []; // Clear array when changing file
+                self::$context_map[$statements_source->getFileAnalyzer()->getFilePath()] = [];
+            }
+            if (!isset(self::$context_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()])) {
+                self::$context_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()] = [];
+            }
+            if (!isset(self::$context_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()][$statements_source->getMethodName()])) {
+                self::$context_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()][$statements_source->getMethodName()] = $context;
+            }
+        } elseif ($stmt instanceof Function_) {
+            assert($class_like_storage instanceof FunctionStorage);
 
-        if (!isset(self::$context_map[$statements_source->getFileAnalyzer()->getFilePath()])) {
-            self::$context_map = []; // Clear array when changing file
-            self::$context_map[$statements_source->getFileAnalyzer()->getFilePath()] = [];
-        }
-        if (!isset(self::$context_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()])) {
-            self::$context_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()] = [];
-        }
-        if(!isset(self::$context_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()][$statements_source->getMethodName()])){
-            self::$context_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()][$statements_source->getMethodName()] = $context;
+            //TODO: throw an exception on conflicting names
+            self::$function_storage_map[strtolower($stmt->name->name)] = $class_like_storage;
         }
 
         return null;
