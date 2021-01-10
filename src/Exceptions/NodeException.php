@@ -8,6 +8,9 @@ use Exception;
 use PhpParser\Node;
 use Throwable;
 
+/**
+ * @psalm-consistent-constructor
+ */
 class NodeException extends Exception
 {
     /** @var Node */
@@ -18,6 +21,9 @@ class NodeException extends Exception
        parent::__construct($message, $code, $previous);
    }
 
+    /**
+     * @return static
+     */
     public static function createWithNode(string $message, Node $node): self{
         $exception = new static($message);
         $exception->node = $node;
