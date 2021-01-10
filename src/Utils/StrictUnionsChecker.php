@@ -60,9 +60,7 @@ class StrictUnionsChecker
         }
 
         if($container instanceof Atomic\TNamedObject){
-            //TODO: this doesn't allow interfaces or childrens. This will need to be refined
-            //TODO: Is it really necessary to check for object name? This has nothing to do with strict types and the error will be there either way...
-            return $content instanceof Atomic\TNamedObject && $content->getKey() === $container->getKey();
+            return $content instanceof Atomic\TNamedObject;
         }
 
         if($container instanceof Atomic\TArray){
