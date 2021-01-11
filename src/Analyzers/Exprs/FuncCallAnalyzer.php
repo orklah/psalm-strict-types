@@ -79,17 +79,34 @@ class FuncCallAnalyzer
         }
         $function_id = strtolower($function_id);
 
-        $function_storage = StrictTypesHooks::$codebase->functions->getAllStubbedFunctions()[$function_id] ?? StrictTypesHooks::$function_storage_map[$function_id] ?? null;
-        if($function_storage === null) {
+        $function_from_stubs = true;
+        $function_storage = StrictTypesHooks::$codebase->functions->getAllStubbedFunctions()[$function_id] ?? null;
+        if ($function_storage === null) {
+            $function_from_stubs = false;
+            $function_storage = StrictTypesHooks::$function_storage_map[$function_id] ?? null;
+        }
+
+        if ($function_storage === null) {
             throw new ShouldNotHappenException('Could not retrieve function storage for ' . $function_id);
         }
+
+
         $function_params = $function_storage->params;
 
         $node_provider = StrictTypesHooks::$statement_source->getNodeTypeProvider();
 
         for ($i_param = 0, $i_paramMax = count($function_params); $i_param < $i_paramMax; $i_param++) {
             $param = $function_params[$i_param];
-            if ($param->signature_type !== null) {
+
+            if($function_from_stubs){
+                // if the function is from the stubs, the location of the type is not relevant
+                $return_type = $param->signature_type ?? $param->type;
+            }
+            else{
+                $return_type = $param->signature_type;
+            }
+
+            if ($return_type !== null || $function_from_stubs) { //when the function is from stubs or callmap, the
                 //TODO: beware of named params
                 if (!isset($expr->args[$i_param])) {
                     // A param in signature is not specified in a call. Probably an optional param, if not, we don't care!
@@ -102,8 +119,8 @@ class FuncCallAnalyzer
                     throw new ShouldNotHappenException('Could not retrieve argument ' . ($i_param + 1) . ' for ' . $function_id);
                 }
 
-                if (!StrictUnionsChecker::strictUnionCheck($param->signature_type, $arg_type)) {
-                    throw NonStrictUsageException::createWithNode('Found argument ' . ($i_param + 1) . ' mismatching between ' . $param->signature_type->getKey() . ' and ' . $arg_type->getKey(), $expr);
+                if (!StrictUnionsChecker::strictUnionCheck($return_type, $arg_type)) {
+                    throw NonStrictUsageException::createWithNode('Found argument ' . ($i_param + 1) . ' mismatching between ' . $return_type->getKey() . ' and ' . $arg_type->getKey(), $expr);
                 }
 
                 if ($arg_type->from_docblock === true) {
