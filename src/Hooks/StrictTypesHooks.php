@@ -114,20 +114,22 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
         } catch (Error $e) {
             // I must have done something reeaaally bad. But we can't allow that to disrupt psalm's analysis
             var_dump(get_class($e), $e->getMessage()) . "\n";
-            echo $e->getTraceAsString() ."\n";
+            echo $e->getTraceAsString() . "\n";
             return;
         }
 
-        $issue = new StrictDeclarationToAddIssue('This file can have a strict declaration added',
-            new CodeLocation($statements_source, new Declare_([]))
-        );
+        if (!$have_declare_statement) {
+            $issue = new StrictDeclarationToAddIssue('This file can have a strict declaration added',
+                new CodeLocation($statements_source, new Declare_([]))
+            );
 
-        IssueBuffer::accepts($issue, $statements_source->getSuppressedIssues());
-        return;
-        //If there wasn't issue, put the strict type declaration
-        $file_contents = file_get_contents($file_storage->file_path);
-        $new_file_contents = str_replace('<?php', '<?php declare(strict_types=1);', $file_contents);
-        file_put_contents($file_storage->file_path, $new_file_contents);
+            IssueBuffer::accepts($issue, $statements_source->getSuppressedIssues());
+            return;
+            //If there wasn't issue, put the strict type declaration
+            $file_contents = file_get_contents($file_storage->file_path);
+            $new_file_contents = str_replace('<?php', '<?php declare(strict_types=1);', $file_contents);
+            file_put_contents($file_storage->file_path, $new_file_contents);
+        }
     }
 
     public static function afterStatementAnalysis(AfterFunctionLikeAnalysisEvent $event): ?bool
