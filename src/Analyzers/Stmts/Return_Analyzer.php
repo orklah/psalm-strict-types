@@ -25,6 +25,11 @@ class Return_Analyzer{
      */
     public static function analyze(Return_ $stmt, array $history): void
     {
+        if($stmt->expr === null){
+            // this happens on void methods. This has no impact on strict types
+            return;
+        }
+
         $method_stmt = NodeNavigator::getLastNodeByType($history, ClassMethod::class);
 
         if($method_stmt !== null){
@@ -41,6 +46,7 @@ class Return_Analyzer{
                 //unable to fetch node provider. Throw
                 throw new ShouldNotHappenException('Unable to retrieve Node Type Provider');
             }
+
             $statement_return_type = $node_provider->getType($stmt->expr);
         }
         else{
