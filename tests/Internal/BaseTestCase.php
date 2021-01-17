@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Orklah\StrictTypes\Tests\Internal;
 
+use Orklah\StrictTypes\Hooks\StrictTypesHooks;
 use Orklah\StrictTypes\Plugin;
 use Orklah\StrictTypes\Tests\PsalmInternal\TestCase;
 use Psalm\Config;
@@ -23,7 +24,6 @@ abstract class BaseTestCase extends TestCase
         $this->project_analyzer->getCodebase()->config->initializePlugins($this->project_analyzer);
 
         Config::getInstance()->throw_exception = true;
-
     }
 
     public function tearDown(): void

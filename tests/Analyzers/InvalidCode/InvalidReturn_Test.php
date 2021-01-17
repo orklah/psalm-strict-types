@@ -10,11 +10,24 @@ class InvalidReturn_Test extends InvalidTestCase
     public function testFunctionReturnStrict(): void
     {
         $this->addFile(
-            'somefile.php',
+            __CLASS__.__METHOD__.'.php',
             '<?php
             function foo(): string { return 0; }'
         );
 
-        $this->analyzeFile('somefile.php', new Context());
+        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+    }
+
+    public function testMethodReturnStrict(): void
+    {
+        $this->addFile(
+            __CLASS__.__METHOD__.'.php',
+            '<?php
+            class A{
+                public function foo(): string { return 0; }
+            }'
+        );
+
+        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
     }
 }
