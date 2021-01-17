@@ -12,10 +12,12 @@ use Orklah\StrictTypes\Utils\StrictUnionsChecker;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Identifier;
+use PhpParser\Node\Name;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 use Psalm\Type\Atomic\TNamedObject;
+use Psalm\Type\Union;
 use function count;
 
 class StaticCallAnalyzer
@@ -49,12 +51,27 @@ class StaticCallAnalyzer
                 //unable to fetch node provider. Throw
                 throw new ShouldNotHappenException('Unable to retrieve Node Type Provider');
             }
-            $object_type = $node_provider->getType($expr->class);
+            if($expr->class->parts[0] === 'parent' || $expr->class->parts[0] === 'self'){
+                $object_type = new Union([new TNamedObject($class_stmt->name->name)]);
+            }
+            else {
+                if ($expr->class instanceof Name) {
+                    $object_type = new Union([new TNamedObject($expr->class->parts[0])]);
+                }
+                else {
+                    $object_type = $node_provider->getType($expr->class);
+                }
+            }
         } else {
             //outside of object context, standard node type provider should be enough
             $node_provider = StrictTypesHooks::$statement_source->getNodeTypeProvider();
 
-            $object_type = $node_provider->getType($expr->class);
+            if ($expr->class instanceof Name) {
+                $object_type = new Union([new TNamedObject($expr->class->parts[0])]);
+            }
+            else {
+                $object_type = $node_provider->getType($expr->class);
+            }
         }
 
         if ($object_type === null) {
