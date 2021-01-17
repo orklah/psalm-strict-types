@@ -21,10 +21,13 @@
     },
     "autoload": {
         "psr-4": {
-            "Orklah\\StrictTypes\\": ["./src"]
+            "Orklah\\StrictTypes\\": ["./src"],
+            "Orklah\\StrictTypes\\Tests\\": ["./tests"]
         }
     },
     "require-dev": {
-        "nikic/php-parser": "^4.0"
+        "nikic/php-parser": "^4.0",
+        "phpunit/phpunit": "^9.5",
+        "psalm/plugin-phpunit": "^0.15.0"
     }
 }
