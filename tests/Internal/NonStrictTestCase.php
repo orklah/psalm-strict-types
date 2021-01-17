@@ -5,12 +5,13 @@ namespace Orklah\StrictTypes\Tests\Internal;
 
 use Psalm\Exception\CodeException;
 
-abstract class InvalidTestCase extends BaseTestCase
+abstract class NonStrictTestCase extends BaseTestCase
 {
     public function setUp(): void
     {
         parent::setUp();
 
         $this->expectException(CodeException::class);
+        $this->expectExceptionMessage('NonStrictUsageIssue');
     }
 }

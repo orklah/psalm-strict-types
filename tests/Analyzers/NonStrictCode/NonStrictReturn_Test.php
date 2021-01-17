@@ -2,10 +2,10 @@
 
 namespace Orklah\StrictTypes\Tests\Analyzers\InvalidCode;
 
-use Orklah\StrictTypes\Tests\Internal\InvalidTestCase;
+use Orklah\StrictTypes\Tests\Internal\NonStrictTestCase;
 use Psalm\Context;
 
-class InvalidReturn_Test extends InvalidTestCase
+class NonStrictReturn_Test extends NonStrictTestCase
 {
     public function testFunctionReturnStrict(): void
     {

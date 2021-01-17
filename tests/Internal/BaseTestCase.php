@@ -25,11 +25,4 @@ abstract class BaseTestCase extends TestCase
 
         Config::getInstance()->throw_exception = true;
     }
-
-    public function tearDown(): void
-    {
-        parent::tearDown();
-
-        self::assertSame(IssueBuffer::getErrorCount(), 0);
-    }
 }

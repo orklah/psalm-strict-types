@@ -120,7 +120,7 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
 
         if (!$have_declare_statement) {
             $issue = new StrictDeclarationToAddIssue('This file can have a strict declaration added',
-                new CodeLocation($statements_source, new Declare_([]))
+                new CodeLocation($statements_source, new Declare_([], null, ['startLine' => 0]))
             );
 
             IssueBuffer::accepts($issue, $statements_source->getSuppressedIssues());

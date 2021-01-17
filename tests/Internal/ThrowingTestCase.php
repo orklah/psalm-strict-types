@@ -13,9 +13,4 @@ abstract class ThrowingTestCase extends BaseTestCase
 
         $this->expectException(ShouldNotHappenException::class);
     }
-
-    public function tearDown(): void
-    {
-        parent::tearDown();
-    }
 }

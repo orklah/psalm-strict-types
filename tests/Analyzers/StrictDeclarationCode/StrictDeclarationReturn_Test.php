@@ -2,11 +2,10 @@
 
 namespace Orklah\StrictTypes\Tests\Analyzers\ValidCode;
 
-use Orklah\StrictTypes\Tests\Internal\BaseTestCase;
-use Orklah\StrictTypes\Tests\Internal\ValidTestCase;
+use Orklah\StrictTypes\Tests\Internal\StrictDeclarationTestCase;
 use Psalm\Context;
 
-class ValidReturn_Test extends ValidTestCase
+class StrictDeclarationReturn_Test extends StrictDeclarationTestCase
 {
     public function testFunctionReturnLax(): void
     {
