@@ -56,9 +56,12 @@ class Return_Analyzer{
                 //weird. possibly when function is not in current file?
                 throw new ShouldNotHappenException('Could not find Function Storage for '.$function_stmt->name->name);
             }
+
+            $node_provider = StrictTypesHooks::$statement_source->getNodeTypeProvider();
+
+            $statement_return_type = $node_provider->getType($stmt->expr);
+
             $signature_return_type = $function_storage->signature_return_type;
-            //TODO: retrieve return type for function
-            $statement_return_type = null;
         }
 
         if ($signature_return_type === null) {

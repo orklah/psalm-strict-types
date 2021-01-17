@@ -3,14 +3,14 @@ declare(strict_types=1);
 
 namespace Orklah\StrictTypes\Tests\Internal;
 
-use Psalm\IssueBuffer;
+use Psalm\Exception\CodeException;
 
 abstract class InvalidTestCase extends BaseTestCase
 {
-    public function tearDown(): void
+    public function setUp(): void
     {
-        parent::tearDown();
+        parent::setUp();
 
-        self::assertTrue(IssueBuffer::getErrorCount() > 0);
+        $this->expectException(CodeException::class);
     }
 }
