@@ -5,7 +5,7 @@ namespace Orklah\StrictTypes\Tests\Internal;
 
 use Psalm\Exception\CodeException;
 
-abstract class NonStrictTestCase extends BaseTestCase
+abstract class NonVerifiableStrictTestCase extends BaseTestCase
 {
     public function setUp(): void
     {

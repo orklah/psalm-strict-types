@@ -14,6 +14,7 @@ use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Name;
 use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt;
+use Psalm\Internal\Codebase\InternalCallMapHandler;
 use function array_slice;
 use function count;
 
@@ -22,7 +23,9 @@ class FuncCallAnalyzer
 
     /**
      * @param array<Expr|Stmt> $history
+     * @throws NeedRefinementException
      * @throws NonStrictUsageException
+     * @throws NonVerifiableStrictUsageException
      * @throws ShouldNotHappenException
      */
     public static function analyze(FuncCall $expr, array $history): void
@@ -79,34 +82,53 @@ class FuncCallAnalyzer
         }
         $function_id = strtolower($function_id);
 
-        $function_from_stubs = true;
-        $function_storage = StrictTypesHooks::$codebase->functions->getAllStubbedFunctions()[$function_id] ?? null;
-        if ($function_storage === null) {
-            $function_from_stubs = false;
-            $function_storage = StrictTypesHooks::$function_storage_map[$function_id] ?? null;
+        $native_function = false;
+        $function_storage = null;
+        $function_params = null;
+        if (isset(StrictTypesHooks::$codebase->functions->getAllStubbedFunctions()[$function_id])) {
+            $native_function = true;
+            $function_storage = StrictTypesHooks::$codebase->functions->getAllStubbedFunctions()[$function_id];
+            $function_params = $function_storage->params;
         }
 
-        if ($function_storage === null) {
-            throw new ShouldNotHappenException('Could not retrieve function storage for ' . $function_id);
+        if ($function_storage === null && InternalCallMapHandler::inCallMap($function_id)) {
+            $native_function = true;
+            $callables = InternalCallMapHandler::getCallablesFromCallMap($function_id);
+
+            if ($callables === null) {
+                throw new ShouldNotHappenException('Could not retrieve callmap function ' . $function_id);
+            }
+
+            if (count($callables) !== 1) {
+                throw NeedRefinementException::createWithNode('Multiple function storage for ' . $function_id . ' retrieved', $expr);
+            }
+
+            $function_params = $callables[0]->params;
         }
 
+        if ($function_storage === null && isset(StrictTypesHooks::$function_storage_map[$function_id])) {
+            $native_function = false;
+            $function_storage = StrictTypesHooks::$function_storage_map[$function_id];
+            $function_params = $function_storage->params;
+        }
 
-        $function_params = $function_storage->params;
+        if ($function_params === null) {
+            throw new ShouldNotHappenException('Could not retrieve params for function ' . $function_id);
+        }
 
         $node_provider = StrictTypesHooks::$statement_source->getNodeTypeProvider();
 
         for ($i_param = 0, $i_paramMax = count($function_params); $i_param < $i_paramMax; $i_param++) {
             $param = $function_params[$i_param];
 
-            if($function_from_stubs){
+            if ($native_function) {
                 // if the function is from the stubs, the location of the type is not relevant
                 $return_type = $param->signature_type ?? $param->type;
-            }
-            else{
+            } else {
                 $return_type = $param->signature_type;
             }
 
-            if ($return_type !== null || $function_from_stubs) { //when the function is from stubs or callmap, the
+            if ($return_type !== null || $native_function) { //when the function is from stubs or callmap, the
                 //TODO: beware of named params
                 if (!isset($expr->args[$i_param])) {
                     // A param in signature is not specified in a call. Probably an optional param, if not, we don't care!
