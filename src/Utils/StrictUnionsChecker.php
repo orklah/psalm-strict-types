@@ -64,7 +64,15 @@ class StrictUnionsChecker
         }
 
         if($container instanceof Atomic\TArray){
-            return $content instanceof Atomic\TArray;
+            return $content instanceof Atomic\TArray || $content instanceof Atomic\TKeyedArray || $content instanceof Atomic\TList;
+        }
+
+        if($container instanceof Atomic\TKeyedArray){
+            return $content instanceof Atomic\TArray || $content instanceof Atomic\TKeyedArray || $content instanceof Atomic\TList;
+        }
+
+        if($container instanceof Atomic\TList){
+            return $content instanceof Atomic\TArray || $content instanceof Atomic\TKeyedArray || $content instanceof Atomic\TList;
         }
 
         return false;
