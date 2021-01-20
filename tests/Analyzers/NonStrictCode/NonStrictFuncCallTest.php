@@ -29,4 +29,19 @@ class NonStrictFuncCallTest extends NonStrictTestCase
 
         $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
     }
+
+    public function testCallMapFunctionInMethod(): void
+    {
+        $this->addFile(
+            __CLASS__.__METHOD__.'.php',
+            '<?php
+            class A{
+                public function foo(): void {
+                    explode(0, 0);
+                }
+            }'
+        );
+
+        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+    }
 }

@@ -7,6 +7,7 @@ use Orklah\StrictTypes\Exceptions\NonStrictUsageException;
 use Orklah\StrictTypes\Exceptions\NonVerifiableStrictUsageException;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
 use Orklah\StrictTypes\Hooks\StrictTypesHooks;
+use Orklah\StrictTypes\Utils\NodeNavigator;
 use Orklah\StrictTypes\Utils\StrictUnionsChecker;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr;
@@ -14,6 +15,8 @@ use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Name;
 use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt;
+use PhpParser\Node\Stmt\Class_;
+use PhpParser\Node\Stmt\ClassMethod;
 use Psalm\Internal\Codebase\InternalCallMapHandler;
 use function array_slice;
 use function count;
@@ -116,7 +119,19 @@ class FuncCallAnalyzer
             throw new ShouldNotHappenException('Could not retrieve params for function ' . $function_id);
         }
 
-        $node_provider = StrictTypesHooks::$statement_source->getNodeTypeProvider();
+        $method_stmt = NodeNavigator::getLastNodeByType($history, ClassMethod::class);
+        $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
+        if ($class_stmt !== null && $method_stmt !== null) {
+            //object context, we fetch the node type provider
+            $node_provider = StrictTypesHooks::$node_type_providers_map[StrictTypesHooks::$file_storage->file_path][$class_stmt->name->name][$method_stmt->name->name] ?? null;
+            if ($node_provider === null) {
+                //unable to fetch node provider. Throw
+                throw new ShouldNotHappenException('Unable to retrieve Node Type Provider');
+            }
+        } else {
+            //outside of object context, standard node type provider should be enough
+            $node_provider = StrictTypesHooks::$statement_source->getNodeTypeProvider();
+        }
 
         for ($i_param = 0, $i_paramMax = count($function_params); $i_param < $i_paramMax; $i_param++) {
             $param = $function_params[$i_param];
