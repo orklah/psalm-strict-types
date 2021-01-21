@@ -44,4 +44,18 @@ class NonStrictFuncCallTest extends NonStrictTestCase
 
         $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
     }
+
+    public function testFunctionVariadics(): void
+    {
+        $this->addFile(
+            __CLASS__.__METHOD__.'.php',
+            '<?php
+            function foo(string $_a, string ...$_b): void{
+
+            }
+            foo("", "", 0);'
+        );
+
+        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+    }
 }

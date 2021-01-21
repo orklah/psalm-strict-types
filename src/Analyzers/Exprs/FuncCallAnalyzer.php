@@ -143,8 +143,8 @@ class FuncCallAnalyzer
                 $return_type = $param->signature_type;
             }
 
-            if ($return_type !== null || $native_function) { //when the function is from stubs or callmap, the
-                //TODO: beware of named params
+            if ($return_type !== null) {
+                //TODO: beware of named params and variadics
                 if (!isset($expr->args[$i_param])) {
                     // A param in signature is not specified in a call. Probably an optional param, if not, we don't care!
                     continue;
