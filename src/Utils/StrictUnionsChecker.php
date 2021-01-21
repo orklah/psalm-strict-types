@@ -63,6 +63,10 @@ class StrictUnionsChecker
             return $content instanceof Atomic\TNamedObject;
         }
 
+        if($container instanceof Atomic\TObject){
+            return $content instanceof Atomic\TNamedObject || $content instanceof Atomic\TObject;
+        }
+
         if($container instanceof Atomic\TArray){
             return $content instanceof Atomic\TArray || $content instanceof Atomic\TKeyedArray || $content instanceof Atomic\TList;
         }
