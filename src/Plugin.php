@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 namespace Orklah\StrictTypes;
 
 use Orklah\StrictTypes\Hooks\StrictTypesHooks;
