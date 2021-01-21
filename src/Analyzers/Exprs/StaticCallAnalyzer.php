@@ -107,30 +107,10 @@ class StaticCallAnalyzer
         }
 
         $method_params = $method_storage->params;
-        for ($i_param = 0, $i_paramMax = count($method_params); $i_param < $i_paramMax; $i_param++) {
-            $param = $method_params[$i_param];
-            if ($param->signature_type !== null) {
-                //TODO: beware of named params
-                if (!isset($expr->args[$i_param])) {
-                    // A param in signature is not specified in a call. Probably an optional param, if not, we don't care!
-                    continue;
-                }
-                $arg = $expr->args[$i_param];
-                $arg_type = $node_provider->getType($arg->value);
-                if ($arg_type === null) {
-                    //weird
-                    throw new ShouldNotHappenException('Could not retrieve argument ' . ($i_param + 1) . ' for ' . $method_storage->cased_name);
-                }
-
-                if (!StrictUnionsChecker::strictUnionCheck($param->signature_type, $arg_type)) {
-                    throw NonStrictUsageException::createWithNode('Found argument ' . ($i_param + 1) . ' mismatching between ' . $param->signature_type->getKey() . ' and ' . $arg_type->getKey(), $expr);
-                }
-
-                if ($arg_type->from_docblock === true) {
-                    //not trustworthy enough
-                    throw NonVerifiableStrictUsageException::createWithNode('Found correct type but from docblock', $expr);
-                }
-            }
+        try {
+            StrictUnionsChecker::checkValuesAgainstParams($expr->args, $method_params, $node_provider, $expr);
+        } catch (ShouldNotHappenException $e) {
+            throw new ShouldNotHappenException('Method ' . $method_storage->cased_name . ': ' . $e->getMessage(), 0, $e);
         }
 
         //every potential mismatch would have been handled earlier

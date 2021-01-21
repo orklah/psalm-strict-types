@@ -132,39 +132,10 @@ class FuncCallAnalyzer
             //outside of object context, standard node type provider should be enough
             $node_provider = StrictTypesHooks::$statement_source->getNodeTypeProvider();
         }
-
-        for ($i_param = 0, $i_paramMax = count($function_params); $i_param < $i_paramMax; $i_param++) {
-            $param = $function_params[$i_param];
-
-            if ($native_function) {
-                // if the function is from the stubs, the location of the type is not relevant
-                $return_type = $param->signature_type ?? $param->type;
-            } else {
-                $return_type = $param->signature_type;
-            }
-
-            if ($return_type !== null) {
-                //TODO: beware of named params and variadics
-                if (!isset($expr->args[$i_param])) {
-                    // A param in signature is not specified in a call. Probably an optional param, if not, we don't care!
-                    continue;
-                }
-                $arg = $expr->args[$i_param];
-                $arg_type = $node_provider->getType($arg->value);
-                if ($arg_type === null) {
-                    //weird
-                    throw new ShouldNotHappenException('Could not retrieve argument ' . ($i_param + 1) . ' for ' . $function_id);
-                }
-
-                if (!StrictUnionsChecker::strictUnionCheck($return_type, $arg_type)) {
-                    throw NonStrictUsageException::createWithNode('Found argument ' . ($i_param + 1) . ' mismatching between ' . $return_type->getKey() . ' and ' . $arg_type->getKey(), $expr);
-                }
-
-                if ($arg_type->from_docblock === true) {
-                    //not trustworthy enough
-                    throw NonVerifiableStrictUsageException::createWithNode('Found correct type but from docblock', $expr);
-                }
-            }
+        try {
+            StrictUnionsChecker::checkValuesAgainstParams($expr->args, $function_params, $node_provider, $expr, $native_function);
+        } catch (ShouldNotHappenException $e) {
+            throw new ShouldNotHappenException('Function ' . $function_id . ': ' . $e->getMessage(), 0, $e);
         }
     }
 }
