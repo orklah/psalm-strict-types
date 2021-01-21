@@ -1,0 +1,33 @@
+name: CI-unix
+
+on:
+  pull_request:
+  push:
+    branches:
+      - "master"
+
+jobs:
+
+  psalm:
+    name: Psalm
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Setup PHP
+        uses: shivammathur/setup-php@master
+        with:
+          php-version: 7.4
+          extensions: mbstring
+      - run: composer require vimeo/psalm && composer require psalm/plugin-phpunit && vendor/bin/psalm --config=psalm.xml.dist
+
+  phpunit:
+    name: PHPUnit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Setup PHP
+        uses: shivammathur/setup-php@master
+        with:
+          php-version: 7.4
+          extensions: mbstring
+      - run: composer require phpunit/phpunit && vendor/bin/phpunit tests
