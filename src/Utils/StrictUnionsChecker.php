@@ -75,6 +75,10 @@ class StrictUnionsChecker
             return $content instanceof Atomic\TArray || $content instanceof Atomic\TKeyedArray || $content instanceof Atomic\TList;
         }
 
+        if($container instanceof Atomic\TMixed){
+            return true;
+        }
+
         return false;
     }
 }
