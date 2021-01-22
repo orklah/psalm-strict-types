@@ -18,8 +18,11 @@ use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 use Psalm\Internal\Codebase\InternalCallMapHandler;
+use Psalm\Type\Atomic\TLiteralString;
+use Webmozart\Assert\Assert;
 use function array_slice;
 use function count;
+use function gettype;
 
 class FuncCallAnalyzer
 {
@@ -68,9 +71,30 @@ class FuncCallAnalyzer
             }
         }
 
+        $method_stmt = NodeNavigator::getLastNodeByType($history, ClassMethod::class);
+        $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
+        if ($class_stmt !== null && $method_stmt !== null) {
+            //object context, we fetch the node type provider
+            $node_provider = StrictTypesHooks::$node_type_providers_map[StrictTypesHooks::$file_storage->file_path][$class_stmt->name->name][$method_stmt->name->name] ?? null;
+            if ($node_provider === null) {
+                //unable to fetch node provider. Throw
+                throw new ShouldNotHappenException('Unable to retrieve Node Type Provider');
+            }
+        } else {
+            //outside of object context, standard node type provider should be enough
+            $node_provider = StrictTypesHooks::$statement_source->getNodeTypeProvider();
+        }
+
         if ($function_name instanceof Expr) {
-            throw NeedRefinementException::createWithNode('Found FuncCall with Expr as function name', $expr);
-            //var_dump(StrictTypesHooks::$statement_source->getNodeTypeProvider()->getType($function_name));die();
+            $function_id_type = StrictTypesHooks::$statement_source->getNodeTypeProvider()->getType($function_name);
+            if($function_id_type !== null && $function_id_type->isSingleStringLiteral()){
+                $type = $function_id_type->getAtomicTypes()[0];
+                Assert::isInstanceOf($function_id_type, TLiteralString::class);
+                $function_id = $type->value;
+            }
+            else{
+                throw NeedRefinementException::createWithNode('Found FuncCall with ' . gettype($function_id_type) . ' as function name', $expr);
+            }
         } else {
             $original_function_id = strtolower(implode('\\', $function_name->parts));
 
@@ -119,19 +143,7 @@ class FuncCallAnalyzer
             throw new ShouldNotHappenException('Could not retrieve params for function ' . $function_id);
         }
 
-        $method_stmt = NodeNavigator::getLastNodeByType($history, ClassMethod::class);
-        $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
-        if ($class_stmt !== null && $method_stmt !== null) {
-            //object context, we fetch the node type provider
-            $node_provider = StrictTypesHooks::$node_type_providers_map[StrictTypesHooks::$file_storage->file_path][$class_stmt->name->name][$method_stmt->name->name] ?? null;
-            if ($node_provider === null) {
-                //unable to fetch node provider. Throw
-                throw new ShouldNotHappenException('Unable to retrieve Node Type Provider');
-            }
-        } else {
-            //outside of object context, standard node type provider should be enough
-            $node_provider = StrictTypesHooks::$statement_source->getNodeTypeProvider();
-        }
+
         try {
             StrictUnionsChecker::checkValuesAgainstParams($expr->args, $function_params, $node_provider, $expr, $native_function);
         } catch (ShouldNotHappenException $e) {
