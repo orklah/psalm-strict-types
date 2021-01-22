@@ -5,20 +5,19 @@ namespace Orklah\StrictTypes\Tests\Analyzers\ValidCode;
 use Orklah\StrictTypes\Tests\Internal\StrictDeclarationTestCase;
 use Psalm\Context;
 
-class StrictDeclarationMethodCallTest extends StrictDeclarationTestCase
+class StrictDeclarationNew_Test extends StrictDeclarationTestCase
 {
-    public function testMethodParamPhpDocType(): void
+    public function testConstructParamPhpDocType(): void
     {
         $this->addFile(
             __CLASS__.__METHOD__.'.php',
             '<?php
             class A{
                 /** @param string $a */
-                public function foo($a) {}
+                public function __construct($a) {}
             }
 
-            $a = new A();
-            $a->foo(1);'
+            new A(1);'
         );
 
         $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
