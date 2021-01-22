@@ -13,7 +13,6 @@ use Orklah\StrictTypes\Issues\NonStrictUsageOnStrictFileIssue;
 use Orklah\StrictTypes\Issues\NonVerifiableStrictUsageIssue;
 use Orklah\StrictTypes\Issues\StrictDeclarationToAddIssue;
 use Orklah\StrictTypes\Traversers\StmtsTraverser;
-use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Declare_;
 use PhpParser\Node\Stmt\Function_;
@@ -50,7 +49,10 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
     public static $function_storage_map = [];
 
     /**
-     * @param list<Stmt> $stmts
+     * @throws NeedRefinementException
+     * @throws NonStrictUsageException
+     * @throws NonVerifiableStrictUsageException
+     * @throws ShouldNotHappenException
      */
     public static function afterAnalyzeFile(AfterFileAnalysisEvent $event): void
     {
@@ -127,8 +129,12 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
             return;
             //If there wasn't issue, put the strict type declaration
             $file_contents = file_get_contents($file_storage->file_path);
-            $new_file_contents = str_replace('<?php', '<?php declare(strict_types=1);', $file_contents);
-            file_put_contents($file_storage->file_path, $new_file_contents);
+
+            $count = 0;
+            $new_file_contents = preg_replace('#^<\?php#', '<?php declare(strict_types=1);', $file_contents, 1, $count);
+            if($count === 1) {
+                file_put_contents($file_storage->file_path, $new_file_contents);
+            }
         }
     }
 
