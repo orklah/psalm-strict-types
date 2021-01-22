@@ -6,17 +6,15 @@ use Orklah\StrictTypes\Exceptions\NeedRefinementException;
 use Orklah\StrictTypes\Exceptions\NonStrictUsageException;
 use Orklah\StrictTypes\Exceptions\NonVerifiableStrictUsageException;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
-use Orklah\StrictTypes\Hooks\StrictTypesHooks;
 use Orklah\StrictTypes\Utils\NodeNavigator;
 use Orklah\StrictTypes\Utils\StrictUnionsChecker;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Stmt;
-use PhpParser\Node\Stmt\Class_;
-use PhpParser\Node\Stmt\ClassMethod;
 use Psalm\Type\Atomic\TNamedObject;
 use function count;
+use function is_string;
 
 class MethodCallAnalyzer
 {
@@ -40,35 +38,13 @@ class MethodCallAnalyzer
             throw NeedRefinementException::createWithNode('Unable to analyze a non-literal method', $expr);
         }
 
+        $node_provider = NodeNavigator::getNodeProviderFromContext($history);
 
-        $method_stmt = NodeNavigator::getLastNodeByType($history, ClassMethod::class);
-        $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
-        if ($class_stmt !== null && $method_stmt !== null) {
-            //object context, we fetch the node type provider or the context if the variable is $this
-            if (is_string($expr->var->name) && $expr->var->name === 'this') {
-                $node_provider = StrictTypesHooks::$node_type_providers_map[StrictTypesHooks::$file_storage->file_path][$class_stmt->name->name][$method_stmt->name->name] ?? null;
-                if ($node_provider === null) {
-                    //unable to fetch node provider. Throw
-                    throw new ShouldNotHappenException('Unable to retrieve Node Type Provider');
-                }
-                $context = StrictTypesHooks::$context_map[StrictTypesHooks::$file_storage->file_path][$class_stmt->name->name][$method_stmt->name->name] ?? null;
-                if ($context === null) {
-                    //unable to context. Throw
-                    throw new ShouldNotHappenException('Unable to retrieve Context');
-                }
-                $object_type = $context->vars_in_scope['$this'];
-            } else {
-                $node_provider = StrictTypesHooks::$node_type_providers_map[StrictTypesHooks::$file_storage->file_path][$class_stmt->name->name][$method_stmt->name->name] ?? null;
-                if ($node_provider === null) {
-                    //unable to fetch node provider. Throw
-                    throw new ShouldNotHappenException('Unable to retrieve Node Type Provider');
-                }
-                $object_type = $node_provider->getType($expr->var);
-            }
+        //object context, we fetch the node type provider or the context if the variable is $this
+        if (is_string($expr->var->name) && $expr->var->name === 'this') {
+            $context = NodeNavigator::getContext($history);
+            $object_type = $context->vars_in_scope['$this'];
         } else {
-            //outside of object context, standard node type provider should be enough
-            $node_provider = StrictTypesHooks::$statement_source->getNodeTypeProvider();
-
             $object_type = $node_provider->getType($expr->var);
         }
 

@@ -6,7 +6,6 @@ use Orklah\StrictTypes\Exceptions\NeedRefinementException;
 use Orklah\StrictTypes\Exceptions\NonStrictUsageException;
 use Orklah\StrictTypes\Exceptions\NonVerifiableStrictUsageException;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
-use Orklah\StrictTypes\Hooks\StrictTypesHooks;
 use Orklah\StrictTypes\Utils\NodeNavigator;
 use Orklah\StrictTypes\Utils\StrictUnionsChecker;
 use PhpParser\Node\Expr;
@@ -15,7 +14,6 @@ use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Class_;
-use PhpParser\Node\Stmt\ClassMethod;
 use Psalm\Type\Atomic\TNamedObject;
 use Psalm\Type\Union;
 use function count;
@@ -42,30 +40,14 @@ class StaticCallAnalyzer
             throw NeedRefinementException::createWithNode('Unable to analyze a non-literal method', $expr);
         }
 
-        $method_stmt = NodeNavigator::getLastNodeByType($history, ClassMethod::class);
-        $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
-        if ($class_stmt !== null && $method_stmt !== null) {
-            //object context, we fetch the node type provider
-            $node_provider = StrictTypesHooks::$node_type_providers_map[StrictTypesHooks::$file_storage->file_path][$class_stmt->name->name][$method_stmt->name->name] ?? null;
-            if ($node_provider === null) {
-                //unable to fetch node provider. Throw
-                throw new ShouldNotHappenException('Unable to retrieve Node Type Provider');
-            }
-            if($expr->class->parts[0] === 'parent' || $expr->class->parts[0] === 'self'){
-                $object_type = new Union([new TNamedObject($class_stmt->name->name)]);
-            }
-            else {
-                if ($expr->class instanceof Name) {
-                    $object_type = new Union([new TNamedObject($expr->class->parts[0])]);
-                }
-                else {
-                    $object_type = $node_provider->getType($expr->class);
-                }
-            }
-        } else {
-            //outside of object context, standard node type provider should be enough
-            $node_provider = StrictTypesHooks::$statement_source->getNodeTypeProvider();
+        $node_provider = NodeNavigator::getNodeProviderFromContext($history);
 
+        if($expr->class->parts[0] === 'parent' || $expr->class->parts[0] === 'self'){
+            //TODO: technically, parent should check the extends. This would imply getting MethodStorage earlier
+            $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
+            $object_type = new Union([new TNamedObject($class_stmt->name->name)]);
+        }
+        else {
             if ($expr->class instanceof Name) {
                 $object_type = new Union([new TNamedObject($expr->class->parts[0])]);
             }

@@ -15,8 +15,6 @@ use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Name;
 use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt;
-use PhpParser\Node\Stmt\Class_;
-use PhpParser\Node\Stmt\ClassMethod;
 use Psalm\Internal\Codebase\InternalCallMapHandler;
 use Psalm\Type\Atomic\TLiteralString;
 use Webmozart\Assert\Assert;
@@ -71,19 +69,7 @@ class FuncCallAnalyzer
             }
         }
 
-        $method_stmt = NodeNavigator::getLastNodeByType($history, ClassMethod::class);
-        $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
-        if ($class_stmt !== null && $method_stmt !== null) {
-            //object context, we fetch the node type provider
-            $node_provider = StrictTypesHooks::$node_type_providers_map[StrictTypesHooks::$file_storage->file_path][$class_stmt->name->name][$method_stmt->name->name] ?? null;
-            if ($node_provider === null) {
-                //unable to fetch node provider. Throw
-                throw new ShouldNotHappenException('Unable to retrieve Node Type Provider');
-            }
-        } else {
-            //outside of object context, standard node type provider should be enough
-            $node_provider = StrictTypesHooks::$statement_source->getNodeTypeProvider();
-        }
+        $node_provider = NodeNavigator::getNodeProviderFromContext($history);
 
         if ($function_name instanceof Expr) {
             $function_id_type = StrictTypesHooks::$statement_source->getNodeTypeProvider()->getType($function_name);
