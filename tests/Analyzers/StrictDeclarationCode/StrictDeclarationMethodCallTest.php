@@ -54,4 +54,21 @@ class StrictDeclarationMethodCallTest extends StrictDeclarationTestCase
 
         $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
     }
+
+    public function testMethodParamThroughProperty(): void
+    {
+        $this->addFile(
+            __CLASS__.__METHOD__.'.php',
+            '<?php
+            class A{
+                public A $a;
+                public function __construct(){
+                    $this->a->foo("");
+                }
+                public function foo(string $a) {}
+            }'
+        );
+
+        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+    }
 }
