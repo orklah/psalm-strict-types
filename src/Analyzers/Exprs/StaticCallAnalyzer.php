@@ -67,12 +67,12 @@ class StaticCallAnalyzer
         if (!$object_type->isSingle()) {
             //multiple object/types. Throw for now, but may be refined
             //TODO: try to refine (object with common parents, same parameters etc...)
-            throw NeedRefinementException::createWithNode('Found MethodCall3', $expr);
+            throw NeedRefinementException::createWithNode('Found Found Multiple objects possible for one call', $expr);
         }
 
         if (!$object_type->isObjectType()) {
             //How is that even possible? TODO: Find out if cases exists
-            throw NeedRefinementException::createWithNode('Found MethodCall4', $expr);
+            throw NeedRefinementException::createWithNode('Found a ' . $object_type->getKey() . ' for a method call', $expr);
         }
 
         //we may remove null safely, this is not what we're checking here
