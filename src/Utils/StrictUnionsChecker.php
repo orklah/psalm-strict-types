@@ -152,6 +152,34 @@ class StrictUnionsChecker
             return $content instanceof Atomic\TResource;
         }
 
+        if ($container instanceof Atomic\TCallable) {
+            return $content instanceof Atomic\TCallable || $content instanceof Atomic\TCallableString || $content instanceof Atomic\TClosure || $content instanceof Atomic\TCallableArray || $content instanceof Atomic\TCallableKeyedArray || $content instanceof Atomic\TCallableList || $content instanceof Atomic\TCallableObject;
+        }
+
+        if ($container instanceof Atomic\TCallableString) {
+            return $content instanceof Atomic\TCallableString;
+        }
+
+        if ($container instanceof Atomic\TClosure) {
+            return $content instanceof Atomic\TClosure;
+        }
+
+        if ($container instanceof Atomic\TCallableArray) {
+            return $content instanceof Atomic\TCallableArray;
+        }
+
+        if ($container instanceof Atomic\TCallableKeyedArray) {
+            return $content instanceof Atomic\TCallableKeyedArray;
+        }
+
+        if ($container instanceof Atomic\TCallableList) {
+            return $content instanceof Atomic\TCallableList;
+        }
+
+        if ($container instanceof Atomic\TCallableObject) {
+            return $content instanceof Atomic\TCallableObject;
+        }
+
         if ($container instanceof Atomic\TMixed) {
             return true;
         }
