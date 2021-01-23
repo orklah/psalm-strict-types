@@ -15,6 +15,7 @@ use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\PropertyFetch;
 use PhpParser\Node\Expr\StaticPropertyFetch;
 use PhpParser\Node\Stmt;
+use PhpParser\Node\Stmt\Namespace_;
 
 class AssignAnalyzer
 {
@@ -37,7 +38,13 @@ class AssignAnalyzer
 
         $node_provider = NodeNavigator::getNodeProviderFromContext($history);
 
-        $property_id = $expr->var->name . '::$' . $expr->var->name;
+        $namespace_stmt = NodeNavigator::getLastNodeByType($history, Namespace_::class);
+        $namespace_prefix = '';
+        if($namespace_stmt !== null){
+            $namespace_prefix = (string)$namespace_stmt->name;
+        }
+
+        $property_id = $namespace_prefix . '\\' . $expr->var->name . '::$' . $expr->var->name;
         $property_type = StrictTypesHooks::$codebase->properties->getPropertyType(
             $property_id,
             true,
