@@ -58,4 +58,42 @@ class StrictDeclarationStaticCallTest extends StrictDeclarationTestCase
 
         $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
     }
+
+    public function testStaticParamSelf(): void
+    {
+        $this->addFile(
+            __CLASS__.__METHOD__.'.php',
+            '<?php
+            class A{
+                public static function test(int $a){}
+            }
+
+            class B extends A{
+                public static function test(int $a){
+                    self::test(1);
+                }
+            }'
+        );
+
+        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+    }
+
+    public function testStaticParamParent(): void
+    {
+        $this->addFile(
+            __CLASS__.__METHOD__.'.php',
+            '<?php
+            class A{
+                public static function test(int $a){}
+            }
+
+            class B extends A{
+                public static function test(int $a){
+                    parent::test(1);
+                }
+            }'
+        );
+
+        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+    }
 }
