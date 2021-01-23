@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Orklah\StrictTypes\Tests\Analyzers\ValidCode;
+namespace Orklah\StrictTypes\Tests\Analyzers\StrictDeclarationCode;
 
 use Orklah\StrictTypes\Tests\Internal\StrictDeclarationTestCase;
 use Psalm\Context;

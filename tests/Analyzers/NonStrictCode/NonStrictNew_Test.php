@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Orklah\StrictTypes\Tests\Analyzers\InvalidCode;
+namespace Orklah\StrictTypes\Tests\Analyzers\NonStrictCode;
 
 use Orklah\StrictTypes\Tests\Internal\NonStrictTestCase;
 use Psalm\Context;
