@@ -35,33 +35,42 @@ class StaticCallAnalyzer
             return;
         }
 
-        if (!$expr->name instanceof Identifier) {
-            //can't handle this for now TODO: refine this
-            throw NeedRefinementException::createWithNode('Unable to analyze a non-literal method', $expr);
+        $node_provider = NodeNavigator::getNodeProviderFromContext($history);
+
+        if ($expr->name instanceof Identifier) {
+            $method_name = $expr->name->name;
+        } elseif ($expr->name instanceof Expr) {
+            $method_name_type = $node_provider->getType($expr->name);
+            if ($method_name_type !== null && $method_name_type->isSingleStringLiteral()) {
+                $method_name = $method_name_type->getSingleStringLiteral()->value;
+            } elseif ($method_name_type === null) {
+                throw NeedRefinementException::createWithNode('Found MethodCall with a method that is an expr with unknown type ', $expr);
+            } else {
+                throw NeedRefinementException::createWithNode('Found MethodCall with a method that is a ' . get_class($method_name_type), $expr);
+            }
+        } else {
+            $method_name = $expr->name;
         }
 
         $node_provider = NodeNavigator::getNodeProviderFromContext($history);
 
-        if($expr->class->parts[0] === 'parent' || $expr->class->parts[0] === 'self'){
+        if ($expr->class->parts[0] === 'parent' || $expr->class->parts[0] === 'self') {
             //TODO: technically, parent should check the extends. This would imply getting MethodStorage earlier
             $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
             $object_type = new Union([new TNamedObject($class_stmt->name->name)]);
-        }
-        elseif ($expr->class->parts[0] === 'static') {
+        } elseif ($expr->class->parts[0] === 'static') {
             throw NeedRefinementException::createWithNode('Found StaticCall with static::', $expr);
-        }
-        else {
+        } else {
             if ($expr->class instanceof Name) {
                 $object_type = new Union([new TNamedObject($expr->class->parts[0])]);
-            }
-            else {
+            } else {
                 $object_type = $node_provider->getType($expr->class);
             }
         }
 
         if ($object_type === null) {
             //unable to identify object. Throw
-            throw new ShouldNotHappenException('Unable to retrieve object type for "'.$expr->class.'"');
+            throw new ShouldNotHappenException('Unable to retrieve object type for "' . $expr->class . '"');
         }
 
         if (!$object_type->isSingle()) {
@@ -85,17 +94,17 @@ class StaticCallAnalyzer
         }
 
         //Ok, we have a single object here. Time to fetch parameters from method
-        $method_storage = NodeNavigator::getMethodStorageFromName(strtolower($atomic_object_type->value), strtolower($expr->name->name));
+        $method_storage = NodeNavigator::getMethodStorageFromName(strtolower($atomic_object_type->value), strtolower($method_name));
         if ($method_storage === null) {
             //weird.
-            throw new ShouldNotHappenException('Could not find Method Storage for ' . $atomic_object_type->value . '::' . $expr->name->name);
+            throw new ShouldNotHappenException('Could not find Method Storage for ' . $atomic_object_type->value . '::' . $method_name);
         }
 
         $method_params = $method_storage->params;
         try {
             StrictUnionsChecker::checkValuesAgainstParams($expr->args, $method_params, $node_provider, $expr);
         } catch (ShouldNotHappenException $e) {
-            throw new ShouldNotHappenException('Method ' . $method_storage->cased_name . ': ' . $e->getMessage(), 0, $e);
+            throw new ShouldNotHappenException('Method ' . $method_name . ': ' . $e->getMessage(), 0, $e);
         }
 
         //every potential mismatch would have been handled earlier

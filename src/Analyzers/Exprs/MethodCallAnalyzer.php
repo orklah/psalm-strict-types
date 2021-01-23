@@ -33,12 +33,22 @@ class MethodCallAnalyzer
             return;
         }
 
-        if (!$expr->name instanceof Identifier) {
-            //can't handle this for now TODO: refine this
-            throw NeedRefinementException::createWithNode('Unable to analyze a non-literal method', $expr);
-        }
-
         $node_provider = NodeNavigator::getNodeProviderFromContext($history);
+
+        if ($expr->name instanceof Identifier) {
+            $method_name = $expr->name->name;
+        } elseif ($expr->name instanceof Expr) {
+            $method_name_type = $node_provider->getType($expr->name);
+            if ($method_name_type !== null && $method_name_type->isSingleStringLiteral()) {
+                $method_name = $method_name_type->getSingleStringLiteral()->value;
+            } elseif ($method_name_type === null) {
+                throw NeedRefinementException::createWithNode('Found MethodCall with a method that is an expr with unknown type ', $expr);
+            } else {
+                throw NeedRefinementException::createWithNode('Found MethodCall with a method that is a ' . get_class($method_name_type), $expr);
+            }
+        } else {
+            $method_name = $expr->name;
+        }
 
         //object context, we fetch the node type provider or the context if the variable is $this
         if (is_string($expr->var->name) && $expr->var->name === 'this') {
@@ -74,10 +84,10 @@ class MethodCallAnalyzer
         }
 
         //Ok, we have a single object here. Time to fetch parameters from method
-        $method_storage = NodeNavigator::getMethodStorageFromName(strtolower($atomic_object_type->value), strtolower($expr->name->name));
+        $method_storage = NodeNavigator::getMethodStorageFromName(strtolower($atomic_object_type->value), strtolower($method_name));
         if ($method_storage === null) {
             //weird.
-            throw new ShouldNotHappenException('Could not find Method Storage for ' . $atomic_object_type->value . '::' . $expr->name->name);
+            throw new ShouldNotHappenException('Could not find Method Storage for ' . $atomic_object_type->value . '::' . $method_name);
         }
 
         $method_params = $method_storage->params;
@@ -85,7 +95,7 @@ class MethodCallAnalyzer
         try {
             StrictUnionsChecker::checkValuesAgainstParams($expr->args, $method_params, $node_provider, $expr);
         } catch (ShouldNotHappenException $e) {
-            throw new ShouldNotHappenException('Method ' . $method_storage->cased_name . ': ' . $e->getMessage(), 0, $e);
+            throw new ShouldNotHappenException('Method ' . $method_name . ': ' . $e->getMessage(), 0, $e);
         }
 
         //every potential mismatch would have been handled earlier

@@ -68,4 +68,24 @@ class ThrowingMethodCallTest extends ThrowingTestCase
 
         $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
     }
+
+    /**
+     * This needs to be fixed, somehow, the use of the variable is problematic. The method is found, but the argument can't be found in node provider
+     */
+    public function testMethodParamExpr(): void
+    {
+        $this->addFile(
+            __CLASS__.__METHOD__.'.php',
+            '<?php
+            class A{
+                public function __construct(){
+                    $method = "foo";
+                    $this->$method("");
+                }
+                public function foo(string $a): void {}
+            }'
+        );
+
+        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+    }
 }
