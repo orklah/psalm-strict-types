@@ -34,7 +34,8 @@ class NodeNavigator
     /**
      * TODO, investigate
      *  $method_id = new MethodIdentifier(...explode('::', $declaring_method_id));
-    $method_storage = $codebase->methods->getStorage($method_id);
+     * $method_storage = $codebase->methods->getStorage($method_id);
+     * TODO: investigate namespaces here
      */
     public static function getMethodStorageFromName(string $class_id, string $method_id): ?MethodStorage{
         $class_storage = StrictTypesHooks::$codebase->classlike_storage_provider->get($class_id);

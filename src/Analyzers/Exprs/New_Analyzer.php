@@ -7,12 +7,12 @@ use Orklah\StrictTypes\Exceptions\NonStrictUsageException;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
 use Orklah\StrictTypes\Utils\NodeNavigator;
 use Orklah\StrictTypes\Utils\StrictUnionsChecker;
-use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt;
 use function count;
+use function get_class;
 
 class New_Analyzer{
 
@@ -28,11 +28,23 @@ class New_Analyzer{
             return;
         }
 
-        if(!$expr->class instanceof Name){
-            throw NeedRefinementException::createWithNode('Found New_ with a class that is not name', $expr);
-        }
+        $node_provider = NodeNavigator::getNodeProviderFromContext($history);
 
-        $object = implode('\\', $expr->class->parts);
+        if($expr->class instanceof Name){
+            $object = implode('\\', $expr->class->parts);
+        }
+        else{
+            $class_type = $node_provider->getType($expr->class);
+            if ($class_type !== null && $class_type->isSingleStringLiteral()) {
+                $object = $class_type->getSingleStringLiteral()->value;
+            }
+            elseif ($class_type === null) {
+                throw NeedRefinementException::createWithNode('Found New_ with a class that is an expr with unknown type ', $expr);
+            }
+            else {
+                throw NeedRefinementException::createWithNode('Found New_ with a class that is a '. get_class($class_type), $expr);
+            }
+        }
 
         //Ok, we have a single object here. Time to fetch parameters from method
         $method_storage = NodeNavigator::getMethodStorageFromName(strtolower($object), '__construct');
@@ -41,7 +53,6 @@ class New_Analyzer{
             throw new ShouldNotHappenException('Could not find Method Storage for ' . $object . '::__construct');
         }
 
-        $node_provider = NodeNavigator::getNodeProviderFromContext($history);
 
         $method_params = $method_storage->params;
         try {

@@ -7,17 +7,48 @@ use Psalm\Context;
 
 class StrictDeclarationNew_Test extends StrictDeclarationTestCase
 {
-    public function testConstructParamPhpDocType(): void
+    public function testNew(): void
     {
         $this->addFile(
             __CLASS__.__METHOD__.'.php',
             '<?php
             class A{
-                /** @param string $a */
-                public function __construct($a) {}
+                public function __construct(string $a) {}
             }
 
-            new A(1);'
+            new A("");'
+        );
+
+        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+    }
+
+    public function testNewExpr(): void
+    {
+        $this->addFile(
+            __CLASS__.__METHOD__.'.php',
+            '<?php
+            class A{
+                public function __construct(string $a) {}
+            }
+            $a = A::class;
+            new $a("");'
+        );
+
+        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+    }
+
+    public function testNewExprNamespace(): void
+    {
+        $this->addFile(
+            __CLASS__.__METHOD__.'.php',
+            '<?php
+            namespace foo;
+            class A{
+                public function __construct(string $a) {
+                    $a = A::class;
+                    new $a("");
+                }
+            }'
         );
 
         $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());

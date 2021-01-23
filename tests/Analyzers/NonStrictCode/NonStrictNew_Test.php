@@ -7,7 +7,7 @@ use Psalm\Context;
 
 class NonStrictNew_Test extends NonStrictTestCase
 {
-    public function testMethodParamWrong(): void
+    public function testNew(): void
     {
         $this->addFile(
             __CLASS__.__METHOD__.'.php',
@@ -17,6 +17,38 @@ class NonStrictNew_Test extends NonStrictTestCase
             }
 
             new A(1);'
+        );
+
+        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+    }
+
+    public function testNewExpr(): void
+    {
+        $this->addFile(
+            __CLASS__.__METHOD__.'.php',
+            '<?php
+            class A{
+                public function __construct(string $a) {}
+            }
+            $a = A::class;
+            new $a(1);'
+        );
+
+        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+    }
+
+    public function testNewExprNamespace(): void
+    {
+        $this->addFile(
+            __CLASS__.__METHOD__.'.php',
+            '<?php
+            namespace foo;
+            class A{
+                public function __construct(string $a) {
+                    $a = A::class;
+                    new $a(1);
+                }
+            }'
         );
 
         $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
