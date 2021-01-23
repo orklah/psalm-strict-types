@@ -13,11 +13,47 @@ class NonStrictMethodCallTest extends NonStrictTestCase
             __CLASS__.__METHOD__.'.php',
             '<?php
             class A{
-                public function foo(string $a) {}
+                public function foo(string $a): void {}
             }
 
             $a = new A();
             $a->foo(1);'
+        );
+
+        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+    }
+
+    public function testMethodParamStrictInNamespace(): void
+    {
+        $this->addFile(
+            __CLASS__.__METHOD__.'.php',
+            '<?php
+            namespace bar;
+            class A{
+                public function __construct(){
+                    $a = new A();
+                    $a->foo(1);
+                }
+                public function foo(string $a): void {}
+            }'
+        );
+
+        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+    }
+
+    public function testNamespacedMethodParamStrictInNamespace(): void
+    {
+        $this->addFile(
+            __CLASS__.__METHOD__.'.php',
+            '<?php
+            namespace bar;
+            class A{
+                public function __construct(){
+                    $a = new \bar\A();
+                    $a->foo(1);
+                }
+                public function foo(string $a): void {}
+            }'
         );
 
         $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
@@ -29,7 +65,7 @@ class NonStrictMethodCallTest extends NonStrictTestCase
             __CLASS__.__METHOD__.'.php',
             '<?php
             class A{
-                public function foo(string $a = "") {}
+                public function foo(string $a = ""): void {}
             }
 
             $a = new A();
@@ -48,7 +84,7 @@ class NonStrictMethodCallTest extends NonStrictTestCase
                 public function __construct(){
                     $this->foo(1);
                 }
-                public function foo(string $a = "") {}
+                public function foo(string $a = ""): void {}
             }'
         );
 
@@ -65,7 +101,7 @@ class NonStrictMethodCallTest extends NonStrictTestCase
                 public function __construct(){
                     $this->a->foo(1);
                 }
-                public function foo(string $a) {}
+                public function foo(string $a): void {}
             }'
         );
 
