@@ -42,7 +42,7 @@ jobs:
         with:
           php-version: 7.4
           extensions: mbstring
-      - run: vendor/bin/phpunit --coverage-clover=coverage.xml
+      - run: composer require phpunit/phpunit && vendor/bin/phpunit --coverage-clover=coverage.xml
 
       - name: "Send code coverage report to Codecov.io"
         env:
