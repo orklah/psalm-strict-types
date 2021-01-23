@@ -148,6 +148,10 @@ class StrictUnionsChecker
             return $content instanceof Atomic\TArray || $content instanceof Atomic\TKeyedArray || $content instanceof Atomic\TList;
         }
 
+        if ($container instanceof Atomic\TResource) {
+            return $content instanceof Atomic\TResource;
+        }
+
         if ($container instanceof Atomic\TMixed) {
             return true;
         }
