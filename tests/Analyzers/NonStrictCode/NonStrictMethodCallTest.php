@@ -7,7 +7,7 @@ use Psalm\Context;
 
 class NonStrictMethodCallTest extends NonStrictTestCase
 {
-    public function testMethodParamWrong(): void
+    public function testMethodParamPhpDocType(): void
     {
         $this->addFile(
             __CLASS__.__METHOD__.'.php',
@@ -23,7 +23,7 @@ class NonStrictMethodCallTest extends NonStrictTestCase
         $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
     }
 
-    public function testMethodParamWrongOptional(): void
+    public function testMethodParamPhpDocTypeOptional(): void
     {
         $this->addFile(
             __CLASS__.__METHOD__.'.php',
@@ -34,6 +34,22 @@ class NonStrictMethodCallTest extends NonStrictTestCase
 
             $a = new A();
             $a->foo(1);'
+        );
+
+        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+    }
+
+    public function testMethodParamFromClass(): void
+    {
+        $this->addFile(
+            __CLASS__.__METHOD__.'.php',
+            '<?php
+            class A{
+                public function __construct(){
+                    $this->foo(1);
+                }
+                public function foo(string $a = "") {}
+            }'
         );
 
         $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
