@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Orklah\StrictTypes\Tests\Analyzers\StrictDeclarationCode;
+namespace Orklah\StrictTypes\Tests\Analyzers\ThrowingCode;
 
 use Orklah\StrictTypes\Tests\Internal\ThrowingTestCase;
 use Psalm\Context;
