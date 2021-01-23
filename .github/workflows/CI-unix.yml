@@ -31,3 +31,20 @@ jobs:
           php-version: 7.4
           extensions: mbstring
       - run: composer require phpunit/phpunit && vendor/bin/phpunit tests
+
+  codecov:
+    name: CodeCoverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Setup PHP
+        uses: shivammathur/setup-php@master
+        with:
+          php-version: 7.4
+          extensions: mbstring
+      - run: vendor/bin/phpunit --coverage-clover=coverage.xml
+
+      - name: "Send code coverage report to Codecov.io"
+        env:
+          CODECOV_TOKEN: "${{ secrets.CODECOV_TOKEN }}"
+        run: "bash <(curl -s https://codecov.io/bash) || true"
