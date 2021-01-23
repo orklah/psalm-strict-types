@@ -19,6 +19,7 @@ class New_Analyzer{
     /**
      * @param array<Expr|Stmt> $history
      * @throws NonStrictUsageException
+     * @throws ShouldNotHappenException
      */
     public static function analyze(New_ $expr, array $history): void
     {
