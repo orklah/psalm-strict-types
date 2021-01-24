@@ -60,7 +60,9 @@ class StaticCallAnalyzer
             $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
             $object_type = new Union([new TNamedObject($class_stmt->name->name)]);
         } elseif ($expr->class->parts[0] === 'static') {
-            throw NeedRefinementException::createWithNode('Found StaticCall with static::', $expr);
+            //TODO: technically, we should check childrens but covariance/contravariance rules states all childrens will accept as least what the parent accepts so it's okay to check parent
+            $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
+            $object_type = new Union([new TNamedObject($class_stmt->name->name)]);
         } else {
             if ($expr->class instanceof Name) {
                 $object_type = new Union([new TNamedObject($expr->class->parts[0])]);
