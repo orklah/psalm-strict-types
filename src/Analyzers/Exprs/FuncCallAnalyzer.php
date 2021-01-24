@@ -74,9 +74,10 @@ class FuncCallAnalyzer
         if ($function_name instanceof Expr) {
             $function_id_type = StrictTypesHooks::$statement_source->getNodeTypeProvider()->getType($function_name);
             if($function_id_type !== null && $function_id_type->isSingleStringLiteral()){
-                $type = $function_id_type->getAtomicTypes()[0];
-                Assert::isInstanceOf($function_id_type, TLiteralString::class);
-                $function_id = $type->value;
+                $function_id_types = $function_id_type->getAtomicTypes();
+                $atomic_function_id_type = array_pop($function_id_types);
+                Assert::isInstanceOf($atomic_function_id_type, TLiteralString::class);
+                $function_id = $atomic_function_id_type->value;
             }
             else{
                 throw NeedRefinementException::createWithNode('Found FuncCall with ' . gettype($function_id_type) . ' as function name', $expr);
