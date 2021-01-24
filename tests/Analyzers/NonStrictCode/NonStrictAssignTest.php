@@ -56,20 +56,4 @@ class NonStrictAssignTest extends NonStrictTestCase
 
         $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
     }
-
-    public function testStaticAssignFromOutsideClass(): void
-    {
-        $this->addFile(
-            __CLASS__.__METHOD__.'.php',
-            '<?php
-            class A{
-                public static string $a;
-            }
-
-            $a = new A();
-            $a::$b = 1;'
-        );
-
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
-    }
 }
