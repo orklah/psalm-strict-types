@@ -12,6 +12,7 @@ use PhpParser\NodeAbstract;
 use Psalm\Context;
 use Psalm\NodeTypeProvider;
 use Psalm\Storage\MethodStorage;
+use Psalm\Type\Union;
 
 class NodeNavigator
 {
@@ -103,5 +104,14 @@ class NodeNavigator
         else{
             return $namespace_prefix . '\\' . $class;
         }
+    }
+
+    public static function canBeFullyExpressedInPhp(?Union $union): bool
+    {
+        if($union === null){
+            return false;
+        }
+
+        return $union->canBeFullyExpressedInPhp(StrictTypesHooks::$codebase->php_major_version, StrictTypesHooks::$codebase->php_minor_version);
     }
 }

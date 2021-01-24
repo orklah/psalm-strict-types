@@ -73,13 +73,12 @@ class FuncCallAnalyzer
 
         if ($function_name instanceof Expr) {
             $function_id_type = StrictTypesHooks::$statement_source->getNodeTypeProvider()->getType($function_name);
-            if($function_id_type !== null && $function_id_type->isSingleStringLiteral()){
+            if ($function_id_type !== null && $function_id_type->isSingleStringLiteral()) {
                 $function_id_types = $function_id_type->getAtomicTypes();
                 $atomic_function_id_type = array_pop($function_id_types);
                 Assert::isInstanceOf($atomic_function_id_type, TLiteralString::class);
                 $function_id = $atomic_function_id_type->value;
-            }
-            else{
+            } else {
                 throw NeedRefinementException::createWithNode('Found FuncCall with ' . gettype($function_id_type) . ' as function name', $expr);
             }
         } else {
@@ -96,45 +95,105 @@ class FuncCallAnalyzer
         }
         $function_id = strtolower($function_id);
 
-        $native_function = false;
-        $function_storage = null;
-        $function_params = null;
-        if (isset(StrictTypesHooks::$codebase->functions->getAllStubbedFunctions()[$function_id])) {
-            $native_function = true;
-            $function_storage = StrictTypesHooks::$codebase->functions->getAllStubbedFunctions()[$function_id];
-            $function_params = $function_storage->params;
-        }
-
-        if ($function_storage === null && InternalCallMapHandler::inCallMap($function_id)) {
-            $native_function = true;
-            $callables = InternalCallMapHandler::getCallablesFromCallMap($function_id);
-
-            if ($callables === null) {
-                throw new ShouldNotHappenException('Could not retrieve callmap function ' . $function_id);
-            }
-
-            if (count($callables) !== 1) {
-                throw NeedRefinementException::createWithNode('Multiple function storage for ' . $function_id . ' retrieved', $expr);
-            }
-
-            $function_params = $callables[0]->params;
-        }
-
-        if ($function_storage === null && isset(StrictTypesHooks::$function_storage_map[$function_id])) {
-            $native_function = false;
-            $function_storage = StrictTypesHooks::$function_storage_map[$function_id];
-            $function_params = $function_storage->params;
-        }
-
-        if ($function_params === null) {
+        if (isset(StrictTypesHooks::$codebase->functions->getAllStubbedFunctions()[$function_id]) || InternalCallMapHandler::inCallMap($function_id)) {
+            $function_params = self::buildParamsFromStubsAndCallMap($function_id);
+        } elseif (isset(StrictTypesHooks::$function_storage_map[$function_id])) {
+            $function_params = StrictTypesHooks::$function_storage_map[$function_id]->params;
+        } else {
             throw new ShouldNotHappenException('Could not retrieve params for function ' . $function_id);
         }
 
-
         try {
-            StrictUnionsChecker::checkValuesAgainstParams($expr->args, $function_params, $node_provider, $expr, $native_function);
+            StrictUnionsChecker::checkValuesAgainstParams($expr->args, $function_params, $node_provider, $expr);
         } catch (ShouldNotHappenException $e) {
             throw new ShouldNotHappenException('Function ' . $function_id . ': ' . $e->getMessage(), 0, $e);
         }
+    }
+
+    private static function buildParamsFromStubsAndCallMap(string $function_id): array
+    {
+        $function_params_from_stubs = [];
+        $callmap_callables = [];
+        $final_params_array = [];
+        $max_params = 0;
+        if (isset(StrictTypesHooks::$codebase->functions->getAllStubbedFunctions()[$function_id])) {
+            $function_storage = StrictTypesHooks::$codebase->functions->getAllStubbedFunctions()[$function_id];
+            $function_params_from_stubs = $function_storage->params;
+            $max_params = count($function_params_from_stubs);
+        }
+
+        if (InternalCallMapHandler::inCallMap($function_id)) {
+            $callmap_callables = InternalCallMapHandler::getCallablesFromCallMap($function_id);
+
+            if ($callmap_callables === null) {
+                throw new ShouldNotHappenException('Could not retrieve callmap function ' . $function_id);
+            }
+
+            foreach ($callmap_callables as $callable) {
+                $tmp_max_params = count($callable->params);
+                if ($tmp_max_params > $max_params) {
+                    $max_params = $tmp_max_params;
+                }
+            }
+        }
+
+        for ($i = 0; $i < $max_params; $i++) {
+            /*
+             * we'll sort by order of preference:
+             * expressible type from signature in stubs
+             * expressible type in all callmaps (signature then doc)
+             * expressible type in doc in stubs
+             *
+             * There may be an additional solution. For example, if the returned type is class-string everywhere, it's not expressible but it can be downgraded is string that is expressible
+             */
+            $stub_signature_type = null;
+            if(isset($function_params_from_stubs[$i])) {
+                $stub_signature_type = $function_params_from_stubs[$i]->signature_type;
+            }
+            $stub_doc_type = null;
+            if(isset($function_params_from_stubs[$i])){
+                $stub_doc_type = $function_params_from_stubs[$i]->type;
+            }
+            $callmap_signature_type = null;
+            $callmap_doc_type = null;
+
+            $tmp_type_signature = null;
+            $tmp_type_doc = null;
+            $consistent_type_signature = true;
+            $consistent_type_doc = true;
+            $functionlike_parameter = null;
+            foreach ($callmap_callables as $callmap_callable) {
+                $functionlike_parameter = $callmap_callable->params[$i];
+                if ($tmp_type_signature === null) {
+                    $tmp_type_signature = $callmap_callable->params[$i]->signature_type;
+                } elseif (!$tmp_type_signature->equals($callmap_callable->params[$i]->signature_type)) {
+                    $consistent_type_signature = false;
+                }
+
+                if ($tmp_type_doc === null) {
+                    $tmp_type_doc = $callmap_callable->params[$i]->type;
+                } elseif (!$tmp_type_doc->equals($callmap_callable->params[$i]->type)) {
+                    $consistent_type_doc = false;
+                }
+            }
+
+            if (NodeNavigator::canBeFullyExpressedInPhp($stub_signature_type)) {
+                $type = $stub_signature_type;
+            } elseif ($consistent_type_signature && NodeNavigator::canBeFullyExpressedInPhp($tmp_type_signature)) {
+                $type = $tmp_type_signature;
+            } elseif ($consistent_type_doc && NodeNavigator::canBeFullyExpressedInPhp($tmp_type_doc)) {
+                $type = $tmp_type_doc;
+            } elseif (NodeNavigator::canBeFullyExpressedInPhp($stub_signature_type)) {
+                $type = $stub_doc_type;
+            }
+            else{
+                return [];
+            }
+
+            $functionlike_parameter->signature_type = $type;
+            $final_params_array[$i] = $functionlike_parameter;
+        }
+
+        return $final_params_array;
     }
 }

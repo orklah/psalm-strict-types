@@ -24,7 +24,7 @@ class StrictUnionsChecker
      * @throws NonVerifiableStrictUsageException
      * @throws ShouldNotHappenException
      */
-    public static function checkValuesAgainstParams(array $values, array $params, NodeTypeProvider $node_provider, Expr $expr, bool $check_against_phpdoc = false): void
+    public static function checkValuesAgainstParams(array $values, array $params, NodeTypeProvider $node_provider, Expr $expr): void
     {
         for ($i_values = 0, $i_valuesMax = count($values); $i_values < $i_valuesMax; $i_values++) {
             $value = $values[$i_values];
@@ -54,12 +54,7 @@ class StrictUnionsChecker
                     $param = $params[$i_values];
                 }
 
-                if ($check_against_phpdoc) {
-                    // if the function is from the stubs, the location of the type is not relevant
-                    $param_type = $param->signature_type ?? $param->type ?? Type::getMixed();
-                } else {
-                    $param_type = $param->signature_type ?? Type::getMixed();
-                }
+                $param_type = $param->signature_type ?? Type::getMixed();
 
                 if (!StrictUnionsChecker::strictUnionCheck($param_type, $value_type)) {
                     throw NonStrictUsageException::createWithNode('Found argument ' . ($i_values + 1) . ' mismatching between param ' . $param_type->getKey() . ' and value ' . $value_type->getKey(), $expr);
