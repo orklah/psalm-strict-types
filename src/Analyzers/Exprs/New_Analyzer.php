@@ -11,6 +11,7 @@ use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt;
+use PhpParser\Node\Stmt\Namespace_;
 use function count;
 use function get_class;
 
@@ -46,8 +47,14 @@ class New_Analyzer{
             }
         }
 
+        $namespace_stmt = NodeNavigator::getLastNodeByType($history, Namespace_::class);
+        $namespace_prefix = '';
+        if ($namespace_stmt !== null) {
+            $namespace_prefix = (string)$namespace_stmt->name;
+        }
+
         //Ok, we have a single object here. Time to fetch parameters from method
-        $method_storage = NodeNavigator::getMethodStorageFromName(strtolower($object), '__construct');
+        $method_storage = NodeNavigator::getMethodStorageFromName(strtolower(NodeNavigator::addNamespacePrefix($namespace_prefix, $object)), '__construct');
         if ($method_storage === null) {
             //weird.
             throw new ShouldNotHappenException('Could not find Method Storage for ' . $object . '::__construct');
