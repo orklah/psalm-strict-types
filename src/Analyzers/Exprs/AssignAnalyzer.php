@@ -44,12 +44,6 @@ class AssignAnalyzer
             return;
         }
 
-        $namespace_stmt = NodeNavigator::getLastNodeByType($history, Namespace_::class);
-        $namespace_prefix = '';
-        if ($namespace_stmt !== null) {
-            $namespace_prefix = (string)$namespace_stmt->name;
-        }
-
         $node_provider = NodeNavigator::getNodeProviderFromContext($history);
         if ($expr->var instanceof PropertyFetch) {
             Assert::isInstanceOf($expr->var->var, Variable::class);
@@ -58,22 +52,20 @@ class AssignAnalyzer
                 if ($expr->var->var->name === 'this') {
                     $context = NodeNavigator::getContext($history);
                     $object_type = $context->vars_in_scope['$this'];
-                    if($object_type->isSingleAndMaybeNullable()){
+                    if ($object_type->isSingleAndMaybeNullable()) {
                         $object_type->removeType('null');
                         $object_types = $object_type->getAtomicTypes();
                         $atomic_object_type = array_pop($object_types);
-                        if($atomic_object_type instanceof TNamedObject){
-                            $object_name = self::addNamespacePrefix($namespace_prefix, $atomic_object_type->value);
-                        }
-                        else{
+                        if ($atomic_object_type instanceof TNamedObject) {
+                            $object_name = $atomic_object_type->value;
+                        } else {
                             throw NeedRefinementException::createWithNode('Found a non interpretable type for $this ' . $object_type->getKey() . ' for object in assign', $expr);
                         }
-                    }
-                    else{
+                    } else {
                         throw NeedRefinementException::createWithNode('Found a non interpretable type for this ' . $object_type->getKey() . ' for object in assign', $expr);
                     }
                 } else {
-                    $object_name = self::addNamespacePrefix($namespace_prefix, $expr->var->var->name);
+                    $object_name = $expr->var->var->name;
                 }
             } else {
                 $object_type = $node_provider->getType($expr->var->var);
@@ -83,57 +75,29 @@ class AssignAnalyzer
                 if (!$object_type->isSingleStringLiteral()) {
                     throw NeedRefinementException::createWithNode('Found a ' . $object_type->getKey() . ' for an assign', $expr);
                 }
-                $object_name = self::addNamespacePrefix($namespace_prefix, $object_type->getSingleStringLiteral()->value);
+                $object_name = $object_type->getSingleStringLiteral()->value;
             }
 
-            $property_id = $object_name . '::$' . $expr->var->name;
-            $property_type = StrictTypesHooks::$codebase->properties->getPropertyType(
-                $property_id,
-                true,
-                StrictTypesHooks::$statement_source,
-                StrictTypesHooks::$file_context
-            );
-            if ($property_type === null) {
-                //unable find property type. Throw
-                throw new ShouldNotHappenException('Unable to retrieve Property type');
-            }
-
-            $value_type = $node_provider->getType($expr->expr);
-            if ($value_type === null) {
-                throw new ShouldNotHappenException('Unable to retrieve Expression type');
-            }
-
-            if (!StrictUnionsChecker::strictUnionCheck($property_type, $value_type)) {
-                throw NonStrictUsageException::createWithNode('Found assignation mismatching between property ' . $property_type->getKey() . ' and value ' . $value_type->getKey(), $expr);
-            }
-
-            if ($value_type->from_docblock === true) {
-                //not trustworthy enough
-                throw NonVerifiableStrictUsageException::createWithNode('Found correct type but from docblock', $expr);
-            }
+            $property_name = $expr->var->name;
         } else {
-            if($expr->var->class instanceof Name){
-                if($expr->var->class->parts[0] === 'self') {
+            if ($expr->var->class instanceof Name) {
+                if ($expr->var->class->parts[0] === 'self') {
                     $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
-                    if($class_stmt === null) {
+                    if ($class_stmt === null) {
                         throw new ShouldNotHappenException('Could not find Class Statement for self reference');
                     }
 
-                    if($class_stmt->name === null){
+                    if ($class_stmt->name === null) {
                         throw new ShouldNotHappenException('Could not find Class Statement name for self reference');
+                    } elseif ($class_stmt->name instanceof Identifier) {
+                        $object_name = $class_stmt->name->name;
+                    } else {
+                        $object_name = $class_stmt->name;
                     }
-                    elseif($class_stmt->name instanceof Identifier) {
-                        $object_name = self::addNamespacePrefix($namespace_prefix, $class_stmt->name->name);
-                    }
-                    else {
-                        $object_name = self::addNamespacePrefix($namespace_prefix, $class_stmt->name);
-                    }
+                } else {
+                    $object_name = implode('\\', $expr->var->class->parts);
                 }
-                else{
-                    $object_name = self::addNamespacePrefix($namespace_prefix, implode('\\', $expr->var->class->parts));
-                }
-            }
-            else{
+            } else {
                 $object_type = $node_provider->getType($expr->var->class);
                 if ($object_type === null) {
                     throw new ShouldNotHappenException('Unable to retrieve object type for assignment2');
@@ -141,65 +105,58 @@ class AssignAnalyzer
                 if (!$object_type->isSingleStringLiteral()) {
                     throw NeedRefinementException::createWithNode('Found a ' . $object_type->getKey() . ' for an assign', $expr);
                 }
-                $object_name = self::addNamespacePrefix($namespace_prefix, $object_type->getSingleStringLiteral()->value);
+                $object_name = $object_type->getSingleStringLiteral()->value;
             }
 
-            if($expr->var->name instanceof VarLikeIdentifier){
+            if ($expr->var->name instanceof VarLikeIdentifier) {
                 $property_name = $expr->var->name->name;
-            }
-            else{
+            } else {
                 $property_type = $node_provider->getType($expr->var->class);
                 if ($property_type === null) {
                     throw new ShouldNotHappenException('Unable to retrieve object type for assignment3');
                 }
                 if (!$property_type->isSingleStringLiteral()) {
-                    var_dump('---'.get_class($object_type));
+                    var_dump('---' . get_class($object_type));
 
                     throw NeedRefinementException::createWithNode('Found a ' . $property_type->getKey() . ' for an assign', $expr);
                 }
                 $property_name = $property_type->getSingleStringLiteral()->value;
             }
+        }
 
-            $property_id = $object_name . '::$' . $property_name;
-            $property_type = StrictTypesHooks::$codebase->properties->getPropertyType(
-                $property_id,
-                true,
-                StrictTypesHooks::$statement_source,
-                StrictTypesHooks::$file_context
-            );
-            if ($property_type === null) {
-                //unable find property type. Throw
-                throw new ShouldNotHappenException('Unable to retrieve Property type');
-            }
+        $namespace_stmt = NodeNavigator::getLastNodeByType($history, Namespace_::class);
+        $namespace_prefix = '';
+        if ($namespace_stmt !== null) {
+            $namespace_prefix = (string)$namespace_stmt->name;
+        }
 
-            $value_type = $node_provider->getType($expr->expr);
-            if ($value_type === null) {
-                throw new ShouldNotHappenException('Unable to retrieve Expression type');
-            }
+        $property_id = NodeNavigator::addNamespacePrefix($namespace_prefix, $object_name) . '::$' . $property_name;
+        $property_type = StrictTypesHooks::$codebase->properties->getPropertyType(
+            $property_id,
+            true,
+            StrictTypesHooks::$statement_source,
+            StrictTypesHooks::$file_context
+        );
 
-            if (!StrictUnionsChecker::strictUnionCheck($property_type, $value_type)) {
-                throw NonStrictUsageException::createWithNode('Found assignation mismatching between property ' . $property_type->getKey() . ' and value ' . $value_type->getKey(), $expr);
-            }
+        if ($property_type === null) {
+            //unable find property type. Throw
+            throw new ShouldNotHappenException('Unable to retrieve Property type');
+        }
 
-            if ($value_type->from_docblock === true) {
-                //not trustworthy enough
-                throw NonVerifiableStrictUsageException::createWithNode('Found correct type but from docblock', $expr);
-            }
+        $value_type = $node_provider->getType($expr->expr);
+        if ($value_type === null) {
+            throw new ShouldNotHappenException('Unable to retrieve Expression type');
+        }
+
+        if (!StrictUnionsChecker::strictUnionCheck($property_type, $value_type)) {
+            throw NonStrictUsageException::createWithNode('Found assignation mismatching between property ' . $property_type->getKey() . ' and value ' . $value_type->getKey(), $expr);
+        }
+
+        if ($value_type->from_docblock === true) {
+            //not trustworthy enough
+            throw NonVerifiableStrictUsageException::createWithNode('Found correct type but from docblock', $expr);
         }
 
         //every potential mismatch would have been handled earlier
-    }
-
-    public static function addNamespacePrefix(string $namespace_prefix, string $class): string {
-        if($namespace_prefix === ''){
-            return $class;
-        }
-
-        if(strpos($class, $namespace_prefix) === 0){
-            return $class;// classname already contains prefix
-        }
-        else{
-            return $namespace_prefix . '\\' . $class;
-        }
     }
 }

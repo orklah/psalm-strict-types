@@ -91,4 +91,17 @@ class NodeNavigator
 
         return $context;
     }
+
+    public static function addNamespacePrefix(string $namespace_prefix, string $class): string {
+        if($namespace_prefix === ''){
+            return $class;
+        }
+
+        if(strpos($class, $namespace_prefix) === 0){
+            return $class;// classname already contains prefix
+        }
+        else{
+            return $namespace_prefix . '\\' . $class;
+        }
+    }
 }
