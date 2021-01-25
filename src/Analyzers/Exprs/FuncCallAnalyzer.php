@@ -163,7 +163,7 @@ class FuncCallAnalyzer
             $consistent_type_doc = true;
             $functionlike_parameter = null;
             foreach ($callmap_callables as $callmap_callable) {
-                $functionlike_parameter = $callmap_callable->params[$i];
+                $functionlike_parameter = $callmap_callable->params[$i] ?? $function_storage->params[$i];
                 if ($tmp_type_signature === null) {
                     $tmp_type_signature = $callmap_callable->params[$i]->signature_type;
                 } elseif (!$tmp_type_signature->equals($callmap_callable->params[$i]->signature_type)) {
