@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <psalm
     totallyTyped="false"
-    errorLevel="1"
+    errorLevel="3"
     resolveFromConfigFile="true"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="https://getpsalm.org/schema/config"
@@ -10,6 +10,11 @@
     <projectFiles>
         <directory name="src"/>
         <directory name="tests"/>
+        <ignoreFiles>
+            <directory name="tests/Analyzers/ThrowingCode"/>
+            <file name="tests/Internal/ThrowingTestCase.php"/>
+            <directory name="tests/PsalmInternal"/>
+        </ignoreFiles>
     </projectFiles>
     <plugins>
         <plugin filename="src/Hooks/StrictTypesHooks.php"/>
