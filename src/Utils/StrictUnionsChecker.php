@@ -13,6 +13,7 @@ use Psalm\Storage\FunctionLikeParameter;
 use Psalm\Type;
 use Psalm\Type\Atomic;
 use Psalm\Type\Union;
+use Webmozart\Assert\Assert;
 use function count;
 
 class StrictUnionsChecker
@@ -33,6 +34,7 @@ class StrictUnionsChecker
 
             if ($value_type !== null) {
                 //TODO: beware of named params
+                $param = null;
                 if (!isset($params[$i_values])) {
                     // We have a value without corresponding param. We'll recursively search the last param in case of variadic
                     $i_values_tmp = $i_values - 1;
@@ -47,6 +49,7 @@ class StrictUnionsChecker
                         }
                         throw new ShouldNotHappenException('Last param found for extra value for position ' . ($i_values + 1) . ' was not a variadic');
                     }
+                    Assert::notNull($param);
                     if ($i_values_tmp === -1) {
                         throw new ShouldNotHappenException('No param found for extra value for position ' . ($i_values + 1));
                     }
