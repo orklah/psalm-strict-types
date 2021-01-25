@@ -30,39 +30,28 @@ class Return_Analyzer{
             return;
         }
 
-        $method_stmt = NodeNavigator::getLastNodeByType($history, ClassMethod::class);
+        $node_provider = NodeNavigator::getNodeProviderFromContext($history);
 
+        $method_stmt = NodeNavigator::getLastNodeByType($history, ClassMethod::class);
         if($method_stmt !== null){
             $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
-            $method_storage = NodeNavigator::getMethodStorageFromName(strtolower($class_stmt->name->name), strtolower($method_stmt->name->name));
-            if($method_storage === null){
-                //weird.
-                throw new ShouldNotHappenException('Could not find Method Storage for '.$method_stmt->name->name);
-            }
-            $signature_return_type = $method_storage->signature_return_type;
-
-            $node_provider = StrictTypesHooks::$node_type_providers_map[StrictTypesHooks::$file_storage->file_path][$class_stmt->name->name][$method_stmt->name->name] ?? null;
-            if ($node_provider === null) {
-                //unable to fetch node provider. Throw
-                throw new ShouldNotHappenException('Unable to retrieve Node Type Provider');
-            }
-
-            $statement_return_type = $node_provider->getType($stmt->expr);
+            $functionlike_storage = NodeNavigator::getMethodStorageFromName(strtolower($class_stmt->name->name), strtolower($method_stmt->name->name));
+            $functionlike_name = $method_stmt->name->name;
         }
         else{
             $function_stmt = NodeNavigator::getLastNodeByType($history, Function_::class);
-            $function_storage = StrictTypesHooks::$file_storage->functions[strtolower((string)$function_stmt->name->name)] ?? null;
-            if($function_storage === null){
-                //weird. possibly when function is not in current file?
-                throw new ShouldNotHappenException('Could not find Function Storage for '.$function_stmt->name->name);
-            }
-
-            $node_provider = StrictTypesHooks::$statement_source->getNodeTypeProvider();
-
-            $statement_return_type = $node_provider->getType($stmt->expr);
-
-            $signature_return_type = $function_storage->signature_return_type;
+            $functionlike_storage = StrictTypesHooks::$file_storage->functions[strtolower((string)$function_stmt->name->name)] ?? null;
+            $functionlike_name = $function_stmt->name->name;
         }
+
+        if($functionlike_storage === null){
+            //weird.
+            throw new ShouldNotHappenException('Could not find Function Storage for '.$functionlike_name);
+        }
+
+        $statement_return_type = $node_provider->getType($stmt->expr);
+
+        $signature_return_type = $functionlike_storage->signature_return_type;
 
         if ($signature_return_type === null) {
             //This is not interesting, if there is no declared type, this can't be wrong with strict_types
