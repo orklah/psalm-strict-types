@@ -96,4 +96,20 @@ class NonStrictStaticCallTest extends NonStrictTestCase
 
         $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
     }
+
+    public function testStaticParamClassString(): void
+    {
+        $this->addFile(
+            __CLASS__.__METHOD__.'.php',
+            '<?php
+            class B{
+                public static function test(int $a){
+                    $b = B::class;
+                    $b::test("");
+                }
+            }'
+        );
+
+        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+    }
 }

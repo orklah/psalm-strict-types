@@ -15,6 +15,7 @@ use PhpParser\Node\Name;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Namespace_;
+use Psalm\Type\Atomic\TLiteralClassString;
 use Psalm\Type\Atomic\TNamedObject;
 use Psalm\Type\Union;
 use function count;
@@ -55,20 +56,20 @@ class StaticCallAnalyzer
 
         $node_provider = NodeNavigator::getNodeProviderFromContext($history);
 
-        if ($expr->class->parts[0] === 'parent' || $expr->class->parts[0] === 'self') {
-            //TODO: technically, parent should check the extends. This would imply getting MethodStorage earlier
-            $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
-            $object_type = new Union([new TNamedObject($class_stmt->name->name)]);
-        } elseif ($expr->class->parts[0] === 'static') {
-            //TODO: technically, we should check childrens but covariance/contravariance rules states all childrens will accept as least what the parent accepts so it's okay to check parent
-            $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
-            $object_type = new Union([new TNamedObject($class_stmt->name->name)]);
-        } else {
-            if ($expr->class instanceof Name) {
-                $object_type = new Union([new TNamedObject($expr->class->parts[0])]);
+        if ($expr->class instanceof Name) {
+            if ($expr->class->parts[0] === 'parent' || $expr->class->parts[0] === 'self') {
+                //TODO: technically, parent should check the extends. This would imply getting MethodStorage earlier
+                $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
+                $object_type = new Union([new TNamedObject($class_stmt->name->name)]);
+            } elseif ($expr->class->parts[0] === 'static') {
+                //TODO: technically, we should check childrens but covariance/contravariance rules states all childrens will accept as least what the parent accepts so it's okay to check parent
+                $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
+                $object_type = new Union([new TNamedObject($class_stmt->name->name)]);
             } else {
-                $object_type = $node_provider->getType($expr->class);
+                $object_type = new Union([new TNamedObject($expr->class->parts[0])]);
             }
+        } else {
+            $object_type = $node_provider->getType($expr->class);
         }
 
         if ($object_type === null) {
@@ -79,11 +80,11 @@ class StaticCallAnalyzer
         if (!$object_type->isSingle()) {
             //multiple object/types. Throw for now, but may be refined
             //TODO: try to refine (object with common parents, same parameters etc...)
-            throw NeedRefinementException::createWithNode('Found Found Multiple objects possible for one call', $expr);
+            throw NeedRefinementException::createWithNode('Found Multiple objects possible for one call', $expr);
         }
 
-        if (!$object_type->isObjectType()) {
-            //How is that even possible? TODO: Find out if cases exists
+        if (!$object_type->isObjectType() && !$object_type->isString()) { //not an object nor a class-string
+            //How is that even possible?
             throw NeedRefinementException::createWithNode('Found a ' . $object_type->getKey() . ' for a method call', $expr);
         }
 
@@ -91,9 +92,14 @@ class StaticCallAnalyzer
         $object_type->removeType('null');
         $object_types = $object_type->getAtomicTypes();
         $atomic_object_type = array_pop($object_types);
-        if (!$atomic_object_type instanceof TNamedObject) {
+        if ($atomic_object_type instanceof TNamedObject) {
+            $object_name = $atomic_object_type->value;
+        } elseif ($atomic_object_type instanceof TLiteralClassString) {
+            $object_name = $atomic_object_type->value;
+        } else {
+            var_dump(get_class($atomic_object_type));
             //TODO: check if we could refine it with TObject or TTemplateParam
-            throw NeedRefinementException::createWithNode('Found MethodCall5', $expr);
+            throw NeedRefinementException::createWithNode('Could not find object type', $expr);
         }
 
         $namespace_stmt = NodeNavigator::getLastNodeByType($history, Namespace_::class);
@@ -103,10 +109,10 @@ class StaticCallAnalyzer
         }
 
         //Ok, we have a single object here. Time to fetch parameters from method
-        $method_storage = NodeNavigator::getMethodStorageFromName(strtolower(NodeNavigator::addNamespacePrefix($namespace_prefix, $atomic_object_type->value)), strtolower($method_name));
+        $method_storage = NodeNavigator::getMethodStorageFromName(strtolower(NodeNavigator::addNamespacePrefix($namespace_prefix, $object_name)), strtolower($method_name));
         if ($method_storage === null) {
             //weird.
-            throw new ShouldNotHappenException('Could not find Method Storage for ' . $atomic_object_type->value . '::' . $method_name);
+            throw new ShouldNotHappenException('Could not find Method Storage for ' . $object_name . '::' . $method_name);
         }
 
         $method_params = $method_storage->params;
