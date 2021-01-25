@@ -46,9 +46,7 @@ class AssignAnalyzer
 
         $node_provider = NodeNavigator::getNodeProviderFromContext($history);
         if ($expr->var instanceof PropertyFetch) {
-            Assert::isInstanceOf($expr->var->var, Variable::class);
-
-            if (is_string($expr->var->var->name)) {
+            if ($expr->var->var instanceof Variable && is_string($expr->var->var->name)) {
                 if ($expr->var->var->name === 'this') {
                     $context = NodeNavigator::getContext($history);
                     $object_type = $context->vars_in_scope['$this'];

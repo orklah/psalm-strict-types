@@ -49,10 +49,11 @@ class StrictUnionsChecker
                         }
                         throw new ShouldNotHappenException('Last param found for extra value for position ' . ($i_values + 1) . ' was not a variadic');
                     }
-                    Assert::notNull($param);
                     if ($i_values_tmp === -1) {
-                        throw new ShouldNotHappenException('No param found for extra value for position ' . ($i_values + 1));
+                        //found a value with no corresponding param. Can happen in case of user error and in case of func_get_args usage
+                        return;
                     }
+                    Assert::notNull($param);
                 } else {
                     $param = $params[$i_values];
                 }
