@@ -101,7 +101,7 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
             return;
         } catch (ShouldNotHappenException $e) {
             // This is probably a bug I left
-            var_dump(get_class($e), $e->getMessage() . ' in ' . $file_storage->file_path) . "\n";
+            var_dump(get_class($e), $e->getMessage() . ' in ' . $file_storage->file_path);
             return;
         } catch (NeedRefinementException $e) {
             // This could be safe but it's not yet ready
@@ -147,29 +147,34 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
         $class_like_storage = $event->getClasslikeStorage();
 
         assert($statements_source instanceof FunctionLikeAnalyzer);
+        $file_path = $statements_source->getFileAnalyzer()->getFilePath();
+        $class_name = strtolower($statements_source->getClassName()??'');
+        $method_name = strtolower($statements_source->getMethodName()??'');
 
         if ($stmt instanceof ClassMethod) {
+            //TODO: consider using namespace instead of file path. It would make more sense
+
             // This will only serve to store NodeTypeProviders for later
-            if (!isset(self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()])) {
+            if (!isset(self::$node_type_providers_map[$file_path])) {
                 self::$node_type_providers_map = []; // Clear array when changing file
-                self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()] = [];
+                self::$node_type_providers_map[$file_path] = [];
             }
-            if (!isset(self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()])) {
-                self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()] = [];
+            if (!isset(self::$node_type_providers_map[$file_path][$class_name])) {
+                self::$node_type_providers_map[$file_path][$class_name] = [];
             }
-            if (!isset(self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()][$statements_source->getMethodName()])) {
-                self::$node_type_providers_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()][$statements_source->getMethodName()] = $node_type_provider;
+            if (!isset(self::$node_type_providers_map[$file_path][$class_name][$method_name])) {
+                self::$node_type_providers_map[$file_path][$class_name][$method_name] = $node_type_provider;
             }
 
-            if (!isset(self::$context_map[$statements_source->getFileAnalyzer()->getFilePath()])) {
+            if (!isset(self::$context_map[$file_path])) {
                 self::$context_map = []; // Clear array when changing file
-                self::$context_map[$statements_source->getFileAnalyzer()->getFilePath()] = [];
+                self::$context_map[$file_path] = [];
             }
-            if (!isset(self::$context_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()])) {
-                self::$context_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()] = [];
+            if (!isset(self::$context_map[$file_path][$class_name])) {
+                self::$context_map[$file_path][$class_name] = [];
             }
-            if (!isset(self::$context_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()][$statements_source->getMethodName()])) {
-                self::$context_map[$statements_source->getFileAnalyzer()->getFilePath()][$statements_source->getClassName()][$statements_source->getMethodName()] = $context;
+            if (!isset(self::$context_map[$file_path][$class_name][$method_name])) {
+                self::$context_map[$file_path][$class_name][$method_name] = $context;
             }
         } elseif ($stmt instanceof Function_) {
             assert($class_like_storage instanceof FunctionStorage);
