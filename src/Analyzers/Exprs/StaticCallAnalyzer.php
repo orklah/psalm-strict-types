@@ -109,10 +109,12 @@ class StaticCallAnalyzer
         }
 
         //Ok, we have a single object here. Time to fetch parameters from method
-        $method_storage = NodeNavigator::getMethodStorageFromName(strtolower(NodeNavigator::addNamespacePrefix($namespace_prefix, $object_name)), strtolower($method_name));
+        $namespaced_class_name = strtolower(NodeNavigator::addNamespacePrefix($namespace_prefix, $object_name));
+        $method_name = strtolower($method_name);
+        $method_storage = NodeNavigator::getMethodStorageFromName($namespaced_class_name, $method_name);
         if ($method_storage === null) {
             //weird.
-            throw new ShouldNotHappenException('Could not find Method Storage for ' . $object_name . '::' . $method_name);
+            throw new ShouldNotHappenException('Could not find Method Storage for ' . $namespaced_class_name . '::' . $method_name);
         }
 
         $method_params = $method_storage->params;
