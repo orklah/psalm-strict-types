@@ -147,11 +147,11 @@ class FuncCallAnalyzer
              * There may be an additional solution. For example, if the returned type is class-string everywhere, it's not expressible but it can be downgraded is string that is expressible
              */
             $stub_signature_type = null;
-            if(isset($function_params_from_stubs[$i])) {
+            if (isset($function_params_from_stubs[$i])) {
                 $stub_signature_type = $function_params_from_stubs[$i]->signature_type;
             }
             $stub_doc_type = null;
-            if(isset($function_params_from_stubs[$i])){
+            if (isset($function_params_from_stubs[$i])) {
                 $stub_doc_type = $function_params_from_stubs[$i]->type;
             }
             $callmap_signature_type = null;
@@ -164,16 +164,20 @@ class FuncCallAnalyzer
             $functionlike_parameter = null;
             foreach ($callmap_callables as $callmap_callable) {
                 $functionlike_parameter = $callmap_callable->params[$i] ?? $function_storage->params[$i];
-                if ($tmp_type_signature === null) {
-                    $tmp_type_signature = $callmap_callable->params[$i]->signature_type;
-                } elseif (!$tmp_type_signature->equals($callmap_callable->params[$i]->signature_type)) {
-                    $consistent_type_signature = false;
+                if (isset($callmap_callable->params[$i])) {
+                    if ($tmp_type_signature === null) {
+                        $tmp_type_signature = $callmap_callable->params[$i]->signature_type;
+                    } elseif (!$tmp_type_signature->equals($callmap_callable->params[$i]->signature_type)) {
+                        $consistent_type_signature = false;
+                    }
                 }
 
-                if ($tmp_type_doc === null) {
-                    $tmp_type_doc = $callmap_callable->params[$i]->type;
-                } elseif (!$tmp_type_doc->equals($callmap_callable->params[$i]->type)) {
-                    $consistent_type_doc = false;
+                if ($callmap_callable->params[$i]) {
+                    if ($tmp_type_doc === null) {
+                        $tmp_type_doc = $callmap_callable->params[$i]->type;
+                    } elseif (!$tmp_type_doc->equals($callmap_callable->params[$i]->type)) {
+                        $consistent_type_doc = false;
+                    }
                 }
             }
 
@@ -185,8 +189,7 @@ class FuncCallAnalyzer
                 $type = $tmp_type_doc;
             } elseif (NodeNavigator::canBeFullyExpressedInPhp($stub_signature_type)) {
                 $type = $stub_doc_type;
-            }
-            else{
+            } else {
                 return [];
             }
 
