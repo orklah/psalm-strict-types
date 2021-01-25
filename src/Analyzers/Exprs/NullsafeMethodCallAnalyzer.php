@@ -9,10 +9,12 @@ use Orklah\StrictTypes\Utils\NodeNavigator;
 use Orklah\StrictTypes\Utils\StrictUnionsChecker;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\NullsafeMethodCall;
+use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Namespace_;
 use Psalm\Type\Atomic\TNamedObject;
+use Webmozart\Assert\Assert;
 use function count;
 use function is_string;
 
@@ -48,7 +50,7 @@ class NullsafeMethodCallAnalyzer
         }
 
         //object context, we fetch the node type provider or the context if the variable is $this
-        if (is_string($expr->var->name) && $expr->var->name === 'this') {
+        if ($expr->var instanceof Variable && is_string($expr->var->name) && $expr->var->name === 'this') {
             $context = NodeNavigator::getContext($history);
             $object_type = $context->vars_in_scope['$this'];
         } else {
@@ -57,13 +59,14 @@ class NullsafeMethodCallAnalyzer
 
         if ($object_type === null) {
             //unable to identify object. Throw
+            Assert::isInstanceOf($expr->var, Variable::class);
             throw new ShouldNotHappenException('Unable to retrieve object type for "' . $expr->var->name . '"');
         }
 
         if (!$object_type->isSingle()) {
             //multiple object/types. Throw for now, but may be refined
             //TODO: try to refine (object with common parents, same parameters etc...)
-            throw NeedRefinementException::createWithNode('Found Found Multiple objects possible for one call', $expr);
+            throw NeedRefinementException::createWithNode('Found Multiple objects possible for one call', $expr);
         }
 
         if (!$object_type->isObjectType()) {
