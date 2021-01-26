@@ -107,4 +107,28 @@ class ThrowingMethodCallTest extends ThrowingTestCase
 
         $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
     }
+
+    /**
+     * This needs to be fixed
+     */
+    public function testMethodCallNonLiteral(): void
+    {
+        $this->addFile(
+            __CLASS__.__METHOD__.'.php',
+            '<?php
+            class A
+            {
+                public function __construct()
+                {
+                    $this->{"foo"}(1);
+                }
+
+                public function foo(string $a): void
+                {
+                }
+            }'
+        );
+
+        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+    }
 }
