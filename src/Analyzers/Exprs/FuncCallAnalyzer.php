@@ -181,16 +181,14 @@ class FuncCallAnalyzer
                 }
             }
 
-            if (NodeNavigator::canBeFullyExpressedInPhp($stub_signature_type)) {
-                $type = $stub_signature_type;
-            } elseif ($consistent_type_signature && NodeNavigator::canBeFullyExpressedInPhp($tmp_type_signature)) {
-                $type = $tmp_type_signature;
-            } elseif ($consistent_type_doc && NodeNavigator::canBeFullyExpressedInPhp($tmp_type_doc)) {
-                $type = $tmp_type_doc;
-            } elseif (NodeNavigator::canBeFullyExpressedInPhp($stub_signature_type)) {
-                $type = $stub_doc_type;
-            } else {
-                return [];
+            $stub_signature_checkable_type = NodeNavigator::transformParamTypeIntoCheckableType($stub_signature_type);
+            $callmap_signature_checkable_type = NodeNavigator::transformParamTypeIntoCheckableType($tmp_type_signature);
+            $callmap_phpdoc_checkable_type = NodeNavigator::transformParamTypeIntoCheckableType($tmp_type_doc);
+            $stub_phpdoc_checkable_type = NodeNavigator::transformParamTypeIntoCheckableType($stub_doc_type);
+            $type = $stub_signature_checkable_type ?? $callmap_signature_checkable_type ?? $callmap_phpdoc_checkable_type ?? $stub_phpdoc_checkable_type;
+
+            if ($type === null) {
+                throw new ShouldNotHappenException('No checkable type found for ' . $function_id);
             }
 
             $functionlike_parameter->signature_type = $type;

@@ -112,12 +112,22 @@ class NodeNavigator
         }
     }
 
-    public static function canBeFullyExpressedInPhp(?Union $union): bool
+    public static function transformParamTypeIntoCheckableType(?Union $union): ?Union
     {
         if($union === null){
-            return false;
+            return null;
         }
 
-        return $union->canBeFullyExpressedInPhp(StrictTypesHooks::$codebase->php_major_version, StrictTypesHooks::$codebase->php_minor_version);
+        //this will take care of the majority of cases. If it's okay in signature, it's okay to be checked
+        if($union->canBeFullyExpressedInPhp(StrictTypesHooks::$codebase->php_major_version, StrictTypesHooks::$codebase->php_minor_version)){
+            return $union;
+        }
+
+        if($union->isMixed()) {
+            //even when not handled in signature for current php version, it's handled in StrictCheck
+            return $union;
+        }
+
+        return null;
     }
 }
