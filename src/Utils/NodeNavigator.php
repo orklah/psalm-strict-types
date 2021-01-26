@@ -14,16 +14,13 @@ use Psalm\NodeTypeProvider;
 use Psalm\Storage\MethodStorage;
 use Psalm\Type\Atomic\TArray;
 use Psalm\Type\Atomic\TBool;
-use Psalm\Type\Atomic\TClassString;
-use Psalm\Type\Atomic\TFalse;
+use Psalm\Type\Atomic\TCallable;
 use Psalm\Type\Atomic\TFloat;
 use Psalm\Type\Atomic\TInt;
 use Psalm\Type\Atomic\TList;
-use Psalm\Type\Atomic\TLiteralClassString;
-use Psalm\Type\Atomic\TLiteralInt;
-use Psalm\Type\Atomic\TLiteralString;
 use Psalm\Type\Atomic\TMixed;
 use Psalm\Type\Atomic\TNull;
+use Psalm\Type\Atomic\TResource;
 use Psalm\Type\Atomic\TScalar;
 use Psalm\Type\Atomic\TString;
 use Psalm\Type\Atomic\TTemplateParam;
@@ -142,10 +139,18 @@ class NodeNavigator
             if($atomic_type instanceof TInt){ continue; }
             if($atomic_type instanceof TFloat){ continue; }
             if($atomic_type instanceof TBool){ continue; }
+
+            if($atomic_type instanceof TResource){ continue; }
+
             if($atomic_type instanceof TNull){ continue; }
-            if($atomic_type instanceof TMixed){ continue; }
+
             if($atomic_type instanceof TArray){ continue; }
             if($atomic_type instanceof TList){ continue; }
+
+            if($atomic_type instanceof TCallable){ continue; }
+
+            if($atomic_type instanceof TMixed){ continue; }
+
 
             //TODO: TTemplateParam could be restricted to the upper type. In the meantime, not eligible
             if($atomic_type instanceof TTemplateParam){ $valid_union = false; break; }
