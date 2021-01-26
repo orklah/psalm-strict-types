@@ -138,12 +138,12 @@ class AssignAnalyzer
 
         if ($property_type === null) {
             //unable find property type. Throw
-            throw new ShouldNotHappenException('Unable to retrieve Property type');
+            throw new ShouldNotHappenException('Unable to retrieve Property type for ' . $property_id);
         }
 
         $value_type = $node_provider->getType($expr->expr);
         if ($value_type === null) {
-            throw new ShouldNotHappenException('Unable to retrieve Expression type');
+            throw new ShouldNotHappenException('Unable to retrieve Expression type for ' . $property_id);
         }
 
         if (!StrictUnionsChecker::strictUnionCheck($property_type, $value_type)) {
