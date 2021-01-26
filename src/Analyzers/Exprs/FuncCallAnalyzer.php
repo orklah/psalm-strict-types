@@ -182,11 +182,11 @@ class FuncCallAnalyzer
             }
 
             $stub_signature_checkable_type = NodeNavigator::transformParamTypeIntoCheckableType($stub_signature_type);
-            $callmap_signature_checkable_type = NodeNavigator::transformParamTypeIntoCheckableType($tmp_type_signature);
-            $callmap_phpdoc_checkable_type = NodeNavigator::transformParamTypeIntoCheckableType($tmp_type_doc);
+            $callmap_signature_checkable_type = $consistent_type_signature ? NodeNavigator::transformParamTypeIntoCheckableType($tmp_type_signature) : null;
+            $callmap_phpdoc_checkable_type = $consistent_type_doc ? NodeNavigator::transformParamTypeIntoCheckableType($tmp_type_doc) : null;
             $stub_phpdoc_checkable_type = NodeNavigator::transformParamTypeIntoCheckableType($stub_doc_type);
-            $type = $stub_signature_checkable_type ?? $callmap_signature_checkable_type ?? $callmap_phpdoc_checkable_type ?? $stub_phpdoc_checkable_type;
 
+            $type = $stub_signature_checkable_type ?? $callmap_signature_checkable_type ?? $callmap_phpdoc_checkable_type ?? $stub_phpdoc_checkable_type;
             if ($type === null) {
                 throw new ShouldNotHappenException('No checkable type found for ' . $function_id);
             }

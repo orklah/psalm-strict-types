@@ -12,6 +12,21 @@ use PhpParser\NodeAbstract;
 use Psalm\Context;
 use Psalm\NodeTypeProvider;
 use Psalm\Storage\MethodStorage;
+use Psalm\Type\Atomic\TArray;
+use Psalm\Type\Atomic\TBool;
+use Psalm\Type\Atomic\TClassString;
+use Psalm\Type\Atomic\TFalse;
+use Psalm\Type\Atomic\TFloat;
+use Psalm\Type\Atomic\TInt;
+use Psalm\Type\Atomic\TList;
+use Psalm\Type\Atomic\TLiteralClassString;
+use Psalm\Type\Atomic\TLiteralInt;
+use Psalm\Type\Atomic\TLiteralString;
+use Psalm\Type\Atomic\TMixed;
+use Psalm\Type\Atomic\TNull;
+use Psalm\Type\Atomic\TScalar;
+use Psalm\Type\Atomic\TString;
+use Psalm\Type\Atomic\TTemplateParam;
 use Psalm\Type\Union;
 
 class NodeNavigator
@@ -38,14 +53,15 @@ class NodeNavigator
      * $method_storage = $codebase->methods->getStorage($method_id);
      * TODO: investigate namespaces here
      */
-    public static function getMethodStorageFromName(string $class_id, string $method_id): ?MethodStorage{
+    public static function getMethodStorageFromName(string $class_id, string $method_id): ?MethodStorage
+    {
         $class_storage = StrictTypesHooks::$codebase->classlike_storage_provider->get($class_id);
         $method_storage = $class_storage->methods[$method_id] ?? null;
-        if($method_storage === null){
+        if ($method_storage === null) {
             //We try on the parent
-            foreach($class_storage->parent_classes as $parent_class){
+            foreach ($class_storage->parent_classes as $parent_class) {
                 $method_storage = self::getMethodStorageFromName($parent_class, $method_id);
-                if($method_storage !== null){
+                if ($method_storage !== null) {
                     break;
                 }
             }
@@ -99,32 +115,49 @@ class NodeNavigator
         return $context;
     }
 
-    public static function addNamespacePrefix(string $namespace_prefix, string $class): string {
-        if($namespace_prefix === ''){
+    public static function addNamespacePrefix(string $namespace_prefix, string $class): string
+    {
+        if ($namespace_prefix === '') {
             return $class;
         }
 
-        if(strpos($class, $namespace_prefix) === 0){
+        if (strpos($class, $namespace_prefix) === 0) {
             return $class;// classname already contains prefix
-        }
-        else{
+        } else {
             return $namespace_prefix . '\\' . $class;
         }
     }
 
     public static function transformParamTypeIntoCheckableType(?Union $union): ?Union
     {
-        if($union === null){
+        if ($union === null) {
             return null;
         }
 
-        //this will take care of the majority of cases. If it's okay in signature, it's okay to be checked
-        if($union->canBeFullyExpressedInPhp(StrictTypesHooks::$codebase->php_major_version, StrictTypesHooks::$codebase->php_minor_version)){
-            return $union;
+        $atomic_types = $union->getAtomicTypes();
+        $valid_union = true;
+        foreach ($atomic_types as $atomic_type) {
+            if($atomic_type instanceof TScalar){ continue; }
+            if($atomic_type instanceof TString){ continue; }
+            if($atomic_type instanceof TInt){ continue; }
+            if($atomic_type instanceof TFloat){ continue; }
+            if($atomic_type instanceof TBool){ continue; }
+            if($atomic_type instanceof TNull){ continue; }
+            if($atomic_type instanceof TMixed){ continue; }
+            if($atomic_type instanceof TArray){ continue; }
+            if($atomic_type instanceof TList){ continue; }
+
+            //TODO: TTemplateParam could be restricted to the upper type. In the meantime, not eligible
+            if($atomic_type instanceof TTemplateParam){ $valid_union = false; break; }
+
+            if (!$atomic_type->canBeFullyExpressedInPhp(StrictTypesHooks::$codebase->php_major_version, StrictTypesHooks::$codebase->php_minor_version)) {
+                var_dump('==>type can be expressed and could be upgraded' . get_class($atomic_type));
+                $valid_union = false;
+                break;
+            }
         }
 
-        if($union->isMixed()) {
-            //even when not handled in signature for current php version, it's handled in StrictCheck
+        if ($valid_union) {
             return $union;
         }
 
