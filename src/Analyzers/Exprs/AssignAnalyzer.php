@@ -22,7 +22,7 @@ use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\VarLikeIdentifier;
 use Psalm\Type\Atomic\TNamedObject;
-use Webmozart\Assert\Assert;
+use UnexpectedValueException;
 use function is_string;
 
 class AssignAnalyzer
@@ -129,16 +129,22 @@ class AssignAnalyzer
         }
 
         $property_id = NodeNavigator::addNamespacePrefix($namespace_prefix, $object_name) . '::$' . $property_name;
-        $property_type = StrictTypesHooks::$codebase->properties->getPropertyType(
-            $property_id,
-            true,
-            StrictTypesHooks::$statement_source,
-            StrictTypesHooks::$file_context
-        );
 
-        if ($property_type === null) {
-            //unable find property type. Throw
-            throw new ShouldNotHappenException('Unable to retrieve Property type for ' . $property_id);
+        try {
+            $property_type = StrictTypesHooks::$codebase->properties->getPropertyType(
+                $property_id,
+                true,
+                StrictTypesHooks::$statement_source,
+                StrictTypesHooks::$file_context
+            );
+        }
+        catch(UnexpectedValueException $e) {
+            throw new ShouldNotHappenException('Unable to retrieve Property for ' . $property_id);
+        }
+
+        if($property_type === null) {
+            //property found but with no type, not interesting
+            return;
         }
 
         $value_type = $node_provider->getType($expr->expr);
