@@ -107,4 +107,55 @@ class NonStrictMethodCallTest extends NonStrictTestCase
 
         $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
     }
+
+    public function testMethodParamPropertyThis(): void
+    {
+        $this->addFile(
+            __CLASS__.__METHOD__.'.php',
+            '<?php
+            class A{
+                public int $a = 1;
+                public function __construct(){
+                    $this->foo($this->a);
+                }
+                public function foo(string $a): void {}
+            }'
+        );
+
+        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+    }
+
+    public function testMethodParamPropertySelf(): void
+    {
+        $this->addFile(
+            __CLASS__.__METHOD__.'.php',
+            '<?php
+            class A{
+                public static int $a = 1;
+                public function __construct(){
+                    $this->foo(self::$a);
+                }
+                public function foo(string $a): void {}
+            }'
+        );
+
+        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+    }
+
+    public function testMethodParamPropertyStatic(): void
+    {
+        $this->addFile(
+            __CLASS__.__METHOD__.'.php',
+            '<?php
+            class A{
+                public static int $a = 1;
+                public function __construct(){
+                    $this->foo(static::$a);
+                }
+                public function foo(string $a): void {}
+            }'
+        );
+
+        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+    }
 }
