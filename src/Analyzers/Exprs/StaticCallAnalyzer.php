@@ -15,6 +15,7 @@ use PhpParser\Node\Name;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Namespace_;
+use Psalm\Type\Atomic\TClassString;
 use Psalm\Type\Atomic\TLiteralClassString;
 use Psalm\Type\Atomic\TNamedObject;
 use Psalm\Type\Union;
@@ -96,8 +97,9 @@ class StaticCallAnalyzer
             $object_name = $atomic_object_type->value;
         } elseif ($atomic_object_type instanceof TLiteralClassString) {
             $object_name = $atomic_object_type->value;
+        } elseif ($atomic_object_type instanceof TClassString) {
+            $object_name = $atomic_object_type->as_type->value;
         } else {
-            var_dump(get_class($atomic_object_type));
             //TODO: check if we could refine it with TObject or TTemplateParam
             throw NeedRefinementException::createWithNode('Could not find object type', $expr);
         }
