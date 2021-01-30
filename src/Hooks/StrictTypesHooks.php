@@ -29,12 +29,11 @@ use Psalm\Plugin\EventHandler\Event\AfterFileAnalysisEvent;
 use Psalm\Plugin\EventHandler\Event\AfterFunctionLikeAnalysisEvent;
 use Psalm\Storage\FileStorage;
 use Psalm\Storage\FunctionStorage;
+use Webmozart\Assert\Assert;
 use function assert;
 
 class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeAnalysisInterface
 {
-    /** @var array<string, array<lowercase-string, array<lowercase-string, Context>>> */
-    public static $context_map = [];
     /** @var FileAnalyzer */
     public static $statement_source;
     /** @var Context|null */
@@ -45,6 +44,12 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
     public static $codebase;
     /** @var array<string, array<lowercase-string, array<lowercase-string, NodeTypeProvider>>> */
     public static $node_type_providers_map = [];
+    /** @var array<string, array<lowercase-string, array<lowercase-string, Context>>> */
+    public static $context_map = [];
+    /** @var array<lowercase-string, array<lowercase-string, NodeTypeProvider>> */
+    public static $current_node_type_providers = [];
+    /** @var array<lowercase-string, array<lowercase-string, Context>> */
+    public static $current_context = [];
     /** @var array<lowercase-string, FunctionStorage> */
     public static $function_storage_map = [];
 
@@ -62,12 +67,23 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
         $codebase = $event->getCodebase();
         $stmts = $event->getStmts();
 
-        assert($statements_source instanceof FileAnalyzer);
+        Assert::isInstanceOf($statements_source, FileAnalyzer::class);
 
         self::$statement_source = $statements_source;
         self::$file_context = $file_context;
         self::$file_storage = $file_storage;
         self::$codebase = $codebase;
+
+        //we need to erase the maps as soon as possible. We make a copy and then erase the maps
+        $file_path = $statements_source->getFileAnalyzer()->getFilePath();
+        if(isset(self::$node_type_providers_map[$file_path])){
+            self::$current_node_type_providers = self::$node_type_providers_map[$file_path];
+        }
+        if(isset(self::$context_map[$file_path])){
+            self::$current_context = self::$context_map[$file_path];
+        }
+        self::$node_type_providers_map = [];
+        self::$context_map = [];
 
         $have_declare_statement = false;
         $maybe_declare = $stmts[0] ?? null;
@@ -110,7 +126,7 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
         } catch (Exception $e) {
             // handle exceptions returned by Psalm. It should be handled sooner (probably in custom methods) but I'm not sure this is stable.
             // handling it here allow psalm to continue working in case of error on one file
-            var_dump(get_class($e), $e->getMessage()) . "\n";
+            var_dump(get_class($e), $e->getMessage() . ' in ' . $file_storage->file_path);
             //echo $e->getTraceAsString() ."\n";
             return;
         } catch (Error $e) {
@@ -156,7 +172,6 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
 
             // This will only serve to store NodeTypeProviders for later
             if (!isset(self::$node_type_providers_map[$file_path])) {
-                self::$node_type_providers_map = []; // Clear array when changing file
                 self::$node_type_providers_map[$file_path] = [];
             }
             if (!isset(self::$node_type_providers_map[$file_path][$class_name])) {
@@ -167,7 +182,6 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
             }
 
             if (!isset(self::$context_map[$file_path])) {
-                self::$context_map = []; // Clear array when changing file
                 self::$context_map[$file_path] = [];
             }
             if (!isset(self::$context_map[$file_path][$class_name])) {

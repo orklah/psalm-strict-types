@@ -79,10 +79,9 @@ class NodeNavigator
         $class_stmt = self::getLastNodeByType($history, Class_::class);
         if ($class_stmt !== null && $method_stmt !== null) {
             //object context, we fetch the node type provider
-            $file_path = StrictTypesHooks::$file_storage->file_path;
             $class_name = strtolower($class_stmt->name->name);
             $method_name = strtolower($method_stmt->name->name);
-            $node_provider = StrictTypesHooks::$node_type_providers_map[$file_path][$class_name][$method_name] ?? null;
+            $node_provider = StrictTypesHooks::$current_node_type_providers[$class_name][$method_name] ?? null;
             if ($node_provider === null) {
                 //unable to fetch node provider. Throw
                 throw new ShouldNotHappenException('Unable to retrieve Node Type Provider for ' . $class_name . '::' . $method_name);
@@ -103,10 +102,9 @@ class NodeNavigator
     {
         $method_stmt = self::getLastNodeByType($history, ClassMethod::class);
         $class_stmt = self::getLastNodeByType($history, Class_::class);
-        $file_path = StrictTypesHooks::$file_storage->file_path;
         $class_name = strtolower($class_stmt->name->name);
         $method_name = strtolower($method_stmt->name->name);
-        $context = StrictTypesHooks::$context_map[$file_path][$class_name][$method_name] ?? null;
+        $context = StrictTypesHooks::$current_context[$class_name][$method_name] ?? null;
         if ($context === null) {
             //unable to context. Throw
             throw new ShouldNotHappenException('Unable to retrieve Context for ' . $class_name . '::' . $method_name);
