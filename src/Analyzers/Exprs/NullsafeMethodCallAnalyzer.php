@@ -83,14 +83,8 @@ class NullsafeMethodCallAnalyzer
             throw NeedRefinementException::createWithNode('Found MethodCall5', $expr);
         }
 
-        $namespace_stmt = NodeNavigator::getLastNodeByType($history, Namespace_::class);
-        $namespace_prefix = '';
-        if ($namespace_stmt !== null) {
-            $namespace_prefix = (string)$namespace_stmt->name;
-        }
-
         //Ok, we have a single object here. Time to fetch parameters from method
-        $method_storage = NodeNavigator::getMethodStorageFromName(strtolower(NodeNavigator::addNamespacePrefix($namespace_prefix, $atomic_object_type->value)), strtolower($method_name));
+        $method_storage = NodeNavigator::getMethodStorageFromName(strtolower(NodeNavigator::resolveName($history, $atomic_object_type->value)), strtolower($method_name));
         if ($method_storage === null) {
             //weird.
             throw new ShouldNotHappenException('Could not find Method Storage for ' . $atomic_object_type->value . '::' . $method_name);

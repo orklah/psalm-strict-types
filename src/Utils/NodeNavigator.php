@@ -2,12 +2,15 @@
 
 namespace Orklah\StrictTypes\Utils;
 
+use Orklah\StrictTypes\Analyzers\Stmts\Use_Analyzer;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
 use Orklah\StrictTypes\Hooks\StrictTypesHooks;
 use PhpParser\Node\Expr;
+use PhpParser\Node\Name;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\NodeAbstract;
 use Psalm\Context;
 use Psalm\NodeTypeProvider;
@@ -112,8 +115,53 @@ class NodeNavigator
         return $context;
     }
 
-    public static function addNamespacePrefix(string $namespace_prefix, string $class): string
+    /**
+     * We receive the node history and the class string. We'll go fetch the Use_ map and reconstruct the FQCN here
+     * @param array<Expr|Stmt> $history
+     * @param string|Name      $class
+     */
+    public static function resolveName(array $history, $class): string
     {
+        if ($class instanceof Name) {
+            $resolved_name = $class->getAttribute('resolvedName');
+            if($resolved_name !== null){
+                return $resolved_name;
+            }
+            else{
+                $class = implode('\\', $class->parts);
+            }
+        }
+
+        if (strpos($class, '\\') === 0) {
+            //the path is absolute, we return the given path
+            return $class;
+        }
+
+        $file_path = StrictTypesHooks::$statement_source->getFileAnalyzer()->getFilePath();
+        $uses = Use_Analyzer::$use_map[$file_path] ?? [];
+
+        $exploded_class = explode('\\', $class);
+        $first_part = $exploded_class[0];
+        $final_class = $class;
+        $found_use = false;
+        while (isset($uses[$first_part])) {
+            $use = $uses[$first_part];
+            $found_use = true;
+            $final_class = implode('\\', $use) . '\\' . $final_class;
+            $first_part = array_shift($use);
+        }
+
+        if ($found_use) {
+            return $final_class;
+        }
+
+        //we retrieve the current namespace. It will prefix the class unless it begins with a known Use
+        $namespace_stmt = self::getLastNodeByType($history, Namespace_::class);
+        $namespace_prefix = '';
+        if ($namespace_stmt !== null) {
+            $namespace_prefix = (string)$namespace_stmt->name;
+        }
+
         if ($namespace_prefix === '') {
             return $class;
         }
@@ -134,26 +182,51 @@ class NodeNavigator
         $atomic_types = $union->getAtomicTypes();
         $valid_union = true;
         foreach ($atomic_types as $atomic_type) {
-            if($atomic_type instanceof TScalar){ continue; }
-            if($atomic_type instanceof TString){ continue; }
-            if($atomic_type instanceof TInt){ continue; }
-            if($atomic_type instanceof TFloat){ continue; }
-            if($atomic_type instanceof TBool){ continue; }
+            if ($atomic_type instanceof TScalar) {
+                continue;
+            }
+            if ($atomic_type instanceof TString) {
+                continue;
+            }
+            if ($atomic_type instanceof TInt) {
+                continue;
+            }
+            if ($atomic_type instanceof TFloat) {
+                continue;
+            }
+            if ($atomic_type instanceof TBool) {
+                continue;
+            }
 
-            if($atomic_type instanceof TResource){ continue; }
+            if ($atomic_type instanceof TResource) {
+                continue;
+            }
 
-            if($atomic_type instanceof TNull){ continue; }
+            if ($atomic_type instanceof TNull) {
+                continue;
+            }
 
-            if($atomic_type instanceof TArray){ continue; }
-            if($atomic_type instanceof TList){ continue; }
+            if ($atomic_type instanceof TArray) {
+                continue;
+            }
+            if ($atomic_type instanceof TList) {
+                continue;
+            }
 
-            if($atomic_type instanceof TCallable){ continue; }
+            if ($atomic_type instanceof TCallable) {
+                continue;
+            }
 
-            if($atomic_type instanceof TMixed){ continue; }
+            if ($atomic_type instanceof TMixed) {
+                continue;
+            }
 
 
             //TODO: TTemplateParam could be restricted to the upper type. In the meantime, not eligible
-            if($atomic_type instanceof TTemplateParam){ $valid_union = false; break; }
+            if ($atomic_type instanceof TTemplateParam) {
+                $valid_union = false;
+                break;
+            }
 
             if (!$atomic_type->canBeFullyExpressedInPhp(StrictTypesHooks::$codebase->php_major_version, StrictTypesHooks::$codebase->php_minor_version)) {
                 var_dump('==>type can be expressed and could be upgraded' . get_class($atomic_type));

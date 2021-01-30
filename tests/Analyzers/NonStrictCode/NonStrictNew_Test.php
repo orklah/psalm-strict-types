@@ -53,4 +53,28 @@ class NonStrictNew_Test extends NonStrictTestCase
 
         $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
     }
+
+    public function testNewOtherNamespace(): void
+    {
+        $this->addFile(
+            __CLASS__.__METHOD__.'.php',
+            '<?php
+            namespace foo{
+                class A{
+                    public function __construct(string $a) {}
+                }
+            }
+
+            namespace foo2{
+                use foo\A;
+                class B{
+                    function scope(): void {
+                        new A(1);
+                    }
+                }
+            }'
+        );
+
+        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+    }
 }

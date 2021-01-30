@@ -39,34 +39,42 @@ class ExprsAnalyzer
         //custom plugin code here
         if ($expr instanceof ArrowFunction) {
             ArrowFunctionAnalyzer::analyze($expr, $history);
+            return;
         }
 
         if ($expr instanceof Closure) {
             ClosureAnalyzer::analyze($expr, $history);
+            return;
         }
 
         if ($expr instanceof FuncCall) {
             FuncCallAnalyzer::analyze($expr, $history);
+            return;
         }
 
         if ($expr instanceof MethodCall) {
             MethodCallAnalyzer::analyze($expr, $history);
+            return;
         }
 
         if ($expr instanceof NullsafeMethodCall) {
             NullsafeMethodCallAnalyzer::analyze($expr, $history);
+            return;
         }
 
         if ($expr instanceof StaticCall) {
             StaticCallAnalyzer::analyze($expr, $history);
+            return;
         }
 
         if ($expr instanceof Assign) {
             AssignAnalyzer::analyze($expr, $history);
+            return;
         }
 
         if ($expr instanceof New_) {
             New_Analyzer::analyze($expr, $history);
+            return;
         }
     }
 }

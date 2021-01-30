@@ -32,7 +32,7 @@ class New_Analyzer{
         $node_provider = NodeNavigator::getNodeProviderFromContext($history);
 
         if($expr->class instanceof Name){
-            $object = implode('\\', $expr->class->parts);
+            $object = $expr->class;
         }
         else{
             $class_type = $node_provider->getType($expr->class);
@@ -47,14 +47,8 @@ class New_Analyzer{
             }
         }
 
-        $namespace_stmt = NodeNavigator::getLastNodeByType($history, Namespace_::class);
-        $namespace_prefix = '';
-        if ($namespace_stmt !== null) {
-            $namespace_prefix = (string)$namespace_stmt->name;
-        }
-
         //Ok, we have a single object here. Time to fetch parameters from method
-        $method_storage = NodeNavigator::getMethodStorageFromName(strtolower(NodeNavigator::addNamespacePrefix($namespace_prefix, $object)), '__construct');
+        $method_storage = NodeNavigator::getMethodStorageFromName(strtolower(NodeNavigator::resolveName($history, $object)), '__construct');
         if ($method_storage === null) {
             //weird.
             throw new ShouldNotHappenException('Could not find Method Storage for ' . $object . '::__construct');

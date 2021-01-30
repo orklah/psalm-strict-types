@@ -93,7 +93,7 @@ class AssignAnalyzer
                         $object_name = $class_stmt->name;
                     }
                 } else {
-                    $object_name = implode('\\', $expr->var->class->parts);
+                    $object_name = $expr->var->class;
                 }
             } else {
                 $object_type = $node_provider->getType($expr->var->class);
@@ -122,13 +122,7 @@ class AssignAnalyzer
             }
         }
 
-        $namespace_stmt = NodeNavigator::getLastNodeByType($history, Namespace_::class);
-        $namespace_prefix = '';
-        if ($namespace_stmt !== null) {
-            $namespace_prefix = (string)$namespace_stmt->name;
-        }
-
-        $property_id = NodeNavigator::addNamespacePrefix($namespace_prefix, $object_name) . '::$' . $property_name;
+        $property_id = NodeNavigator::resolveName($history, $object_name) . '::$' . $property_name;
 
         try {
             $property_type = StrictTypesHooks::$codebase->properties->getPropertyType(

@@ -104,14 +104,8 @@ class StaticCallAnalyzer
             throw NeedRefinementException::createWithNode('Could not find object type', $expr);
         }
 
-        $namespace_stmt = NodeNavigator::getLastNodeByType($history, Namespace_::class);
-        $namespace_prefix = '';
-        if ($namespace_stmt !== null) {
-            $namespace_prefix = (string)$namespace_stmt->name;
-        }
-
         //Ok, we have a single object here. Time to fetch parameters from method
-        $namespaced_class_name = strtolower(NodeNavigator::addNamespacePrefix($namespace_prefix, $object_name));
+        $namespaced_class_name = strtolower(NodeNavigator::resolveName($history, $object_name));
         $method_name = strtolower($method_name);
         $method_storage = NodeNavigator::getMethodStorageFromName($namespaced_class_name, $method_name);
         if ($method_storage === null) {
