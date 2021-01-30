@@ -114,8 +114,6 @@ class AssignAnalyzer
                     throw new ShouldNotHappenException('Unable to retrieve object type for assignment3');
                 }
                 if (!$property_type->isSingleStringLiteral()) {
-                    var_dump('---' . get_class($object_type));
-
                     throw NeedRefinementException::createWithNode('Found a ' . $property_type->getKey() . ' for an assign', $expr);
                 }
                 $property_name = $property_type->getSingleStringLiteral()->value;
