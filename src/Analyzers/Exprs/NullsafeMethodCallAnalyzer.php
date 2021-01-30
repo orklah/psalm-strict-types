@@ -57,37 +57,13 @@ class NullsafeMethodCallAnalyzer
             $object_type = $node_provider->getType($expr->var);
         }
 
-        if ($object_type === null) {
-            //unable to identify object. Throw
-            Assert::isInstanceOf($expr->var, Variable::class);
-            throw new ShouldNotHappenException('Unable to retrieve object type for "' . $expr->var->name . '"');
-        }
-
-        if (!$object_type->isSingle()) {
-            //multiple object/types. Throw for now, but may be refined
-            //TODO: try to refine (object with common parents, same parameters etc...)
-            throw NeedRefinementException::createWithNode('Found Multiple objects possible for one call', $expr);
-        }
-
-        if (!$object_type->isObjectType()) {
-            //How is that even possible? TODO: Find out if cases exists
-            throw NeedRefinementException::createWithNode('Found a ' . $object_type->getKey() . ' for a method call', $expr);
-        }
-
-        //we may remove null safely, this is not what we're checking here
-        $object_type->removeType('null');
-        $object_types = $object_type->getAtomicTypes();
-        $atomic_object_type = array_pop($object_types);
-        if (!$atomic_object_type instanceof TNamedObject) {
-            //TODO: check if we could refine it with TObject or TTemplateParam
-            throw NeedRefinementException::createWithNode('Found MethodCall5', $expr);
-        }
+        $object_name = NodeNavigator::reduceUnionToString($object_type, $expr);
 
         //Ok, we have a single object here. Time to fetch parameters from method
-        $method_storage = NodeNavigator::getMethodStorageFromName(strtolower($atomic_object_type->value), strtolower($method_name));
+        $method_storage = NodeNavigator::getMethodStorageFromName(strtolower($object_name), strtolower($method_name));
         if ($method_storage === null) {
             //weird.
-            throw new ShouldNotHappenException('Could not find Method Storage for ' . $atomic_object_type->value . '::' . $method_name);
+            throw new ShouldNotHappenException('Could not find Method Storage for ' . $object_name . '::' . $method_name);
         }
 
         $method_params = $method_storage->params;

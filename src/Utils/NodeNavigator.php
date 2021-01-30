@@ -3,6 +3,7 @@
 namespace Orklah\StrictTypes\Utils;
 
 use Orklah\StrictTypes\Analyzers\Stmts\Use_Analyzer;
+use Orklah\StrictTypes\Exceptions\NeedRefinementException;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
 use Orklah\StrictTypes\Hooks\StrictTypesHooks;
 use PhpParser\Node\Expr;
@@ -18,10 +19,13 @@ use Psalm\Storage\MethodStorage;
 use Psalm\Type\Atomic\TArray;
 use Psalm\Type\Atomic\TBool;
 use Psalm\Type\Atomic\TCallable;
+use Psalm\Type\Atomic\TClassString;
 use Psalm\Type\Atomic\TFloat;
 use Psalm\Type\Atomic\TInt;
 use Psalm\Type\Atomic\TList;
+use Psalm\Type\Atomic\TLiteralClassString;
 use Psalm\Type\Atomic\TMixed;
+use Psalm\Type\Atomic\TNamedObject;
 use Psalm\Type\Atomic\TNull;
 use Psalm\Type\Atomic\TResource;
 use Psalm\Type\Atomic\TScalar;
@@ -238,5 +242,40 @@ class NodeNavigator
         }
 
         return null;
+    }
+
+    public static function reduceUnionToString(?Union $object_type, Expr $expr): string
+    {
+        if ($object_type === null) {
+            throw new ShouldNotHappenException('Unable to retrieve object type');
+        }
+
+        if (!$object_type->isSingleAndMaybeNullable()) {
+            //multiple object/types. Throw for now, but may be refined
+            //TODO: try to refine (object with common parents, same parameters etc...)
+            throw NeedRefinementException::createWithNode('Found Multiple objects possible for one call', $expr);
+        }
+
+        if (!$object_type->isObjectType() && !$object_type->isString()) { //not an object nor a class-string
+            //How is that even possible?
+            throw NeedRefinementException::createWithNode('Found a ' . $object_type->getKey() . ' for a method call', $expr);
+        }
+
+        //we may remove null safely, this is not what we're checking here
+        $object_type->removeType('null');
+        $object_types = $object_type->getAtomicTypes();
+        $atomic_object_type = array_pop($object_types);
+        if ($atomic_object_type instanceof TNamedObject) {
+            $object_name = $atomic_object_type->value;
+        } elseif ($atomic_object_type instanceof TLiteralClassString) {
+            $object_name = $atomic_object_type->value;
+        } elseif ($atomic_object_type instanceof TClassString) {
+            $object_name = $atomic_object_type->as_type->value;
+        } else {
+            //TODO: check if we could refine it with TObject or TTemplateParam
+            throw NeedRefinementException::createWithNode('Could not handle '.get_class($atomic_object_type), $expr);
+        }
+
+        return $object_name;
     }
 }

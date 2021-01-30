@@ -47,16 +47,8 @@ class New_Analyzer{
             }
         }
         else{
-            $class_type = $node_provider->getType($expr->class);
-            if ($class_type !== null && $class_type->isSingleStringLiteral()) {
-                $object_name = $class_type->getSingleStringLiteral()->value;
-            }
-            elseif ($class_type === null) {
-                throw NeedRefinementException::createWithNode('Found New_ with a class that is an expr with unknown type ', $expr);
-            }
-            else {
-                throw NeedRefinementException::createWithNode('Found New_ with a class that is a '. get_class($class_type), $expr);
-            }
+            $object_type = $node_provider->getType($expr->class);
+            $object_name = NodeNavigator::reduceUnionToString($object_type, $expr);
         }
 
         //Ok, we have a single object here. Time to fetch parameters from method
