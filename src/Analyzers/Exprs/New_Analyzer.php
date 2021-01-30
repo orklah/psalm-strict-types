@@ -11,6 +11,7 @@ use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt;
+use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Namespace_;
 use function count;
 use function get_class;
@@ -31,13 +32,24 @@ class New_Analyzer{
 
         $node_provider = NodeNavigator::getNodeProviderFromContext($history);
 
+
         if($expr->class instanceof Name){
-            $object = $expr->class;
+            if ($expr->class->parts[0] === 'parent' || $expr->class->parts[0] === 'self') {
+                //TODO: technically, parent should check the extends. This would imply getting MethodStorage earlier
+                $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
+                $object_name = $class_stmt->name->name;
+            } elseif ($expr->class->parts[0] === 'static') {
+                //TODO: technically, we should check childrens but covariance/contravariance rules states all childrens will accept as least what the parent accepts so it's okay to check parent
+                $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
+                $object_name = $class_stmt->name->name;
+            } else {
+                $object_name = $expr->class;
+            }
         }
         else{
             $class_type = $node_provider->getType($expr->class);
             if ($class_type !== null && $class_type->isSingleStringLiteral()) {
-                $object = $class_type->getSingleStringLiteral()->value;
+                $object_name = $class_type->getSingleStringLiteral()->value;
             }
             elseif ($class_type === null) {
                 throw NeedRefinementException::createWithNode('Found New_ with a class that is an expr with unknown type ', $expr);
@@ -48,10 +60,10 @@ class New_Analyzer{
         }
 
         //Ok, we have a single object here. Time to fetch parameters from method
-        $method_storage = NodeNavigator::getMethodStorageFromName(strtolower(NodeNavigator::resolveName($history, $object)), '__construct');
+        $method_storage = NodeNavigator::getMethodStorageFromName(strtolower(NodeNavigator::resolveName($history, $object_name)), '__construct');
         if ($method_storage === null) {
             //weird.
-            throw new ShouldNotHappenException('Could not find Method Storage for ' . $object . '::__construct');
+            throw new ShouldNotHappenException('Could not find Method Storage for ' . $object_name . '::__construct');
         }
 
 

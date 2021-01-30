@@ -77,4 +77,20 @@ class NonStrictNew_Test extends NonStrictTestCase
 
         $this->analyzeFile(__METHOD__.'.php', new Context());
     }
+
+    public function testNewSelf(): void
+    {
+        $this->addFile(
+            __METHOD__.'.php',
+            '<?php
+            class B{
+                function __construct(string $a){}
+                function scope(): void {
+                    new self(1);
+                }
+            }'
+        );
+
+        $this->analyzeFile(__METHOD__.'.php', new Context());
+    }
 }
