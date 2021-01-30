@@ -61,47 +61,47 @@ class StaticCallAnalyzer
             if ($expr->class->parts[0] === 'parent' || $expr->class->parts[0] === 'self') {
                 //TODO: technically, parent should check the extends. This would imply getting MethodStorage earlier
                 $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
-                $object_type = new Union([new TNamedObject($class_stmt->name->name)]);
+                $object_name = $class_stmt->name->name;
             } elseif ($expr->class->parts[0] === 'static') {
                 //TODO: technically, we should check childrens but covariance/contravariance rules states all childrens will accept as least what the parent accepts so it's okay to check parent
                 $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
-                $object_type = new Union([new TNamedObject($class_stmt->name->name)]);
+                $object_name = $class_stmt->name->name;
             } else {
-                $object_type = new Union([new TNamedObject(implode('\\', $expr->class->parts))]);
+                $object_name = $expr->class;
             }
         } else {
             $object_type = $node_provider->getType($expr->class);
-        }
 
-        if ($object_type === null) {
-            //unable to identify object. Throw
-            throw new ShouldNotHappenException('Unable to retrieve object type for "' . $expr->class . '"');
-        }
+            if ($object_type === null) {
+                //unable to identify object. Throw
+                throw new ShouldNotHappenException('Unable to retrieve object type for "' . $expr->class . '"');
+            }
 
-        if (!$object_type->isSingle()) {
-            //multiple object/types. Throw for now, but may be refined
-            //TODO: try to refine (object with common parents, same parameters etc...)
-            throw NeedRefinementException::createWithNode('Found Multiple objects possible for one call', $expr);
-        }
+            if (!$object_type->isSingle()) {
+                //multiple object/types. Throw for now, but may be refined
+                //TODO: try to refine (object with common parents, same parameters etc...)
+                throw NeedRefinementException::createWithNode('Found Multiple objects possible for one call', $expr);
+            }
 
-        if (!$object_type->isObjectType() && !$object_type->isString()) { //not an object nor a class-string
-            //How is that even possible?
-            throw NeedRefinementException::createWithNode('Found a ' . $object_type->getKey() . ' for a method call', $expr);
-        }
+            if (!$object_type->isObjectType() && !$object_type->isString()) { //not an object nor a class-string
+                //How is that even possible?
+                throw NeedRefinementException::createWithNode('Found a ' . $object_type->getKey() . ' for a method call', $expr);
+            }
 
-        //we may remove null safely, this is not what we're checking here
-        $object_type->removeType('null');
-        $object_types = $object_type->getAtomicTypes();
-        $atomic_object_type = array_pop($object_types);
-        if ($atomic_object_type instanceof TNamedObject) {
-            $object_name = $atomic_object_type->value;
-        } elseif ($atomic_object_type instanceof TLiteralClassString) {
-            $object_name = $atomic_object_type->value;
-        } elseif ($atomic_object_type instanceof TClassString) {
-            $object_name = $atomic_object_type->as_type->value;
-        } else {
-            //TODO: check if we could refine it with TObject or TTemplateParam
-            throw NeedRefinementException::createWithNode('Could not find object type', $expr);
+            //we may remove null safely, this is not what we're checking here
+            $object_type->removeType('null');
+            $object_types = $object_type->getAtomicTypes();
+            $atomic_object_type = array_pop($object_types);
+            if ($atomic_object_type instanceof TNamedObject) {
+                $object_name = $atomic_object_type->value;
+            } elseif ($atomic_object_type instanceof TLiteralClassString) {
+                $object_name = $atomic_object_type->value;
+            } elseif ($atomic_object_type instanceof TClassString) {
+                $object_name = $atomic_object_type->as_type->value;
+            } else {
+                //TODO: check if we could refine it with TObject or TTemplateParam
+                throw NeedRefinementException::createWithNode('Could not find object type', $expr);
+            }
         }
 
         //Ok, we have a single object here. Time to fetch parameters from method
