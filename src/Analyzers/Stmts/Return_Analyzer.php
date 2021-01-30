@@ -32,21 +32,19 @@ class Return_Analyzer{
 
         $node_provider = NodeNavigator::getNodeProviderFromContext($history);
 
-        $method_stmt = NodeNavigator::getLastNodeByType($history, ClassMethod::class);
-        if($method_stmt !== null){
+        $functionlike_stmt = NodeNavigator::getLastNodeByType($history, ClassMethod::class);
+        if($functionlike_stmt !== null){
             $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
-            $functionlike_storage = NodeNavigator::getMethodStorageFromName(strtolower($class_stmt->name->name), strtolower($method_stmt->name->name));
-            $functionlike_name = $method_stmt->name->name;
+            $functionlike_storage = NodeNavigator::getMethodStorageFromName(NodeNavigator::resolveName($history, $class_stmt->name->name), strtolower($functionlike_stmt->name->name));
         }
         else{
-            $function_stmt = NodeNavigator::getLastNodeByType($history, Function_::class);
-            $functionlike_storage = StrictTypesHooks::$file_storage->functions[strtolower((string)$function_stmt->name->name)] ?? null;
-            $functionlike_name = $function_stmt->name->name;
+            $functionlike_stmt = NodeNavigator::getLastNodeByType($history, Function_::class);
+            $functionlike_storage = StrictTypesHooks::$file_storage->functions[strtolower((string)$functionlike_stmt->name->name)] ?? null;
         }
 
         if($functionlike_storage === null){
             //weird.
-            throw new ShouldNotHappenException('Could not find Function Storage for '.$functionlike_name);
+            throw new ShouldNotHappenException('Could not find Function Storage for '.$functionlike_stmt->name->name);
         }
 
         $statement_return_type = $node_provider->getType($stmt->expr);
