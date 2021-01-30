@@ -48,23 +48,10 @@ class AssignAnalyzer
             if ($expr->var->var instanceof Variable && is_string($expr->var->var->name) && $expr->var->var->name === 'this') {
                 $context = NodeNavigator::getContext($history);
                 $object_type = $context->vars_in_scope['$this'];
-                if ($object_type->isSingleAndMaybeNullable()) {
-                    $object_type->removeType('null');
-                    $object_types = $object_type->getAtomicTypes();
-                    $atomic_object_type = array_pop($object_types);
-                    if ($atomic_object_type instanceof TNamedObject) {
-                        $object_name = $atomic_object_type->value;
-                    } else {
-                        throw NeedRefinementException::createWithNode('Found a non interpretable type for $this ' . $object_type->getKey() . ' for object in assign', $expr);
-                    }
-                } else {
-                    throw NeedRefinementException::createWithNode('Found a non interpretable type for this ' . $object_type->getKey() . ' for object in assign', $expr);
-                }
             } else {
                 $object_type = $node_provider->getType($expr->var->var);
-                $object_name = NodeNavigator::reduceUnionToString($object_type, $expr);
             }
-
+            $object_name = NodeNavigator::reduceUnionToString($object_type, $expr);
             $property_name = $expr->var->name;
         } else {
             if ($expr->var->class instanceof Name) {
@@ -86,26 +73,14 @@ class AssignAnalyzer
                 }
             } else {
                 $object_type = $node_provider->getType($expr->var->class);
-                if ($object_type === null) {
-                    throw new ShouldNotHappenException('Unable to retrieve object type for assignment2');
-                }
-                if (!$object_type->isSingleStringLiteral()) {
-                    throw NeedRefinementException::createWithNode('Found a ' . $object_type->getKey() . ' for an assign', $expr);
-                }
-                $object_name = $object_type->getSingleStringLiteral()->value;
+                $object_name = NodeNavigator::reduceUnionToString($object_type, $expr);
             }
 
             if ($expr->var->name instanceof VarLikeIdentifier) {
                 $property_name = $expr->var->name->name;
             } else {
                 $property_type = $node_provider->getType($expr->var->class);
-                if ($property_type === null) {
-                    throw new ShouldNotHappenException('Unable to retrieve object type for assignment3');
-                }
-                if (!$property_type->isSingleStringLiteral()) {
-                    throw NeedRefinementException::createWithNode('Found a ' . $property_type->getKey() . ' for an assign', $expr);
-                }
-                $property_name = $property_type->getSingleStringLiteral()->value;
+                $property_name = NodeNavigator::reduceUnionToString($property_type, $expr);
             }
         }
 

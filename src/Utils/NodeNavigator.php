@@ -23,7 +23,7 @@ use Psalm\Type\Atomic\TClassString;
 use Psalm\Type\Atomic\TFloat;
 use Psalm\Type\Atomic\TInt;
 use Psalm\Type\Atomic\TList;
-use Psalm\Type\Atomic\TLiteralClassString;
+use Psalm\Type\Atomic\TLiteralString;
 use Psalm\Type\Atomic\TMixed;
 use Psalm\Type\Atomic\TNamedObject;
 use Psalm\Type\Atomic\TNull;
@@ -268,7 +268,7 @@ class NodeNavigator
         $atomic_object_type = array_pop($object_types);
         if ($atomic_object_type instanceof TNamedObject) {
             $object_name = $atomic_object_type->value;
-        } elseif ($atomic_object_type instanceof TLiteralClassString) {
+        } elseif ($atomic_object_type instanceof TLiteralString) {
             $object_name = $atomic_object_type->value;
         } elseif ($atomic_object_type instanceof TClassString) {
             $object_name = $atomic_object_type->as_type->value;

@@ -40,13 +40,7 @@ class StaticCallAnalyzer
             $method_name = $expr->name->name;
         } elseif ($expr->name instanceof Expr) {
             $method_name_type = $node_provider->getType($expr->name);
-            if ($method_name_type !== null && $method_name_type->isSingleStringLiteral()) {
-                $method_name = $method_name_type->getSingleStringLiteral()->value;
-            } elseif ($method_name_type === null) {
-                throw NeedRefinementException::createWithNode('Found MethodCall with a method that is an expr with unknown type ', $expr);
-            } else {
-                throw NeedRefinementException::createWithNode('Found MethodCall with a method that is a ' . get_class($method_name_type), $expr);
-            }
+            $method_name = NodeNavigator::reduceUnionToString($method_name_type, $expr);
         } else {
             $method_name = $expr->name;
         }
