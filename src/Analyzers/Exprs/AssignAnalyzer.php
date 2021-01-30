@@ -2,7 +2,6 @@
 
 namespace Orklah\StrictTypes\Analyzers\Exprs;
 
-use Orklah\StrictTypes\Exceptions\NeedRefinementException;
 use Orklah\StrictTypes\Exceptions\NodeException;
 use Orklah\StrictTypes\Exceptions\NonStrictUsageException;
 use Orklah\StrictTypes\Exceptions\NonVerifiableStrictUsageException;
@@ -20,7 +19,6 @@ use PhpParser\Node\Name;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\VarLikeIdentifier;
-use Psalm\Type\Atomic\TNamedObject;
 use UnexpectedValueException;
 use function is_string;
 
@@ -65,11 +63,14 @@ class AssignAnalyzer
                         throw new ShouldNotHappenException('Could not find Class Statement name for self reference');
                     } elseif ($class_stmt->name instanceof Identifier) {
                         $object_name = $class_stmt->name->name;
+                        $object_name = NodeNavigator::resolveName($history, $object_name);
                     } else {
                         $object_name = $class_stmt->name;
+                        $object_name = NodeNavigator::resolveName($history, $object_name);
                     }
                 } else {
                     $object_name = $expr->var->class;
+                    $object_name = NodeNavigator::resolveName($history, $object_name);
                 }
             } else {
                 $object_type = $node_provider->getType($expr->var->class);
@@ -84,7 +85,7 @@ class AssignAnalyzer
             }
         }
 
-        $property_id = NodeNavigator::resolveName($history, $object_name) . '::$' . $property_name;
+        $property_id = $object_name . '::$' . $property_name;
 
         try {
             $property_type = StrictTypesHooks::$codebase->properties->getPropertyType(
