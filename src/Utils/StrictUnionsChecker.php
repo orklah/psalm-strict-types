@@ -60,7 +60,7 @@ class StrictUnionsChecker
 
                 $param_type = $param->signature_type ?? Type::getMixed();
 
-                if (!StrictUnionsChecker::strictUnionCheck($param_type, $value_type)) {
+                if (!self::strictUnionCheck($param_type, $value_type)) {
                     throw NonStrictUsageException::createWithNode('Found argument ' . ($i_values + 1) . ' mismatching between param ' . $param_type->getKey() . ' and value ' . $value_type->getKey(), $expr);
                 }
 

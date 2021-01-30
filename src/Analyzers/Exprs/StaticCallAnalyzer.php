@@ -14,12 +14,8 @@ use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Class_;
-use PhpParser\Node\Stmt\Namespace_;
-use Psalm\Type\Atomic\TClassString;
-use Psalm\Type\Atomic\TLiteralClassString;
-use Psalm\Type\Atomic\TNamedObject;
-use Psalm\Type\Union;
 use function count;
+use function get_class;
 
 class StaticCallAnalyzer
 {

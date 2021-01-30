@@ -19,7 +19,6 @@ use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Class_;
-use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\VarLikeIdentifier;
 use Psalm\Type\Atomic\TNamedObject;
 use UnexpectedValueException;

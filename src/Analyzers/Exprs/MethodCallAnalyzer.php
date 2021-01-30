@@ -12,9 +12,8 @@ use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Stmt;
-use PhpParser\Node\Stmt\Namespace_;
-use Psalm\Type\Atomic\TNamedObject;
 use function count;
+use function get_class;
 use function is_string;
 
 class MethodCallAnalyzer

@@ -21,12 +21,12 @@ class Use_Analyzer
     public static function analyze(Use_ $stmt, array $history): void
     {
         $file_path = StrictTypesHooks::$statement_source->getFileAnalyzer()->getFilePath();
+        if (!isset(self::$use_map[$file_path])) {
+            self::$use_map[$file_path] = [];
+        }
         foreach ($stmt->uses as $useUse) {
             $parts = $useUse->name->parts;
             $last_part = strtolower(array_pop($parts));
-            if (!isset(self::$use_map[$file_path])) {
-                self::$use_map[$file_path] = [];
-            }
             self::$use_map[$file_path][$last_part] = $parts;
         }
     }

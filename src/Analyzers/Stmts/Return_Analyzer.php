@@ -30,8 +30,6 @@ class Return_Analyzer{
             return;
         }
 
-        $node_provider = NodeNavigator::getNodeProviderFromContext($history);
-
         $functionlike_stmt = NodeNavigator::getLastNodeByType($history, ClassMethod::class);
         if($functionlike_stmt !== null){
             $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
@@ -46,6 +44,8 @@ class Return_Analyzer{
             //weird.
             throw new ShouldNotHappenException('Could not find Function Storage for '.$functionlike_stmt->name->name);
         }
+
+        $node_provider = NodeNavigator::getNodeProviderFromContext($history);
 
         $statement_return_type = $node_provider->getType($stmt->expr);
 
