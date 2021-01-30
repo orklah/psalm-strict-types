@@ -158,4 +158,29 @@ class NonStrictMethodCallTest extends NonStrictTestCase
 
         $this->analyzeFile(__METHOD__.'.php', new Context());
     }
+
+    public function testMethodCompositeNamespace(): void
+    {
+        $this->addFile(
+            __METHOD__.'.php',
+            '<?php
+            namespace A\B\C{
+                class F{
+                    function scope(){
+                    \A\B\D\E::f(1);
+                    }
+                }
+            }
+
+            namespace A\B\D{
+                class E{
+                    public static function f(string $a){
+
+                    }
+                }
+            }'
+        );
+
+        $this->analyzeFile(__METHOD__.'.php', new Context());
+    }
 }
