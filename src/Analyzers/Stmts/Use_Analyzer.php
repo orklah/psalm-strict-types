@@ -11,7 +11,7 @@ use PhpParser\Node\Stmt\Use_;
 class Use_Analyzer
 {
 
-    /** @var array<string, array<string, list<string>>> */
+    /** @var array<string, array<lowercase-string, list<string>>> */
     public static $use_map = [];
 
     /**
@@ -23,7 +23,7 @@ class Use_Analyzer
         $file_path = StrictTypesHooks::$statement_source->getFileAnalyzer()->getFilePath();
         foreach ($stmt->uses as $useUse) {
             $parts = $useUse->name->parts;
-            $last_part = array_pop($parts);
+            $last_part = strtolower(array_pop($parts));
             if (!isset(self::$use_map[$file_path])) {
                 self::$use_map[$file_path] = [];
             }

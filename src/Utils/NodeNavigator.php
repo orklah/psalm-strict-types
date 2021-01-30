@@ -141,14 +141,14 @@ class NodeNavigator
         $uses = Use_Analyzer::$use_map[$file_path] ?? [];
 
         $exploded_class = explode('\\', $class);
-        $first_part = $exploded_class[0];
+        $first_part = strtolower($exploded_class[0]);
         $final_class = $class;
         $found_use = false;
         while (isset($uses[$first_part])) {
             $use = $uses[$first_part];
             $found_use = true;
             $final_class = implode('\\', $use) . '\\' . $final_class;
-            $first_part = array_shift($use);
+            $first_part = strtolower(array_shift($use));
         }
 
         if ($found_use) {
