@@ -10,7 +10,7 @@ class NonStrictAssignTest extends NonStrictTestCase
     public function testAssignFromClass(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             class A{
                 public string $a;
@@ -21,13 +21,13 @@ class NonStrictAssignTest extends NonStrictTestCase
             }'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 
     public function testAssignFromOutsideClass(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             class A{
                 public string $a;
@@ -37,13 +37,13 @@ class NonStrictAssignTest extends NonStrictTestCase
             $a->a = 1;'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 
     public function testStaticAssignFromClass(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             class A{
                 public static string $a;
@@ -54,6 +54,6 @@ class NonStrictAssignTest extends NonStrictTestCase
             }'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 }

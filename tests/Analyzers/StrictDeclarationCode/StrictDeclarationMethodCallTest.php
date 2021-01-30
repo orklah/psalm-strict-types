@@ -10,7 +10,7 @@ class StrictDeclarationMethodCallTest extends StrictDeclarationTestCase
     public function testMethodParamStrict(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             class A{
                 public function foo(string $a) {}
@@ -20,13 +20,13 @@ class StrictDeclarationMethodCallTest extends StrictDeclarationTestCase
             $a->foo("");'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 
     public function testMethodParamStrictInNamespace(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             namespace bar;
             class A{
@@ -38,13 +38,13 @@ class StrictDeclarationMethodCallTest extends StrictDeclarationTestCase
             }'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 
     public function testNamespacedMethodParamStrictInNamespace(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             namespace bar;
             class A{
@@ -56,13 +56,13 @@ class StrictDeclarationMethodCallTest extends StrictDeclarationTestCase
             }'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 
     public function testMethodParamStrictOptional(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             class A{
                 public function foo(string $a = ""): void {}
@@ -72,13 +72,13 @@ class StrictDeclarationMethodCallTest extends StrictDeclarationTestCase
             $a->foo("");'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 
     public function testMethodParamFromClass(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             class A{
                 public function __construct() {
@@ -88,13 +88,13 @@ class StrictDeclarationMethodCallTest extends StrictDeclarationTestCase
             }'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 
     public function testMethodParamThroughProperty(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             class A{
                 public A $a;
@@ -105,13 +105,13 @@ class StrictDeclarationMethodCallTest extends StrictDeclarationTestCase
             }'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 
     public function testMethodParamPropertyThis(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             class A{
                 public string $a = "";
@@ -122,13 +122,13 @@ class StrictDeclarationMethodCallTest extends StrictDeclarationTestCase
             }'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 
     public function testMethodParamPropertySelf(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             class A{
                 public static string $a = "";
@@ -139,13 +139,13 @@ class StrictDeclarationMethodCallTest extends StrictDeclarationTestCase
             }'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 
     public function testMethodParamPropertyStatic(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             class A{
                 public static string $a = "";
@@ -156,6 +156,6 @@ class StrictDeclarationMethodCallTest extends StrictDeclarationTestCase
             }'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 }

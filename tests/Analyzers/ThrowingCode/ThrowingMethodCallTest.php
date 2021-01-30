@@ -13,7 +13,7 @@ class ThrowingMethodCallTest extends ThrowingTestCase
     public function testMethodParamStrictInNamespace(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             namespace bar;
             class A{
@@ -24,7 +24,7 @@ class ThrowingMethodCallTest extends ThrowingTestCase
             $a->foo("");'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 
     /**
@@ -33,7 +33,7 @@ class ThrowingMethodCallTest extends ThrowingTestCase
     public function testNamespacedMethodParamStrictInNamespace(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             namespace bar;
             class A{
@@ -44,7 +44,7 @@ class ThrowingMethodCallTest extends ThrowingTestCase
             $a->foo("");'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 
     /**
@@ -53,7 +53,7 @@ class ThrowingMethodCallTest extends ThrowingTestCase
     public function testStaticParamStatic(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             class A{
                 public static function test(int $a){}
@@ -66,7 +66,7 @@ class ThrowingMethodCallTest extends ThrowingTestCase
             }'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 
     /**
@@ -75,7 +75,7 @@ class ThrowingMethodCallTest extends ThrowingTestCase
     public function testMethodParamExpr(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             class A{
                 public function __construct(){
@@ -86,7 +86,7 @@ class ThrowingMethodCallTest extends ThrowingTestCase
             }'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 
     /**
@@ -95,7 +95,7 @@ class ThrowingMethodCallTest extends ThrowingTestCase
     public function testStaticAssignFromOutsideClass(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             class A{
                 public static string $a;
@@ -105,7 +105,7 @@ class ThrowingMethodCallTest extends ThrowingTestCase
             $a::$b = "1";'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 
     /**
@@ -114,7 +114,7 @@ class ThrowingMethodCallTest extends ThrowingTestCase
     public function testMethodCallNonLiteral(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             class A
             {
@@ -129,6 +129,6 @@ class ThrowingMethodCallTest extends ThrowingTestCase
             }'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 }

@@ -10,7 +10,7 @@ class StrictDeclarationNew_Test extends StrictDeclarationTestCase
     public function testNew(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             class A{
                 public function __construct(string $a) {}
@@ -19,13 +19,13 @@ class StrictDeclarationNew_Test extends StrictDeclarationTestCase
             new A("");'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 
     public function testNewExpr(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             class A{
                 public function __construct(string $a) {}
@@ -34,13 +34,13 @@ class StrictDeclarationNew_Test extends StrictDeclarationTestCase
             new $a("");'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 
     public function testNewExprNamespace(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             namespace foo;
             class A{
@@ -51,13 +51,13 @@ class StrictDeclarationNew_Test extends StrictDeclarationTestCase
             }'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 
     public function testNewOtherNamespace(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             namespace foo{
                 class A{
@@ -75,6 +75,6 @@ class StrictDeclarationNew_Test extends StrictDeclarationTestCase
             }'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 }

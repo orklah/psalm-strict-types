@@ -10,30 +10,30 @@ class StrictDeclarationFuncCallTest extends StrictDeclarationTestCase
     public function testCallMapFunction(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             asinh(1.5);'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 
     public function testStubbedFunction(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             $a = ["b", "a"];
             sort($a);'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 
     public function testCallMapFunctionInMethod(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             class A{
                 public function foo(): void {
@@ -42,13 +42,13 @@ class StrictDeclarationFuncCallTest extends StrictDeclarationTestCase
             }'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 
     public function testFunctionVariadics(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             function foo(string $_a, string ...$_b): void{
 
@@ -58,6 +58,6 @@ class StrictDeclarationFuncCallTest extends StrictDeclarationTestCase
             foo("", "", "");'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 }

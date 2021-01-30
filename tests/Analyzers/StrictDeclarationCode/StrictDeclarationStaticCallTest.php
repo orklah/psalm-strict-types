@@ -10,7 +10,7 @@ class StrictDeclarationStaticCallTest extends StrictDeclarationTestCase
     public function testStaticParamStrictInsideClass(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             class A{
                 public static function test(int $a){}
@@ -23,13 +23,13 @@ class StrictDeclarationStaticCallTest extends StrictDeclarationTestCase
             }'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 
     public function testStaticParamStrictGlobalScope(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             class A{
                 public static function test(int $a){}
@@ -37,13 +37,13 @@ class StrictDeclarationStaticCallTest extends StrictDeclarationTestCase
             A::test(1);'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 
     public function testStaticParamStrictParent(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             class A{
                 public static function test(int $a){}
@@ -56,13 +56,13 @@ class StrictDeclarationStaticCallTest extends StrictDeclarationTestCase
             }'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 
     public function testStaticParamSelf(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             class A{
                 public static function test(int $a){}
@@ -75,13 +75,13 @@ class StrictDeclarationStaticCallTest extends StrictDeclarationTestCase
             }'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 
     public function testStaticParamStatic(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             class A{
                 public static function test(int $a){}
@@ -94,13 +94,13 @@ class StrictDeclarationStaticCallTest extends StrictDeclarationTestCase
             }'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 
     public function testStaticParamParent(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             class A{
                 public static function test(int $a){}
@@ -113,13 +113,13 @@ class StrictDeclarationStaticCallTest extends StrictDeclarationTestCase
             }'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 
     public function testStaticParamClassString(): void
     {
         $this->addFile(
-            __CLASS__.__METHOD__.'.php',
+            __METHOD__.'.php',
             '<?php
             class B{
                 public static function test(int $a){
@@ -129,6 +129,6 @@ class StrictDeclarationStaticCallTest extends StrictDeclarationTestCase
             }'
         );
 
-        $this->analyzeFile(__CLASS__.__METHOD__.'.php', new Context());
+        $this->analyzeFile(__METHOD__.'.php', new Context());
     }
 }
