@@ -170,9 +170,7 @@ class FuncCallAnalyzer
                     } elseif (!$tmp_type_signature->equals($callmap_callable->params[$i]->signature_type)) {
                         $consistent_type_signature = false;
                     }
-                }
 
-                if ($callmap_callable->params[$i]) {
                     if ($tmp_type_doc === null) {
                         $tmp_type_doc = $callmap_callable->params[$i]->type;
                     } elseif (!$tmp_type_doc->equals($callmap_callable->params[$i]->type)) {
