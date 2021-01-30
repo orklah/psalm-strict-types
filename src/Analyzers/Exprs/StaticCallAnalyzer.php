@@ -67,7 +67,7 @@ class StaticCallAnalyzer
                 $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
                 $object_type = new Union([new TNamedObject($class_stmt->name->name)]);
             } else {
-                $object_type = new Union([new TNamedObject($expr->class->parts[0])]);
+                $object_type = new Union([new TNamedObject(implode('\\', $expr->class->parts))]);
             }
         } else {
             $object_type = $node_provider->getType($expr->class);
