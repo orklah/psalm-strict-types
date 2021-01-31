@@ -147,6 +147,10 @@ class StrictUnionsChecker
             return $content instanceof Atomic\TArray || $content instanceof Atomic\TKeyedArray || $content instanceof Atomic\TList;
         }
 
+        if ($container instanceof Atomic\TIterable) {
+            return $content instanceof Atomic\TArray || $content instanceof Atomic\TKeyedArray || $content instanceof Atomic\TList  || $content instanceof Atomic\TIterable;
+        }
+
         if ($container instanceof Atomic\TResource) {
             return $content instanceof Atomic\TResource;
         }
