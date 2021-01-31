@@ -60,6 +60,11 @@ class StrictUnionsChecker
 
                 $param_type = $param->signature_type ?? Type::getMixed();
 
+                if($param_type->isMixed()){
+                    //this param is not interesting because everything will pass for mixed
+                    continue;
+                }
+
                 if (!self::strictUnionCheck($param_type, $value_type)) {
                     throw NonStrictUsageException::createWithNode('Found argument ' . ($i_values + 1) . ' mismatching between param ' . $param_type->getKey() . ' and value ' . $value_type->getKey(), $expr);
                 }
@@ -181,10 +186,6 @@ class StrictUnionsChecker
 
         if ($container instanceof Atomic\TCallableObject) {
             return $content instanceof Atomic\TCallableObject;
-        }
-
-        if ($container instanceof Atomic\TMixed) {
-            return true;
         }
 
         return false;
