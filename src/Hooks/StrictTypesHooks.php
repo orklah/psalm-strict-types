@@ -31,6 +31,7 @@ use Psalm\Storage\FileStorage;
 use Psalm\Storage\FunctionStorage;
 use Webmozart\Assert\Assert;
 use function assert;
+use function get_class;
 
 class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeAnalysisInterface
 {
@@ -42,9 +43,9 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
     public static $file_storage;
     /** @var Codebase */
     public static $codebase;
-    /** @var array<string, array<lowercase-string, array<lowercase-string, NodeTypeProvider>>> */
+    /** @var array<lowercase-string, array<lowercase-string, NodeTypeProvider>> */
     public static $node_type_providers_map = [];
-    /** @var array<string, array<lowercase-string, array<lowercase-string, Context>>> */
+    /** @var array<lowercase-string, array<lowercase-string, Context>> */
     public static $context_map = [];
     /** @var array<lowercase-string, array<lowercase-string, NodeTypeProvider>> */
     public static $current_node_type_providers = [];
@@ -75,13 +76,8 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
         self::$codebase = $codebase;
 
         //we need to erase the maps as soon as possible. We make a copy and then erase the maps
-        $file_path = $statements_source->getFileAnalyzer()->getFilePath();
-        if(isset(self::$node_type_providers_map[$file_path])){
-            self::$current_node_type_providers = self::$node_type_providers_map[$file_path];
-        }
-        if(isset(self::$context_map[$file_path])){
-            self::$current_context = self::$context_map[$file_path];
-        }
+        self::$current_node_type_providers = self::$node_type_providers_map;
+        self::$current_context = self::$context_map;
         self::$node_type_providers_map = [];
         self::$context_map = [];
 
@@ -163,7 +159,6 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
         $class_like_storage = $event->getClasslikeStorage();
 
         assert($statements_source instanceof FunctionLikeAnalyzer);
-        $file_path = $statements_source->getFileAnalyzer()->getFilePath();
         $class_name = strtolower($statements_source->getClassName()??'');
         $method_name = strtolower($statements_source->getMethodName()??'');
 
@@ -171,24 +166,18 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
             //TODO: consider using namespace instead of file path. It would make more sense
 
             // This will only serve to store NodeTypeProviders for later
-            if (!isset(self::$node_type_providers_map[$file_path])) {
-                self::$node_type_providers_map[$file_path] = [];
+            if (!isset(self::$node_type_providers_map[$class_name])) {
+                self::$node_type_providers_map[$class_name] = [];
             }
-            if (!isset(self::$node_type_providers_map[$file_path][$class_name])) {
-                self::$node_type_providers_map[$file_path][$class_name] = [];
-            }
-            if (!isset(self::$node_type_providers_map[$file_path][$class_name][$method_name])) {
-                self::$node_type_providers_map[$file_path][$class_name][$method_name] = $node_type_provider;
+            if (!isset(self::$node_type_providers_map[$class_name][$method_name])) {
+                self::$node_type_providers_map[$class_name][$method_name] = $node_type_provider;
             }
 
-            if (!isset(self::$context_map[$file_path])) {
-                self::$context_map[$file_path] = [];
+            if (!isset(self::$context_map[$class_name])) {
+                self::$context_map[$class_name] = [];
             }
-            if (!isset(self::$context_map[$file_path][$class_name])) {
-                self::$context_map[$file_path][$class_name] = [];
-            }
-            if (!isset(self::$context_map[$file_path][$class_name][$method_name])) {
-                self::$context_map[$file_path][$class_name][$method_name] = $context;
+            if (!isset(self::$context_map[$class_name][$method_name])) {
+                self::$context_map[$class_name][$method_name] = $context;
             }
         } elseif ($stmt instanceof Function_) {
             assert($class_like_storage instanceof FunctionStorage);
