@@ -271,7 +271,11 @@ class NodeNavigator
         } elseif ($atomic_object_type instanceof TLiteralString) {
             $object_name = $atomic_object_type->value;
         } elseif ($atomic_object_type instanceof TClassString) {
-            $object_name = $atomic_object_type->as_type->value;
+            if($atomic_object_type->as_type !== null) {
+                $object_name = $atomic_object_type->as_type->value;
+            } else {
+                $object_name = $atomic_object_type->as;
+            }
         } else {
             //TODO: check if we could refine it with TObject or TTemplateParam
             throw NeedRefinementException::createWithNode('Could not handle '.get_class($atomic_object_type), $expr);
