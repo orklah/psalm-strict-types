@@ -61,17 +61,13 @@ class AssignAnalyzer
 
                     if ($class_stmt->name === null) {
                         throw new ShouldNotHappenException('Could not find Class Statement name for self reference');
-                    } elseif ($class_stmt->name instanceof Identifier) {
-                        $object_name = $class_stmt->name->name;
-                        $object_name = NodeNavigator::resolveName($history, $object_name);
-                    } else {
-                        $object_name = $class_stmt->name;
-                        $object_name = NodeNavigator::resolveName($history, $object_name);
                     }
+
+                    $object_name = $class_stmt->name->name;
                 } else {
                     $object_name = $expr->var->class;
-                    $object_name = NodeNavigator::resolveName($history, $object_name);
                 }
+                $object_name = NodeNavigator::resolveName($history, $object_name);
             } else {
                 $object_type = $node_provider->getType($expr->var->class);
                 $object_name = NodeNavigator::reduceUnionToString($object_type, $expr);
