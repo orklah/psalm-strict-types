@@ -11,6 +11,7 @@ use PhpParser\Node\Name;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\NodeAbstract;
 use Psalm\Context;
@@ -38,6 +39,24 @@ class NodeNavigator
 {
     /**
      * @template T of NodeAbstract
+     * @param array<Stmt|Expr>      $history
+     * @param list<class-string<T>> $nodeTypes
+     * @return T|null
+     */
+    public static function getLastNodeByTypes(array $history, array $nodeTypes): ?NodeAbstract
+    {
+        while ($node = array_pop($history)) {
+            foreach ($nodeTypes as $nodeType) {
+                if ($node instanceof $nodeType) {
+                    return $node;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @template T of NodeAbstract
      * @param array<Stmt|Expr> $history
      * @param class-string<T>  $nodeType
      * @return T|null
@@ -63,7 +82,7 @@ class NodeNavigator
         $class_storage = StrictTypesHooks::$codebase->classlike_storage_provider->get($class_id);
         if ($take_parent) {
             $parent_class = $class_storage->parent_class;
-            if($parent_class === null) {
+            if ($parent_class === null) {
                 return null;
             }
             $class_storage = StrictTypesHooks::$codebase->classlike_storage_provider->get($parent_class);
@@ -87,12 +106,12 @@ class NodeNavigator
      */
     public static function getNodeProviderFromContext(array $history): NodeTypeProvider
     {
-        $method_stmt = self::getLastNodeByType($history, ClassMethod::class);
-        $class_stmt = self::getLastNodeByType($history, Class_::class);
-        if ($class_stmt !== null && $method_stmt !== null) {
+        $functionlike_stmt = self::getLastNodeByTypes($history, [Function_::class, ClassMethod::class]);
+        if ($functionlike_stmt instanceof ClassMethod) {
+            $class_stmt = self::getLastNodeByType($history, Class_::class);
             //object context, we fetch the node type provider
             $class_name = strtolower($class_stmt->name->name);
-            $method_name = strtolower($method_stmt->name->name);
+            $method_name = strtolower($functionlike_stmt->name->name);
             $node_provider = StrictTypesHooks::$current_node_type_providers[$class_name][$method_name] ?? null;
             if ($node_provider === null) {
                 //unable to fetch node provider. Throw
@@ -134,10 +153,9 @@ class NodeNavigator
     {
         if ($class instanceof Name) {
             $resolved_name = $class->getAttribute('resolvedName');
-            if($resolved_name !== null){
+            if ($resolved_name !== null) {
                 return $resolved_name;
-            }
-            else{
+            } else {
                 $class = implode('\\', $class->parts);
             }
         }
@@ -278,14 +296,14 @@ class NodeNavigator
         } elseif ($atomic_object_type instanceof TLiteralString) {
             $object_name = $atomic_object_type->value;
         } elseif ($atomic_object_type instanceof TClassString) {
-            if($atomic_object_type->as_type !== null) {
+            if ($atomic_object_type->as_type !== null) {
                 $object_name = $atomic_object_type->as_type->value;
             } else {
                 $object_name = $atomic_object_type->as;
             }
         } else {
             //TODO: check if we could refine it with TObject or TTemplateParam
-            throw NeedRefinementException::createWithNode('Could not handle '.get_class($atomic_object_type), $expr);
+            throw NeedRefinementException::createWithNode('Could not handle ' . get_class($atomic_object_type), $expr);
         }
 
         return $object_name;

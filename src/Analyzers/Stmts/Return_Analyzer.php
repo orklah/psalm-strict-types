@@ -30,14 +30,13 @@ class Return_Analyzer{
             return;
         }
 
-        $functionlike_stmt = NodeNavigator::getLastNodeByType($history, ClassMethod::class);
-        if($functionlike_stmt !== null){
-            $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
-            $functionlike_storage = NodeNavigator::getMethodStorageFromName(NodeNavigator::resolveName($history, $class_stmt->name->name), strtolower($functionlike_stmt->name->name));
+        $functionlike_stmt = NodeNavigator::getLastNodeByTypes($history, [Function_::class, ClassMethod::class]);
+        if($functionlike_stmt instanceof Function_){
+            $functionlike_storage = StrictTypesHooks::$file_storage->functions[strtolower((string)$functionlike_stmt->name->name)] ?? null;
         }
         else{
-            $functionlike_stmt = NodeNavigator::getLastNodeByType($history, Function_::class);
-            $functionlike_storage = StrictTypesHooks::$file_storage->functions[strtolower((string)$functionlike_stmt->name->name)] ?? null;
+            $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
+            $functionlike_storage = NodeNavigator::getMethodStorageFromName(NodeNavigator::resolveName($history, $class_stmt->name->name), strtolower($functionlike_stmt->name->name));
         }
 
         if($functionlike_storage === null){
