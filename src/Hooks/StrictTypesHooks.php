@@ -21,6 +21,7 @@ use Psalm\CodeLocation;
 use Psalm\Context;
 use Psalm\Internal\Analyzer\FileAnalyzer;
 use Psalm\Internal\Analyzer\FunctionLikeAnalyzer;
+use Psalm\Internal\Analyzer\ProjectAnalyzer;
 use Psalm\IssueBuffer;
 use Psalm\NodeTypeProvider;
 use Psalm\Plugin\EventHandler\AfterFileAnalysisInterface;
@@ -113,39 +114,59 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
             return;
         } catch (ShouldNotHappenException $e) {
             // This is probably a bug I left
-            var_dump(get_class($e), $e->getMessage() . ' in ' . $file_storage->file_path);
+            if(ProjectAnalyzer::$instance->debug_lines) {
+                ProjectAnalyzer::$instance->progress->debug(get_class($e) . ': ' . $e->getMessage() . ' in ' . $file_storage->file_path);
+                //echo $e->getTraceAsString() ."\n";
+            }
             return;
         } catch (NeedRefinementException $e) {
             // This could be safe but it's not yet ready
-            var_dump(get_class($e), $e->getMessage() . ' in ' . $file_storage->file_path);
+            if(ProjectAnalyzer::$instance->debug_lines) {
+                ProjectAnalyzer::$instance->progress->debug(get_class($e) . ': ' . $e->getMessage() . ' in ' . $file_storage->file_path);
+                //echo $e->getTraceAsString() ."\n";
+            }
+            if($codebase->config->throw_exception){
+                throw $e;
+            }
             return;
         } catch (Exception $e) {
             // handle exceptions returned by Psalm. It should be handled sooner (probably in custom methods) but I'm not sure this is stable.
             // handling it here allow psalm to continue working in case of error on one file
-            var_dump(get_class($e), $e->getMessage() . ' in ' . $file_storage->file_path);
-            //echo $e->getTraceAsString() ."\n";
+            if(ProjectAnalyzer::$instance->debug_lines) {
+                ProjectAnalyzer::$instance->progress->debug(get_class($e) . ': ' . $e->getMessage() . ' in ' . $file_storage->file_path);
+                //echo $e->getTraceAsString() ."\n";
+            }
+            if($codebase->config->throw_exception){
+                throw $e;
+            }
             return;
         } catch (Error $e) {
             // I must have done something reeaaally bad. But we can't allow that to disrupt psalm's analysis
-            var_dump(get_class($e), $e->getMessage()) . "\n";
-            echo $e->getTraceAsString() . "\n";
+            if(ProjectAnalyzer::$instance->debug_lines) {
+                ProjectAnalyzer::$instance->progress->debug(get_class($e) . ': ' . $e->getMessage() . ' in ' . $file_storage->file_path);
+                //echo $e->getTraceAsString() ."\n";
+            }
+            if($codebase->config->throw_exception){
+                throw $e;
+            }
             return;
         }
 
         if (!$have_declare_statement) {
-            $issue = new StrictDeclarationToAddIssue('This file can have a strict declaration added',
-                new CodeLocation($statements_source, new Declare_([], null, ['startLine' => 0]))
-            );
+            if ($codebase->alter_code) {
+                $file_contents = file_get_contents($file_storage->file_path);
 
-            IssueBuffer::accepts($issue, $statements_source->getSuppressedIssues());
-            return;
-            //If there wasn't issue, put the strict type declaration
-            $file_contents = file_get_contents($file_storage->file_path);
+                $count = 0;
+                $new_file_contents = preg_replace('#^<\?php#', '<?php declare(strict_types=1);', $file_contents, 1, $count);
+                if ($count === 1) {
+                    file_put_contents($file_storage->file_path, $new_file_contents);
+                }
+            } else {
+                $issue = new StrictDeclarationToAddIssue('This file can have a strict declaration added',
+                    new CodeLocation($statements_source, new Declare_([], null, ['startLine' => 0]))
+                );
 
-            $count = 0;
-            $new_file_contents = preg_replace('#^<\?php#', '<?php declare(strict_types=1);', $file_contents, 1, $count);
-            if($count === 1) {
-                file_put_contents($file_storage->file_path, $new_file_contents);
+                IssueBuffer::accepts($issue, $statements_source->getSuppressedIssues());
             }
         }
     }
@@ -159,8 +180,8 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
         $class_like_storage = $event->getClasslikeStorage();
 
         assert($statements_source instanceof FunctionLikeAnalyzer);
-        $class_name = strtolower($statements_source->getClassName()??'');
-        $method_name = strtolower($statements_source->getMethodName()??'');
+        $class_name = strtolower($statements_source->getClassName() ?? '');
+        $method_name = strtolower($statements_source->getMethodName() ?? '');
 
         if ($stmt instanceof ClassMethod) {
             //TODO: consider using namespace instead of file path. It would make more sense
