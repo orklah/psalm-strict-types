@@ -58,9 +58,16 @@ class NodeNavigator
      * $method_storage = $codebase->methods->getStorage($method_id);
      * TODO: investigate namespaces here
      */
-    public static function getMethodStorageFromName(string $class_id, string $method_id): ?MethodStorage
+    public static function getMethodStorageFromName(string $class_id, string $method_id, bool $take_parent = false): ?MethodStorage
     {
         $class_storage = StrictTypesHooks::$codebase->classlike_storage_provider->get($class_id);
+        if ($take_parent) {
+            $parent_class = $class_storage->parent_class;
+            if($parent_class === null) {
+                return null;
+            }
+            $class_storage = StrictTypesHooks::$codebase->classlike_storage_provider->get($parent_class);
+        }
         $method_storage = $class_storage->methods[$method_id] ?? null;
         if ($method_storage === null) {
             //We try on the parent

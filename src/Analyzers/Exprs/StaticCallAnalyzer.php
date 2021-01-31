@@ -47,9 +47,13 @@ class StaticCallAnalyzer
 
         $node_provider = NodeNavigator::getNodeProviderFromContext($history);
 
+        $take_parent = false;
         if ($expr->class instanceof Name) {
-            if ($expr->class->parts[0] === 'parent' || $expr->class->parts[0] === 'self') {
-                //TODO: technically, parent should check the extends. This would imply getting MethodStorage earlier
+            if ($expr->class->parts[0] === 'parent') {
+                $take_parent = true;
+                $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
+                $object_name = $class_stmt->name->name;
+            } elseif($expr->class->parts[0] === 'self') {
                 $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
                 $object_name = $class_stmt->name->name;
             } elseif ($expr->class->parts[0] === 'static') {
@@ -67,7 +71,7 @@ class StaticCallAnalyzer
         //Ok, we have a single object here. Time to fetch parameters from method
         $namespaced_class_name = strtolower(NodeNavigator::resolveName($history, $object_name));
         $method_name = strtolower($method_name);
-        $method_storage = NodeNavigator::getMethodStorageFromName($namespaced_class_name, $method_name);
+        $method_storage = NodeNavigator::getMethodStorageFromName($namespaced_class_name, $method_name, $take_parent);
         if ($method_storage === null) {
             //weird.
             throw new ShouldNotHappenException('Could not find Method Storage for ' . $namespaced_class_name . '::' . $method_name);

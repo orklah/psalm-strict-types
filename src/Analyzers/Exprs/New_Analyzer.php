@@ -29,10 +29,8 @@ class New_Analyzer{
 
         $node_provider = NodeNavigator::getNodeProviderFromContext($history);
 
-
         if($expr->class instanceof Name){
-            if ($expr->class->parts[0] === 'parent' || $expr->class->parts[0] === 'self') {
-                //TODO: technically, parent should check the extends. This would imply getting MethodStorage earlier
+            if($expr->class->parts[0] === 'self') {
                 $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
                 $object_name = $class_stmt->name->name;
             } elseif ($expr->class->parts[0] === 'static') {
