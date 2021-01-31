@@ -90,7 +90,7 @@ class AssignAnalyzer
             return;
         }
 
-        $property_id = $object_name . '::$' . $property_name;
+        $property_id = $object_name . '::$' . (string) $property_name;
 
         try {
             $property_type = StrictTypesHooks::$codebase->properties->getPropertyType(

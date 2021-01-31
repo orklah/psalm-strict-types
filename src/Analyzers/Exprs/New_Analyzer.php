@@ -40,8 +40,9 @@ class New_Analyzer{
             } else {
                 $object_name = $expr->class;
             }
-        }
-        else{
+        } elseif ($expr->class instanceof Class_) {
+            $object_name = (string) $expr->class->name;
+        } else{
             $object_type = $node_provider->getType($expr->class);
             $object_name = NodeNavigator::reduceUnionToString($object_type, $expr);
         }
