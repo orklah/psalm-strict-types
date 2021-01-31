@@ -38,11 +38,9 @@ class StaticCallAnalyzer
 
         if ($expr->name instanceof Identifier) {
             $method_name = $expr->name->name;
-        } elseif ($expr->name instanceof Expr) {
+        } else {
             $method_name_type = $node_provider->getType($expr->name);
             $method_name = NodeNavigator::reduceUnionToString($method_name_type, $expr);
-        } else {
-            $method_name = $expr->name;
         }
 
         $node_provider = NodeNavigator::getNodeProviderFromContext($history);
