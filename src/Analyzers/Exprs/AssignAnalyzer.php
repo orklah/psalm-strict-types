@@ -85,6 +85,11 @@ class AssignAnalyzer
             }
         }
 
+        if ($object_name === 'stdClass') {
+            //not interesting as properties can't be typed on stdClass
+            return;
+        }
+
         $property_id = $object_name . '::$' . $property_name;
 
         try {
@@ -94,12 +99,11 @@ class AssignAnalyzer
                 StrictTypesHooks::$statement_source,
                 StrictTypesHooks::$file_context
             );
-        }
-        catch(UnexpectedValueException $e) {
+        } catch (UnexpectedValueException $e) {
             throw new ShouldNotHappenException('Unable to retrieve Property for ' . $property_id);
         }
 
-        if($property_type === null) {
+        if ($property_type === null) {
             //property found but with no type, not interesting
             return;
         }
