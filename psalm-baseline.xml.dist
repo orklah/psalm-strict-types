@@ -34,29 +34,9 @@
       <code>$class_stmt-&gt;name</code>
     </PossiblyNullPropertyFetch>
   </file>
-  <file src="src/Analyzers/Stmts/Return_Analyzer.php">
-    <PossiblyNullArgument occurrences="1">
-      <code>$class_stmt-&gt;name-&gt;name</code>
-    </PossiblyNullArgument>
-    <PossiblyNullPropertyFetch occurrences="1">
-      <code>$class_stmt-&gt;name</code>
-    </PossiblyNullPropertyFetch>
-  </file>
   <file src="src/Exceptions/NodeException.php">
     <PropertyNotSetInConstructor occurrences="1">
       <code>$node</code>
     </PropertyNotSetInConstructor>
-  </file>
-  <file src="src/Utils/NodeNavigator.php">
-    <PossiblyNullArgument occurrences="3">
-      <code>$class_stmt-&gt;name-&gt;name</code>
-      <code>$class_stmt-&gt;name-&gt;name</code>
-      <code>$method_stmt-&gt;name-&gt;name</code>
-    </PossiblyNullArgument>
-    <PossiblyNullPropertyFetch occurrences="3">
-      <code>$class_stmt-&gt;name</code>
-      <code>$class_stmt-&gt;name-&gt;name</code>
-      <code>$method_stmt-&gt;name</code>
-    </PossiblyNullPropertyFetch>
   </file>
 </files>

@@ -14,12 +14,12 @@ use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\PropertyFetch;
 use PhpParser\Node\Expr\StaticPropertyFetch;
 use PhpParser\Node\Expr\Variable;
-use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\VarLikeIdentifier;
 use UnexpectedValueException;
+use Webmozart\Assert\Assert;
 use function is_string;
 
 class AssignAnalyzer
@@ -45,6 +45,7 @@ class AssignAnalyzer
         if ($expr->var instanceof PropertyFetch) {
             if ($expr->var->var instanceof Variable && is_string($expr->var->var->name) && $expr->var->var->name === 'this') {
                 $context = NodeNavigator::getContext($history);
+                Assert::notNull($context);
                 $object_type = $context->vars_in_scope['$this'];
             } else {
                 $object_type = $node_provider->getType($expr->var->var);
@@ -86,7 +87,7 @@ class AssignAnalyzer
             return;
         }
 
-        $property_id = $object_name . '::$' . (string) $property_name;
+        $property_id = $object_name . '::$' . (string)$property_name;
 
         try {
             $property_type = StrictTypesHooks::$codebase->properties->getPropertyType(

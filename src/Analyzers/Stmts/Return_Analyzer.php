@@ -14,8 +14,10 @@ use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\Return_;
+use Webmozart\Assert\Assert;
 
-class Return_Analyzer{
+class Return_Analyzer
+{
 
     /**
      * @param array<Expr|Stmt> $history
@@ -25,23 +27,25 @@ class Return_Analyzer{
      */
     public static function analyze(Return_ $stmt, array $history): void
     {
-        if($stmt->expr === null){
+        if ($stmt->expr === null) {
             // this happens on void methods. This has no impact on strict types
             return;
         }
 
         $functionlike_stmt = NodeNavigator::getLastNodeByTypes($history, [Function_::class, ClassMethod::class]);
-        if($functionlike_stmt instanceof Function_){
-            $functionlike_storage = StrictTypesHooks::$file_storage->functions[strtolower((string)$functionlike_stmt->name->name)] ?? null;
-        }
-        else{
+        Assert::notNull($functionlike_stmt);
+        $functionlike_storage = null;
+        if ($functionlike_stmt instanceof Function_) {
+            $functionlike_storage = StrictTypesHooks::$file_storage->functions[strtolower((string)$functionlike_stmt->name)] ?? null;
+        } else {
             $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
-            $functionlike_storage = NodeNavigator::getMethodStorageFromName(NodeNavigator::resolveName($history, $class_stmt->name->name), strtolower($functionlike_stmt->name->name));
+            Assert::notNull($class_stmt);
+            $functionlike_storage = NodeNavigator::getMethodStorageFromName(NodeNavigator::resolveName($history, (string)$class_stmt->name), strtolower((string)$functionlike_stmt->name));
         }
 
-        if($functionlike_storage === null){
+        if ($functionlike_storage === null) {
             //weird.
-            throw new ShouldNotHappenException('Could not find Function Storage for '.$functionlike_stmt->name->name);
+            throw new ShouldNotHappenException('Could not find Function Storage for ' . (string)$functionlike_stmt->name);
         }
 
         $node_provider = NodeNavigator::getNodeProviderFromContext($history);
@@ -60,7 +64,7 @@ class Return_Analyzer{
         }
 
         if (!StrictUnionsChecker::strictUnionCheck($signature_return_type, $statement_return_type)) {
-            throw NonStrictUsageException::createWithNode('Found return statement mismatching between '.$signature_return_type->getKey().' and '.$statement_return_type->getKey(), $stmt);
+            throw NonStrictUsageException::createWithNode('Found return statement mismatching between ' . $signature_return_type->getKey() . ' and ' . $statement_return_type->getKey(), $stmt);
         }
 
         if ($statement_return_type->from_docblock === true) {

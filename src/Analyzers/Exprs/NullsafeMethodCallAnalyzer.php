@@ -12,8 +12,8 @@ use PhpParser\Node\Expr\NullsafeMethodCall;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Stmt;
+use Webmozart\Assert\Assert;
 use function count;
-use function get_class;
 use function is_string;
 
 class NullsafeMethodCallAnalyzer
@@ -42,6 +42,7 @@ class NullsafeMethodCallAnalyzer
         //object context, we fetch the node type provider or the context if the variable is $this
         if ($expr->var instanceof Variable && is_string($expr->var->name) && $expr->var->name === 'this') {
             $context = NodeNavigator::getContext($history);
+            Assert::notNull($context);
             $object_type = $context->vars_in_scope['$this'];
         } else {
             $object_type = $node_provider->getType($expr->var);

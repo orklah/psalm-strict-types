@@ -33,6 +33,7 @@ use Psalm\Type\Atomic\TScalar;
 use Psalm\Type\Atomic\TString;
 use Psalm\Type\Atomic\TTemplateParam;
 use Psalm\Type\Union;
+use Webmozart\Assert\Assert;
 use function get_class;
 
 class NodeNavigator
@@ -109,9 +110,10 @@ class NodeNavigator
         $functionlike_stmt = self::getLastNodeByTypes($history, [Function_::class, ClassMethod::class]);
         if ($functionlike_stmt instanceof ClassMethod) {
             $class_stmt = self::getLastNodeByType($history, Class_::class);
+            Assert::notNull($class_stmt);
             //object context, we fetch the node type provider
-            $class_name = strtolower($class_stmt->name->name);
-            $method_name = strtolower($functionlike_stmt->name->name);
+            $class_name = strtolower((string)$class_stmt->name);
+            $method_name = strtolower((string)$functionlike_stmt->name);
             $node_provider = StrictTypesHooks::$current_node_type_providers[$class_name][$method_name] ?? null;
             if ($node_provider === null) {
                 //unable to fetch node provider. Throw
@@ -129,12 +131,15 @@ class NodeNavigator
      * @param array<Expr|Stmt> $history
      * @throws ShouldNotHappenException
      */
-    public static function getContext(array $history): Context
+    public static function getContext(array $history): ?Context
     {
         $method_stmt = self::getLastNodeByType($history, ClassMethod::class);
         $class_stmt = self::getLastNodeByType($history, Class_::class);
-        $class_name = strtolower($class_stmt->name->name);
-        $method_name = strtolower($method_stmt->name->name);
+        if ($method_stmt === null || $class_stmt === null) {
+            return null;
+        }
+        $class_name = strtolower((string)$class_stmt->name);
+        $method_name = strtolower((string)$method_stmt->name);
         $context = StrictTypesHooks::$current_context[$class_name][$method_name] ?? null;
         if ($context === null) {
             //unable to context. Throw

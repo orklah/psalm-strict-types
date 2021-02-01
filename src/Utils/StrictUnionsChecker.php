@@ -45,7 +45,7 @@ class StrictUnionsChecker
                 }
                 if ($param_type->isMixed()) {
                     //this param is not interesting because everything will pass for mixed
-                    if($is_unpacked && $is_variadic) {
+                    if ($is_unpacked && $is_variadic) {
                         //really? What kind of monster would do that?
                         break;
                     }
@@ -61,7 +61,7 @@ class StrictUnionsChecker
                     throw NonVerifiableStrictUsageException::createWithNode('Found correct type but from docblock', $expr);
                 }
 
-                if($is_unpacked && $is_variadic) {
+                if ($is_unpacked && $is_variadic) {
                     //really? What kind of monster would do that?
                     break;
                 }
@@ -185,7 +185,6 @@ class StrictUnionsChecker
 
     /**
      * @param array<Arg> $values
-     * @return 0|positive-int
      */
     private static function getMaxValues(array $values): int
     {
@@ -199,8 +198,7 @@ class StrictUnionsChecker
     }
 
     /**
-     * @param array<Arg>     $values
-     * @param 0|positive-int $i_values
+     * @param array<Arg> $values
      */
     private static function getUnionValueForPosition(array $values, int $i_values, NodeTypeProvider $node_provider, bool &$is_unpacked = false): ?Union
     {
@@ -214,10 +212,10 @@ class StrictUnionsChecker
             $is_unpacked = true;
             $last_value_type = $node_provider->getType($last_value->value);
 
-            if($last_value_type === null){
+            if ($last_value_type === null) {
                 return Type::getMixed(); // couldn't resolve type. Return the largest type
             }
-            if(!$last_value_type->isSingle()){
+            if (!$last_value_type->isSingle()) {
                 return Type::getMixed(); // type is a mix. Return the largest type
             }
             $atomic_types = $last_value_type->getAtomicTypes();
