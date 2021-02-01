@@ -99,7 +99,7 @@ class AssignAnalyzer
             throw new ShouldNotHappenException('Unable to retrieve Property for ' . $property_id);
         }
 
-        if ($property_type === null) {
+        if ($property_type === null || $property_type->from_docblock) {
             //property found but with no type, not interesting
             return;
         }
