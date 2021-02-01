@@ -10,10 +10,10 @@ use Orklah\StrictTypes\Utils\NodeNavigator;
 use Orklah\StrictTypes\Utils\StrictUnionsChecker;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\MethodCall;
+use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Stmt;
 use function count;
-use function get_class;
 use function is_string;
 
 class MethodCallAnalyzer
@@ -43,7 +43,7 @@ class MethodCallAnalyzer
         }
 
         //object context, we fetch the node type provider or the context if the variable is $this
-        if (is_string($expr->var->name) && $expr->var->name === 'this') {
+        if ($expr->var instanceof Variable && is_string($expr->var->name) && $expr->var->name === 'this') {
             $context = NodeNavigator::getContext($history);
             $object_type = $context->vars_in_scope['$this'];
         } else {

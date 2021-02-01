@@ -183,4 +183,41 @@ class NonStrictMethodCallTest extends NonStrictTestCase
 
         $this->analyzeFile(__METHOD__.'.php', new Context());
     }
+
+    public function testMethodVariadics(): void
+    {
+        $this->addFile(
+            __METHOD__.'.php',
+            '<?php
+            class A{
+                public function __construct(){
+                    $this->f("", "", 1);
+                }
+                public function f(string $a, string ...$variadics){
+
+                }
+            }'
+        );
+
+        $this->analyzeFile(__METHOD__.'.php', new Context());
+    }
+
+    public function testMethodUnpacking(): void
+    {
+        $this->addFile(
+            __METHOD__.'.php',
+            '<?php
+            class A{
+                public function __construct(){
+                    $a = ["", "", 1];
+                    $this->f(...$a);
+                }
+                public function f(string $a, string $b, string $c){
+
+                }
+            }'
+        );
+
+        $this->analyzeFile(__METHOD__.'.php', new Context());
+    }
 }

@@ -6,6 +6,7 @@ namespace Orklah\StrictTypes\Utils;
 use Orklah\StrictTypes\Exceptions\NonStrictUsageException;
 use Orklah\StrictTypes\Exceptions\NonVerifiableStrictUsageException;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
+use OutOfBoundsException;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr;
 use Psalm\NodeTypeProvider;
@@ -13,7 +14,6 @@ use Psalm\Storage\FunctionLikeParameter;
 use Psalm\Type;
 use Psalm\Type\Atomic;
 use Psalm\Type\Union;
-use Webmozart\Assert\Assert;
 use function count;
 
 class StrictUnionsChecker
@@ -27,41 +27,28 @@ class StrictUnionsChecker
      */
     public static function checkValuesAgainstParams(array $values, array $params, NodeTypeProvider $node_provider, Expr $expr): void
     {
-        for ($i_values = 0, $i_valuesMax = count($values); $i_values < $i_valuesMax; $i_values++) {
-            $value = $values[$i_values];
-
-            $value_type = $node_provider->getType($value->value);
+        $i_valuesMax = self::getMaxValues($values);
+        $is_unpacked = false;
+        $is_variadic = false;
+        for ($i_values = 0; $i_values < $i_valuesMax; $i_values++) {
+            $value_type = self::getUnionValueForPosition($values, $i_values, $node_provider, $is_unpacked);
 
             if ($value_type !== null) {
-                //TODO: beware of named params
-                $param = null;
-                if (!isset($params[$i_values])) {
-                    // We have a value without corresponding param. We'll recursively search the last param in case of variadic
-                    $i_values_tmp = $i_values - 1;
-                    while ($i_values_tmp !== -1) {
-                        if (!isset($params[$i_values_tmp])) {
-                            $i_values_tmp--;
-                            continue;
-                        }
-                        if ($params[$i_values_tmp]->is_variadic) {
-                            $param = $params[$i_values_tmp];
-                            break;
-                        }
-                        throw new ShouldNotHappenException('Last param found for extra value for position ' . ($i_values + 1) . ' was not a variadic');
+                try {
+                    $param_type = self::getUnionParamForPosition($params, $i_values, $is_variadic);
+                } catch (OutOfBoundsException $e) {
+                    // No parameter left. It's okay if we have unpacked values though
+                    if ($is_unpacked) {
+                        break;
                     }
-                    if ($i_values_tmp === -1) {
-                        //found a value with no corresponding param. Can happen in case of user error and in case of func_get_args usage
-                        return;
-                    }
-                    Assert::notNull($param);
-                } else {
-                    $param = $params[$i_values];
+                    throw $e;
                 }
-
-                $param_type = $param->signature_type ?? Type::getMixed();
-
-                if($param_type->isMixed()){
+                if ($param_type->isMixed()) {
                     //this param is not interesting because everything will pass for mixed
+                    if($is_unpacked && $is_variadic) {
+                        //really? What kind of monster would do that?
+                        break;
+                    }
                     continue;
                 }
 
@@ -72,6 +59,11 @@ class StrictUnionsChecker
                 if ($value_type->from_docblock === true) {
                     //not trustworthy enough
                     throw NonVerifiableStrictUsageException::createWithNode('Found correct type but from docblock', $expr);
+                }
+
+                if($is_unpacked && $is_variadic) {
+                    //really? What kind of monster would do that?
+                    break;
                 }
             } else {
                 throw new ShouldNotHappenException('Could not find value type for param ' . ($i_values + 1));
@@ -153,7 +145,7 @@ class StrictUnionsChecker
         }
 
         if ($container instanceof Atomic\TIterable) {
-            return $content instanceof Atomic\TArray || $content instanceof Atomic\TKeyedArray || $content instanceof Atomic\TList  || $content instanceof Atomic\TIterable;
+            return $content instanceof Atomic\TArray || $content instanceof Atomic\TKeyedArray || $content instanceof Atomic\TList || $content instanceof Atomic\TIterable;
         }
 
         if ($container instanceof Atomic\TResource) {
@@ -189,5 +181,88 @@ class StrictUnionsChecker
         }
 
         return false;
+    }
+
+    /**
+     * @param array<Arg> $values
+     * @return 0|positive-int
+     */
+    private static function getMaxValues(array $values): int
+    {
+        $i_valuesMax = count($values);
+        $last_value = array_pop($values);
+        if ($last_value->unpack) {
+            return PHP_INT_MAX;
+        }
+
+        return $i_valuesMax;
+    }
+
+    /**
+     * @param array<Arg>     $values
+     * @param 0|positive-int $i_values
+     */
+    private static function getUnionValueForPosition(array $values, int $i_values, NodeTypeProvider $node_provider, bool &$is_unpacked = false): ?Union
+    {
+        if (isset($values[$i_values]) && !$values[$i_values]->unpack) {
+            $value = $values[$i_values];
+            return $node_provider->getType($value->value);
+        }
+
+        $last_value = array_pop($values);
+        if ($last_value->unpack) {
+            $is_unpacked = true;
+            $last_value_type = $node_provider->getType($last_value->value);
+
+            if($last_value_type === null){
+                return Type::getMixed(); // couldn't resolve type. Return the largest type
+            }
+            if(!$last_value_type->isSingle()){
+                return Type::getMixed(); // type is a mix. Return the largest type
+            }
+            $atomic_types = $last_value_type->getAtomicTypes();
+            $atomic_type = array_pop($atomic_types);
+
+            $arg_type_param = null;
+            if ($atomic_type instanceof Type\Atomic\TKeyedArray) {
+                $arg_type_param = $atomic_type->getGenericValueType();
+            } elseif ($atomic_type instanceof Type\Atomic\TList) {
+                $arg_type_param = $atomic_type->type_param;
+            } elseif ($atomic_type instanceof Type\Atomic\TArray) {
+                $arg_type_param = $atomic_type->type_params[1];
+            } elseif ($atomic_type instanceof Type\Atomic\TIterable) {
+                $arg_type_param = $atomic_type->type_params[1];
+            }
+
+            if ($arg_type_param === null) {
+                $arg_type_param = Type::getMixed();
+            }
+
+            return $arg_type_param;
+        }
+
+        throw new OutOfBoundsException('No argument for position ' . ($i_values + 1) . ' and no unpack detected');
+    }
+
+    /**
+     * @param array<FunctionLikeParameter> $params
+     * @param int                          $i_values
+     */
+    private static function getUnionParamForPosition(array $params, int $i_values, bool &$is_variadic = false): Union
+    {
+        //TODO: beware of named params
+        if (isset($params[$i_values])) {
+            $param = $params[$i_values];
+        } else {
+            $last_param = array_pop($params);
+            if ($last_param->is_variadic) {
+                $is_variadic = true;
+                $param = $last_param;
+            } else {
+                throw new OutOfBoundsException('No param for position ' . ($i_values + 1) . ' and no variadic detected');
+            }
+        }
+
+        return $param->signature_type ?? Type::getMixed();
     }
 }

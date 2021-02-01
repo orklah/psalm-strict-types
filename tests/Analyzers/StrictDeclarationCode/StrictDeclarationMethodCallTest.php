@@ -183,4 +183,41 @@ class StrictDeclarationMethodCallTest extends StrictDeclarationTestCase
 
         $this->analyzeFile(__METHOD__.'.php', new Context());
     }
+
+    public function testMethodVariadics(): void
+    {
+        $this->addFile(
+            __METHOD__.'.php',
+            '<?php
+            class A{
+                public function __construct(){
+                    $this->f("", "", "");
+                }
+                public function f(string $a, string ...$variadics){
+
+                }
+            }'
+        );
+
+        $this->analyzeFile(__METHOD__.'.php', new Context());
+    }
+
+    public function testMethodUnpacking(): void
+    {
+        $this->addFile(
+            __METHOD__.'.php',
+            '<?php
+            class A{
+                public function __construct(){
+                    $a = ["", "", ""];
+                    $this->f(...$a);
+                }
+                public function f(string $a, string $b, string $c){
+
+                }
+            }'
+        );
+
+        $this->analyzeFile(__METHOD__.'.php', new Context());
+    }
 }
