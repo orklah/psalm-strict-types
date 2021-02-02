@@ -222,6 +222,9 @@ class StrictUnionsChecker
             if (!$last_value_type->isSingle()) {
                 return Type::getMixed(); // type is a mix. Return the largest type
             }
+
+            $last_value_from_docblock = $last_value_type->from_docblock;
+
             $atomic_types = $last_value_type->getAtomicTypes();
             $atomic_type = array_pop($atomic_types);
 
@@ -239,6 +242,8 @@ class StrictUnionsChecker
             if ($arg_type_param === null) {
                 $arg_type_param = Type::getMixed();
             }
+
+            $arg_type_param->from_docblock = $last_value_from_docblock;//if the type of the array was from docblock, the result of unpacking will be from docblock.
 
             return $arg_type_param;
         }
