@@ -112,7 +112,6 @@ class AssignAnalyzer
         }
 
         if (!StrictUnionsChecker::strictUnionCheck($property_type, $value_type)) {
-            var_dump($property_type);
             if ($property_type->from_docblock) {
                 throw BadTypeFromDocblockException::createWithNode('Found assignation mismatching between property ' . $property_type->getKey() . ' and value ' . $value_type->getKey(), $expr);
             }
