@@ -107,12 +107,12 @@ class AssignAnalyzer
         }
 
         $value_type = $node_provider->getType($expr->expr);
-        if ($value_type === null) {
+        if ($value_type === null || $property_type->from_docblock) {
             throw new ShouldNotHappenException('Unable to retrieve Expression type for ' . $property_id);
         }
 
         if (!StrictUnionsChecker::strictUnionCheck($property_type, $value_type)) {
-            if ($property_type->from_docblock) {
+            if ($value_type->from_docblock) {
                 throw BadTypeFromDocblockException::createWithNode('Found assignation mismatching between property ' . $property_type->getKey() . ' and value ' . $value_type->getKey(), $expr);
             }
             throw BadTypeFromSignatureException::createWithNode('Found assignation mismatching between property ' . $property_type->getKey() . ' and value ' . $value_type->getKey(), $expr);
