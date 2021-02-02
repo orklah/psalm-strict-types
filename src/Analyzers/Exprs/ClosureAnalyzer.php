@@ -18,7 +18,6 @@ class ClosureAnalyzer{
     public static function analyze(Closure $expr, array $history): void
     {
         $has_params = false;
-        //$has_at_least_one_typed_param = false;
         if (count($expr->params) !== 0) {
             $has_params = true;
         }
