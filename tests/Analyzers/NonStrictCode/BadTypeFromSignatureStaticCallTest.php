@@ -2,10 +2,10 @@
 
 namespace Orklah\StrictTypes\Tests\Analyzers\NonStrictCode;
 
-use Orklah\StrictTypes\Tests\Internal\NonStrictTestCase;
+use Orklah\StrictTypes\Tests\Internal\BadTypeFromSignatureTestCase;
 use Psalm\Context;
 
-class NonStrictStaticCallTest extends NonStrictTestCase
+class BadTypeFromSignatureStaticCallTest extends BadTypeFromSignatureTestCase
 {
     public function testStaticParamStrictInsideClass(): void
     {

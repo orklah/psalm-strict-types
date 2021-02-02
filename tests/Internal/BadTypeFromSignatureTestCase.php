@@ -5,13 +5,13 @@ namespace Orklah\StrictTypes\Tests\Internal;
 
 use Psalm\Exception\CodeException;
 
-abstract class NonVerifiableStrictTestCase extends BaseTestCase
+abstract class BadTypeFromSignatureTestCase extends BaseTestCase
 {
     public function setUp(): void
     {
         parent::setUp();
 
         $this->expectException(CodeException::class);
-        $this->expectExceptionMessage('NonVerifiableStrictUsageIssue');
+        $this->expectExceptionMessage('BadTypeFromSignatureIssue');
     }
 }
