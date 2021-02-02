@@ -157,7 +157,9 @@ class StrictUnionsChecker
         }
 
         if ($container instanceof Atomic\TCallable) {
-            return $content instanceof Atomic\TCallable || $content instanceof Atomic\TCallableString || $content instanceof Atomic\TClosure || $content instanceof Atomic\TCallableArray || $content instanceof Atomic\TCallableKeyedArray || $content instanceof Atomic\TCallableList || $content instanceof Atomic\TCallableObject;
+            // Note: we accept string as a callable because even in non strict_typpe, PHP engine will check the string for callable.
+            // This means if there is an issue in callable before, adding strict_type won't be an issue
+            return $content instanceof Atomic\TCallable || $content instanceof Atomic\TCallableString || $content instanceof Atomic\TClosure || $content instanceof Atomic\TCallableArray || $content instanceof Atomic\TCallableKeyedArray || $content instanceof Atomic\TCallableList || $content instanceof Atomic\TCallableObject || $content instanceof Atomic\TString;
         }
 
         if ($container instanceof Atomic\TCallableString) {
