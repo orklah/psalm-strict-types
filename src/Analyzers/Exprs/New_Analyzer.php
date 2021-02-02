@@ -2,7 +2,7 @@
 
 namespace Orklah\StrictTypes\Analyzers\Exprs;
 
-use Orklah\StrictTypes\Exceptions\NonStrictUsageException;
+use Orklah\StrictTypes\Exceptions\BadTypeFromSignatureException;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
 use Orklah\StrictTypes\Utils\NodeNavigator;
 use Orklah\StrictTypes\Utils\StrictUnionsChecker;
@@ -17,7 +17,7 @@ class New_Analyzer{
 
     /**
      * @param array<Expr|Stmt> $history
-     * @throws NonStrictUsageException
+     * @throws BadTypeFromSignatureException
      * @throws ShouldNotHappenException
      */
     public static function analyze(New_ $expr, array $history): void

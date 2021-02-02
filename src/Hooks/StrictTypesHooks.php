@@ -5,12 +5,12 @@ namespace Orklah\StrictTypes\Hooks;
 use Error;
 use Exception;
 use Orklah\StrictTypes\Exceptions\NeedRefinementException;
-use Orklah\StrictTypes\Exceptions\NonStrictUsageException;
-use Orklah\StrictTypes\Exceptions\NonVerifiableStrictUsageException;
+use Orklah\StrictTypes\Exceptions\BadTypeFromSignatureException;
+use Orklah\StrictTypes\Exceptions\GoodTypeFromDocblockException;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
-use Orklah\StrictTypes\Issues\NonStrictUsageIssue;
-use Orklah\StrictTypes\Issues\NonStrictUsageOnStrictFileIssue;
-use Orklah\StrictTypes\Issues\NonVerifiableStrictUsageIssue;
+use Orklah\StrictTypes\Issues\BadTypeFromSignatureIssue;
+use Orklah\StrictTypes\Issues\BadTypeFromSignatureOnStrictFileIssue;
+use Orklah\StrictTypes\Issues\GoodTypeFromDocblockIssue;
 use Orklah\StrictTypes\Issues\StrictDeclarationToAddIssue;
 use Orklah\StrictTypes\Traversers\StmtsTraverser;
 use PhpParser\Node\Stmt\ClassMethod;
@@ -57,8 +57,8 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
 
     /**
      * @throws NeedRefinementException
-     * @throws NonStrictUsageException
-     * @throws NonVerifiableStrictUsageException
+     * @throws BadTypeFromSignatureException
+     * @throws GoodTypeFromDocblockException
      * @throws ShouldNotHappenException
      */
     public static function afterAnalyzeFile(AfterFileAnalysisEvent $event): void
@@ -91,22 +91,22 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
 
         try {
             StmtsTraverser::traverseStatements($stmts, []);
-        } catch (NonStrictUsageException $e) {
+        } catch (BadTypeFromSignatureException $e) {
             if ($have_declare_statement) {
-                $issue = new NonStrictUsageOnStrictFileIssue($e->getMessage(),
+                $issue = new BadTypeFromSignatureOnStrictFileIssue($e->getMessage(),
                     new CodeLocation($statements_source, $e->getNode())
                 );
             } else {
-                $issue = new NonStrictUsageIssue($e->getMessage(),
+                $issue = new BadTypeFromSignatureIssue($e->getMessage(),
                     new CodeLocation($statements_source, $e->getNode())
                 );
             }
 
             IssueBuffer::accepts($issue, $statements_source->getSuppressedIssues());
             return;
-        } catch (NonVerifiableStrictUsageException $e) {
+        } catch (GoodTypeFromDocblockException $e) {
             // This is not safe enough to do automatically
-            $issue = new NonVerifiableStrictUsageIssue($e->getMessage(),
+            $issue = new GoodTypeFromDocblockIssue($e->getMessage(),
                 new CodeLocation($statements_source, $e->getNode())
             );
 

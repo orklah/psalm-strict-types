@@ -4,7 +4,7 @@ namespace Orklah\StrictTypes\Issues;
 
 use Psalm\Issue\CodeIssue;
 
-class NonStrictUsageIssue extends CodeIssue
+class BadTypeFromSignatureOnStrictFileIssue extends CodeIssue
 {
 
 }

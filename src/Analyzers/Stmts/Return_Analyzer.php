@@ -2,8 +2,8 @@
 
 namespace Orklah\StrictTypes\Analyzers\Stmts;
 
-use Orklah\StrictTypes\Exceptions\NonStrictUsageException;
-use Orklah\StrictTypes\Exceptions\NonVerifiableStrictUsageException;
+use Orklah\StrictTypes\Exceptions\BadTypeFromSignatureException;
+use Orklah\StrictTypes\Exceptions\GoodTypeFromDocblockException;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
 use Orklah\StrictTypes\Hooks\StrictTypesHooks;
 use Orklah\StrictTypes\Utils\NodeNavigator;
@@ -21,9 +21,9 @@ class Return_Analyzer
 
     /**
      * @param array<Expr|Stmt> $history
-     * @throws NonStrictUsageException
+     * @throws BadTypeFromSignatureException
      * @throws ShouldNotHappenException
-     * @throws NonVerifiableStrictUsageException
+     * @throws GoodTypeFromDocblockException
      */
     public static function analyze(Return_ $stmt, array $history): void
     {
@@ -64,12 +64,12 @@ class Return_Analyzer
         }
 
         if (!StrictUnionsChecker::strictUnionCheck($signature_return_type, $statement_return_type)) {
-            throw NonStrictUsageException::createWithNode('Found return statement mismatching between ' . $signature_return_type->getKey() . ' and ' . $statement_return_type->getKey(), $stmt);
+            throw BadTypeFromSignatureException::createWithNode('Found return statement mismatching between ' . $signature_return_type->getKey() . ' and ' . $statement_return_type->getKey(), $stmt);
         }
 
         if ($statement_return_type->from_docblock === true) {
             //not trustworthy enough
-            throw NonVerifiableStrictUsageException::createWithNode('Found correct type but from docblock', $stmt);
+            throw GoodTypeFromDocblockException::createWithNode('Found correct type but from docblock', $stmt);
         }
 
         //every potential mismatch would have been handled earlier

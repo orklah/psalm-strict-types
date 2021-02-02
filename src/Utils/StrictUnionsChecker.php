@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace Orklah\StrictTypes\Utils;
 
-use Orklah\StrictTypes\Exceptions\NonStrictUsageException;
-use Orklah\StrictTypes\Exceptions\NonVerifiableStrictUsageException;
+use Orklah\StrictTypes\Exceptions\BadTypeFromSignatureException;
+use Orklah\StrictTypes\Exceptions\GoodTypeFromDocblockException;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
 use OutOfBoundsException;
 use PhpParser\Node\Arg;
@@ -21,8 +21,8 @@ class StrictUnionsChecker
     /**
      * @param array<Arg>                   $values
      * @param array<FunctionLikeParameter> $params
-     * @throws NonStrictUsageException
-     * @throws NonVerifiableStrictUsageException
+     * @throws BadTypeFromSignatureException
+     * @throws GoodTypeFromDocblockException
      * @throws ShouldNotHappenException
      */
     public static function checkValuesAgainstParams(array $values, array $params, NodeTypeProvider $node_provider, Expr $expr): void
@@ -53,12 +53,12 @@ class StrictUnionsChecker
                 }
 
                 if (!self::strictUnionCheck($param_type, $value_type)) {
-                    throw NonStrictUsageException::createWithNode('Found argument ' . ($i_values + 1) . ' mismatching between param ' . $param_type->getKey() . ' and value ' . $value_type->getKey(), $expr);
+                    throw BadTypeFromSignatureException::createWithNode('Found argument ' . ($i_values + 1) . ' mismatching between param ' . $param_type->getKey() . ' and value ' . $value_type->getKey(), $expr);
                 }
 
                 if ($value_type->from_docblock === true) {
                     //not trustworthy enough
-                    throw NonVerifiableStrictUsageException::createWithNode('Found correct type but from docblock', $expr);
+                    throw GoodTypeFromDocblockException::createWithNode('Found correct type but from docblock', $expr);
                 }
 
                 if ($is_unpacked && $is_variadic) {

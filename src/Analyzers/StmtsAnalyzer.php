@@ -4,7 +4,7 @@ namespace Orklah\StrictTypes\Analyzers;
 
 use Orklah\StrictTypes\Analyzers\Stmts\Return_Analyzer;
 use Orklah\StrictTypes\Analyzers\Stmts\Use_Analyzer;
-use Orklah\StrictTypes\Exceptions\NonStrictUsageException;
+use Orklah\StrictTypes\Exceptions\BadTypeFromSignatureException;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Stmt;
@@ -15,7 +15,7 @@ class StmtsAnalyzer
 {
     /**
      * @param array<Expr|Stmt> $history
-     * @throws ShouldNotHappenException|NonStrictUsageException
+     * @throws ShouldNotHappenException|BadTypeFromSignatureException
      */
     public static function customStmtHandling(Stmt $stmt, array $history): void
     {

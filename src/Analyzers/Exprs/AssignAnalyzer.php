@@ -3,8 +3,8 @@
 namespace Orklah\StrictTypes\Analyzers\Exprs;
 
 use Orklah\StrictTypes\Exceptions\NodeException;
-use Orklah\StrictTypes\Exceptions\NonStrictUsageException;
-use Orklah\StrictTypes\Exceptions\NonVerifiableStrictUsageException;
+use Orklah\StrictTypes\Exceptions\BadTypeFromSignatureException;
+use Orklah\StrictTypes\Exceptions\GoodTypeFromDocblockException;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
 use Orklah\StrictTypes\Hooks\StrictTypesHooks;
 use Orklah\StrictTypes\Utils\NodeNavigator;
@@ -111,12 +111,12 @@ class AssignAnalyzer
         }
 
         if (!StrictUnionsChecker::strictUnionCheck($property_type, $value_type)) {
-            throw NonStrictUsageException::createWithNode('Found assignation mismatching between property ' . $property_type->getKey() . ' and value ' . $value_type->getKey(), $expr);
+            throw BadTypeFromSignatureException::createWithNode('Found assignation mismatching between property ' . $property_type->getKey() . ' and value ' . $value_type->getKey(), $expr);
         }
 
         if ($value_type->from_docblock === true) {
             //not trustworthy enough
-            throw NonVerifiableStrictUsageException::createWithNode('Found correct type but from docblock', $expr);
+            throw GoodTypeFromDocblockException::createWithNode('Found correct type but from docblock', $expr);
         }
 
         //every potential mismatch would have been handled earlier

@@ -3,7 +3,7 @@
 namespace Orklah\StrictTypes\Analyzers\Exprs;
 
 use Orklah\StrictTypes\Exceptions\NeedRefinementException;
-use Orklah\StrictTypes\Exceptions\NonStrictUsageException;
+use Orklah\StrictTypes\Exceptions\BadTypeFromSignatureException;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
 use Orklah\StrictTypes\Utils\NodeNavigator;
 use Orklah\StrictTypes\Utils\StrictUnionsChecker;
@@ -21,7 +21,7 @@ class NullsafeMethodCallAnalyzer
 
     /**
      * @param array<Expr|Stmt> $history
-     * @throws NonStrictUsageException
+     * @throws BadTypeFromSignatureException
      */
     public static function analyze(NullsafeMethodCall $expr, array $history): void
     {

@@ -2,7 +2,7 @@
 
 namespace Orklah\StrictTypes\Analyzers\Exprs;
 
-use Orklah\StrictTypes\Exceptions\NonStrictUsageException;
+use Orklah\StrictTypes\Exceptions\BadTypeFromSignatureException;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\ArrowFunction;
 use PhpParser\Node\Stmt;
@@ -12,7 +12,7 @@ class ArrowFunctionAnalyzer{
 
     /**
      * @param array<Expr|Stmt> $history
-     * @throws NonStrictUsageException
+     * @throws BadTypeFromSignatureException
      */
     public static function analyze(ArrowFunction $expr, array $history): void
     {
@@ -28,6 +28,6 @@ class ArrowFunctionAnalyzer{
             return;
         }
 
-        throw NonStrictUsageException::createWithNode('Found ArrowFunction', $expr);
+        throw BadTypeFromSignatureException::createWithNode('Found ArrowFunction', $expr);
     }
 }

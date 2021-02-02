@@ -4,8 +4,8 @@ namespace Orklah\StrictTypes\Traversers;
 
 use Orklah\StrictTypes\Analyzers\StmtsAnalyzer;
 use Orklah\StrictTypes\Exceptions\NeedRefinementException;
-use Orklah\StrictTypes\Exceptions\NonStrictUsageException;
-use Orklah\StrictTypes\Exceptions\NonVerifiableStrictUsageException;
+use Orklah\StrictTypes\Exceptions\BadTypeFromSignatureException;
+use Orklah\StrictTypes\Exceptions\GoodTypeFromDocblockException;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Stmt;
@@ -58,10 +58,10 @@ class StmtsTraverser
     /**
      * @param array<Stmt|null> $stmts
      * @param list<Stmt|Expr>  $history
-     * @throws NonStrictUsageException
+     * @throws BadTypeFromSignatureException
      * @throws ShouldNotHappenException
      * @throws NeedRefinementException
-     * @throws NonVerifiableStrictUsageException
+     * @throws GoodTypeFromDocblockException
      */
     public static function traverseStatements(array $stmts, array $history): void
     {
@@ -75,10 +75,10 @@ class StmtsTraverser
     /**
      * This will only receive a statement and break it down into other statements or expressions
      * @param list<Stmt|Expr> $history
-     * @throws NonStrictUsageException
+     * @throws BadTypeFromSignatureException
      * @throws ShouldNotHappenException
      * @throws NeedRefinementException
-     * @throws NonVerifiableStrictUsageException
+     * @throws GoodTypeFromDocblockException
      */
     public static function analyzeStatement(Stmt $stmt, array $history): void
     {

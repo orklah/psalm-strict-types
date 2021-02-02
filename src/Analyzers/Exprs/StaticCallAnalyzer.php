@@ -3,8 +3,8 @@
 namespace Orklah\StrictTypes\Analyzers\Exprs;
 
 use Orklah\StrictTypes\Exceptions\NeedRefinementException;
-use Orklah\StrictTypes\Exceptions\NonStrictUsageException;
-use Orklah\StrictTypes\Exceptions\NonVerifiableStrictUsageException;
+use Orklah\StrictTypes\Exceptions\BadTypeFromSignatureException;
+use Orklah\StrictTypes\Exceptions\GoodTypeFromDocblockException;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
 use Orklah\StrictTypes\Utils\NodeNavigator;
 use Orklah\StrictTypes\Utils\StrictUnionsChecker;
@@ -22,10 +22,10 @@ class StaticCallAnalyzer
 
     /**
      * @param array<Expr|Stmt> $history
-     * @throws NonStrictUsageException
+     * @throws BadTypeFromSignatureException
      * @throws ShouldNotHappenException
      * @throws NeedRefinementException
-     * @throws NonVerifiableStrictUsageException
+     * @throws GoodTypeFromDocblockException
      */
     public static function analyze(StaticCall $expr, array $history): void
     {

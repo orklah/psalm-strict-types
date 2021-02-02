@@ -3,8 +3,8 @@
 namespace Orklah\StrictTypes\Analyzers\Exprs;
 
 use Orklah\StrictTypes\Exceptions\NeedRefinementException;
-use Orklah\StrictTypes\Exceptions\NonStrictUsageException;
-use Orklah\StrictTypes\Exceptions\NonVerifiableStrictUsageException;
+use Orklah\StrictTypes\Exceptions\BadTypeFromSignatureException;
+use Orklah\StrictTypes\Exceptions\GoodTypeFromDocblockException;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
 use Orklah\StrictTypes\Hooks\StrictTypesHooks;
 use Orklah\StrictTypes\Utils\NodeNavigator;
@@ -28,8 +28,8 @@ class FuncCallAnalyzer
     /**
      * @param array<Expr|Stmt> $history
      * @throws NeedRefinementException
-     * @throws NonStrictUsageException
-     * @throws NonVerifiableStrictUsageException
+     * @throws BadTypeFromSignatureException
+     * @throws GoodTypeFromDocblockException
      * @throws ShouldNotHappenException
      */
     public static function analyze(FuncCall $expr, array $history): void

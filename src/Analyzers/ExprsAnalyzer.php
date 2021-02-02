@@ -11,8 +11,8 @@ use Orklah\StrictTypes\Analyzers\Exprs\New_Analyzer;
 use Orklah\StrictTypes\Analyzers\Exprs\NullsafeMethodCallAnalyzer;
 use Orklah\StrictTypes\Analyzers\Exprs\StaticCallAnalyzer;
 use Orklah\StrictTypes\Exceptions\NeedRefinementException;
-use Orklah\StrictTypes\Exceptions\NonStrictUsageException;
-use Orklah\StrictTypes\Exceptions\NonVerifiableStrictUsageException;
+use Orklah\StrictTypes\Exceptions\BadTypeFromSignatureException;
+use Orklah\StrictTypes\Exceptions\GoodTypeFromDocblockException;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\ArrowFunction;
@@ -29,9 +29,9 @@ class ExprsAnalyzer
 {
     /**
      * @param array<Expr|Stmt> $history
-     * @throws NonStrictUsageException
+     * @throws BadTypeFromSignatureException
      * @throws NeedRefinementException
-     * @throws NonVerifiableStrictUsageException
+     * @throws GoodTypeFromDocblockException
      * @throws ShouldNotHappenException
      */
     public static function customExprHandling(Expr $expr, array $history): void

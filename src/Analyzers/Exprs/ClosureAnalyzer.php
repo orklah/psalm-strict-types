@@ -3,7 +3,7 @@
 namespace Orklah\StrictTypes\Analyzers\Exprs;
 
 use Orklah\StrictTypes\Exceptions\NeedRefinementException;
-use Orklah\StrictTypes\Exceptions\NonStrictUsageException;
+use Orklah\StrictTypes\Exceptions\BadTypeFromSignatureException;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\Stmt;
@@ -13,7 +13,7 @@ class ClosureAnalyzer{
 
     /**
      * @param array<Expr|Stmt> $history
-     * @throws NonStrictUsageException
+     * @throws BadTypeFromSignatureException
      */
     public static function analyze(Closure $expr, array $history): void
     {

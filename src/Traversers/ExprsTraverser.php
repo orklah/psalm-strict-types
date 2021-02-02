@@ -4,8 +4,8 @@ namespace Orklah\StrictTypes\Traversers;
 
 use Orklah\StrictTypes\Analyzers\ExprsAnalyzer;
 use Orklah\StrictTypes\Exceptions\NeedRefinementException;
-use Orklah\StrictTypes\Exceptions\NonStrictUsageException;
-use Orklah\StrictTypes\Exceptions\NonVerifiableStrictUsageException;
+use Orklah\StrictTypes\Exceptions\BadTypeFromSignatureException;
+use Orklah\StrictTypes\Exceptions\GoodTypeFromDocblockException;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
@@ -65,8 +65,8 @@ class ExprsTraverser
      * @param array<Expr|null>          $exprs
      * @param list<Stmt|Expr> $history
      * @throws NeedRefinementException
-     * @throws NonStrictUsageException
-     * @throws NonVerifiableStrictUsageException
+     * @throws BadTypeFromSignatureException
+     * @throws GoodTypeFromDocblockException
      * @throws ShouldNotHappenException
      */
     public static function traverseExprs(array $exprs, array $history): void
@@ -81,8 +81,8 @@ class ExprsTraverser
     /**
      * @param list<Stmt|Expr> $history
      * @throws NeedRefinementException
-     * @throws NonStrictUsageException
-     * @throws NonVerifiableStrictUsageException
+     * @throws BadTypeFromSignatureException
+     * @throws GoodTypeFromDocblockException
      * @throws ShouldNotHappenException
      */
     public static function traverseExpr(Expr $expr, array $history): void
