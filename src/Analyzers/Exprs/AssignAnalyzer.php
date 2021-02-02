@@ -2,6 +2,7 @@
 
 namespace Orklah\StrictTypes\Analyzers\Exprs;
 
+use Orklah\StrictTypes\Exceptions\BadTypeFromDocblockException;
 use Orklah\StrictTypes\Exceptions\NodeException;
 use Orklah\StrictTypes\Exceptions\BadTypeFromSignatureException;
 use Orklah\StrictTypes\Exceptions\GoodTypeFromDocblockException;
@@ -100,7 +101,7 @@ class AssignAnalyzer
             throw new ShouldNotHappenException('Unable to retrieve Property for ' . $property_id);
         }
 
-        if ($property_type === null || $property_type->from_docblock) {
+        if ($property_type === null) {
             //property found but with no type, not interesting
             return;
         }
@@ -111,6 +112,10 @@ class AssignAnalyzer
         }
 
         if (!StrictUnionsChecker::strictUnionCheck($property_type, $value_type)) {
+            var_dump($property_type);
+            if ($property_type->from_docblock) {
+                throw BadTypeFromDocblockException::createWithNode('Found assignation mismatching between property ' . $property_type->getKey() . ' and value ' . $value_type->getKey(), $expr);
+            }
             throw BadTypeFromSignatureException::createWithNode('Found assignation mismatching between property ' . $property_type->getKey() . ' and value ' . $value_type->getKey(), $expr);
         }
 

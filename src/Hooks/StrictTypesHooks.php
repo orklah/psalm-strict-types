@@ -4,10 +4,12 @@ namespace Orklah\StrictTypes\Hooks;
 
 use Error;
 use Exception;
+use Orklah\StrictTypes\Exceptions\BadTypeFromDocblockException;
 use Orklah\StrictTypes\Exceptions\NeedRefinementException;
 use Orklah\StrictTypes\Exceptions\BadTypeFromSignatureException;
 use Orklah\StrictTypes\Exceptions\GoodTypeFromDocblockException;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
+use Orklah\StrictTypes\Issues\BadTypeFromDocblockIssue;
 use Orklah\StrictTypes\Issues\BadTypeFromSignatureIssue;
 use Orklah\StrictTypes\Issues\BadTypeFromSignatureOnStrictFileIssue;
 use Orklah\StrictTypes\Issues\GoodTypeFromDocblockIssue;
@@ -107,6 +109,14 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
         } catch (GoodTypeFromDocblockException $e) {
             // This is not safe enough to do automatically
             $issue = new GoodTypeFromDocblockIssue($e->getMessage(),
+                new CodeLocation($statements_source, $e->getNode())
+            );
+
+            IssueBuffer::accepts($issue, $statements_source->getSuppressedIssues());
+            return;
+        } catch (BadTypeFromDocblockException $e) {
+            // This is not safe enough to do automatically
+            $issue = new BadTypeFromDocblockIssue($e->getMessage(),
                 new CodeLocation($statements_source, $e->getNode())
             );
 
