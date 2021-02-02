@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Orklah\StrictTypes\Utils;
 
+use Orklah\StrictTypes\Exceptions\BadTypeFromDocblockException;
 use Orklah\StrictTypes\Exceptions\BadTypeFromSignatureException;
 use Orklah\StrictTypes\Exceptions\GoodTypeFromDocblockException;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
@@ -53,6 +54,9 @@ class StrictUnionsChecker
                 }
 
                 if (!self::strictUnionCheck($param_type, $value_type)) {
+                    if ($value_type->from_docblock) {
+                        throw BadTypeFromDocblockException::createWithNode('Found argument ' . ($i_values + 1) . ' mismatching between param ' . $param_type->getKey() . ' and value ' . $value_type->getKey(), $expr);
+                    }
                     throw BadTypeFromSignatureException::createWithNode('Found argument ' . ($i_values + 1) . ' mismatching between param ' . $param_type->getKey() . ' and value ' . $value_type->getKey(), $expr);
                 }
 

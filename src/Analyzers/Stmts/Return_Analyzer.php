@@ -2,6 +2,7 @@
 
 namespace Orklah\StrictTypes\Analyzers\Stmts;
 
+use Orklah\StrictTypes\Exceptions\BadTypeFromDocblockException;
 use Orklah\StrictTypes\Exceptions\BadTypeFromSignatureException;
 use Orklah\StrictTypes\Exceptions\GoodTypeFromDocblockException;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
@@ -64,6 +65,9 @@ class Return_Analyzer
         }
 
         if (!StrictUnionsChecker::strictUnionCheck($signature_return_type, $statement_return_type)) {
+            if ($statement_return_type->from_docblock) {
+                throw BadTypeFromDocblockException::createWithNode('Found return statement mismatching between ' . $signature_return_type->getKey() . ' and ' . $statement_return_type->getKey(), $stmt);
+            }
             throw BadTypeFromSignatureException::createWithNode('Found return statement mismatching between ' . $signature_return_type->getKey() . ' and ' . $statement_return_type->getKey(), $stmt);
         }
 
