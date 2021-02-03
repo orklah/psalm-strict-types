@@ -26,6 +26,6 @@
         <InternalProperty errorLevel="suppress"/>
 
         <ForbiddenCode errorLevel="suppress"/>
-        <PluginIssue name="NonVerifiableStrictUsageIssue" errorLevel="suppress" />
+        <PluginIssue name="GoodTypeFromDocblockIssue" errorLevel="suppress" />
     </issueHandlers>
 </psalm>
