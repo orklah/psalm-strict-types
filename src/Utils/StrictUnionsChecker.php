@@ -129,7 +129,8 @@ class StrictUnionsChecker
         }
 
         if ($container instanceof Atomic\TNamedObject) {
-            return $content instanceof Atomic\TNamedObject;
+            //Note: we allow object here. This may accept another object but this is not a strict_types issue
+            return $content instanceof Atomic\TNamedObject || $content instanceof Atomic\TObject;
         }
 
         if ($container instanceof Atomic\TObject) {

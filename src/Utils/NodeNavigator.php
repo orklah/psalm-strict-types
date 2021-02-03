@@ -28,6 +28,7 @@ use Psalm\Type\Atomic\TLiteralString;
 use Psalm\Type\Atomic\TMixed;
 use Psalm\Type\Atomic\TNamedObject;
 use Psalm\Type\Atomic\TNull;
+use Psalm\Type\Atomic\TObject;
 use Psalm\Type\Atomic\TResource;
 use Psalm\Type\Atomic\TScalar;
 use Psalm\Type\Atomic\TString;
@@ -243,6 +244,13 @@ class NodeNavigator
                 continue;
             }
             if ($atomic_type instanceof TList) {
+                continue;
+            }
+
+            if ($atomic_type instanceof TObject) {
+                continue;
+            }
+            if ($atomic_type instanceof TNamedObject) {
                 continue;
             }
 
