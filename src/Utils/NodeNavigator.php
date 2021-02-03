@@ -261,7 +261,7 @@ class NodeNavigator
                 break;
             }
 
-            if (!$atomic_type->canBeFullyExpressedInPhp(StrictTypesHooks::$codebase->php_major_version, StrictTypesHooks::$codebase->php_minor_version)) {
+            if ($atomic_type->canBeFullyExpressedInPhp(StrictTypesHooks::$codebase->php_major_version, StrictTypesHooks::$codebase->php_minor_version)) {
                 var_dump('==>type can be expressed and could be upgraded' . get_class($atomic_type));
                 $valid_union = false;
                 break;
