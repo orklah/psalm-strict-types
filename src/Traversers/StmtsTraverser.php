@@ -156,6 +156,7 @@ class StmtsTraverser
         }
 
         if ($stmt instanceof Else_) {
+            var_dump($stmt->stmts);
             self::traverseStatements($stmt->stmts, $history);
             return;
         }
@@ -217,6 +218,10 @@ class StmtsTraverser
         if ($stmt instanceof If_) {
             ExprsTraverser::traverseExpr($stmt->cond, $history);
             self::traverseStatements($stmt->stmts, $history);
+            self::traverseStatements($stmt->elseifs, $history);
+            if ($stmt->else !== null) {
+                self::analyzeStatement($stmt->else, $history);
+            }
             return;
         }
 
