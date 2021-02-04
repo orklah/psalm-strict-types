@@ -107,8 +107,12 @@ class AssignAnalyzer
         }
 
         $value_type = $node_provider->getType($expr->expr);
-        if ($value_type === null || $property_type->from_docblock) {
+        if ($value_type === null) {
             throw new ShouldNotHappenException('Unable to retrieve Expression type for ' . $property_id);
+        }
+        if($property_type->from_docblock){
+            //not interesting. If the property is loosely typed we can assign anything to it
+            return;
         }
 
         if (!StrictUnionsChecker::strictUnionCheck($property_type, $value_type)) {
