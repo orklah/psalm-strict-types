@@ -67,7 +67,7 @@ class StmtsTraverser
     {
         foreach ($stmts as $stmt) {
             if ($stmt !== null) {
-                self::analyzeStatement($stmt, $history);
+                self::traverseStmt($stmt, $history);
             }
         }
     }
@@ -80,7 +80,7 @@ class StmtsTraverser
      * @throws NeedRefinementException
      * @throws GoodTypeFromDocblockException
      */
-    public static function analyzeStatement(Stmt $stmt, array $history): void
+    public static function traverseStmt(Stmt $stmt, array $history): void
     {
         //var_dump('seen '.get_class($stmt));
         $history[] = $stmt;
@@ -220,7 +220,7 @@ class StmtsTraverser
             self::traverseStatements($stmt->stmts, $history);
             self::traverseStatements($stmt->elseifs, $history);
             if ($stmt->else !== null) {
-                self::analyzeStatement($stmt->else, $history);
+                self::traverseStmt($stmt->else, $history);
             }
             return;
         }
@@ -280,7 +280,7 @@ class StmtsTraverser
         if ($stmt instanceof Switch_) {
             ExprsTraverser::traverseExpr($stmt->cond, $history);
             foreach ($stmt->cases as $case) {
-                self::analyzeStatement($case, $history);
+                self::traverseStmt($case, $history);
             }
             return;
         }
@@ -304,7 +304,7 @@ class StmtsTraverser
             self::traverseStatements($stmt->stmts, $history);
             self::traverseStatements($stmt->catches, $history);
             if ($stmt->finally !== null) {
-                self::analyzeStatement($stmt->finally, $history);
+                self::traverseStmt($stmt->finally, $history);
             }
             return;
         }
