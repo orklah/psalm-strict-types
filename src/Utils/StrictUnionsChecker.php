@@ -187,6 +187,15 @@ class StrictUnionsChecker
             return $content instanceof Atomic\TCallableObject;
         }
 
+
+
+        if($content instanceof Atomic\TNull){
+            //This is a special case. If a container doesn't accept null, it will fail, even without strict_types.
+            // This means that null value will never be the cause of a change of behaviour and thus we can always allow it
+            return true;
+        }
+
+
         return false;
     }
 
