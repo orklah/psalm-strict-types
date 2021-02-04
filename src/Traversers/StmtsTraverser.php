@@ -156,7 +156,6 @@ class StmtsTraverser
         }
 
         if ($stmt instanceof Else_) {
-            var_dump($stmt->stmts);
             self::traverseStatements($stmt->stmts, $history);
             return;
         }
