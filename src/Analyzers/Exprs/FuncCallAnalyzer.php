@@ -18,13 +18,8 @@ use PhpParser\Node\Stmt;
 use Psalm\Internal\Codebase\InternalCallMapHandler;
 use Psalm\Storage\FunctionLikeParameter;
 use Psalm\Type;
-use Psalm\Type\Atomic\TLiteralString;
-use Psalm\Type\Atomic\TNever;
-use Psalm\Type\Union;
-use Webmozart\Assert\Assert;
 use function array_slice;
 use function count;
-use function gettype;
 
 class FuncCallAnalyzer
 {
@@ -160,7 +155,7 @@ class FuncCallAnalyzer
             $consistent_type_doc = true;
             $functionlike_parameter = null;
             foreach ($callmap_callables as $callmap_callable) {
-                $functionlike_parameter = $callmap_callable->params[$i] ?? $function_storage->params[$i] ?? new FunctionLikeParameter('unknown param', false, new Union([new TNever()]));
+                $functionlike_parameter = $callmap_callable->params[$i] ?? $function_storage->params[$i] ?? new FunctionLikeParameter('unknown param', false, Type::getEmpty());
                 if (isset($callmap_callable->params[$i])) {
                     if ($tmp_type_signature === null) {
                         $tmp_type_signature = $callmap_callable->params[$i]->signature_type;
