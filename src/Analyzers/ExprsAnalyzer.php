@@ -11,9 +11,8 @@ use Orklah\StrictTypes\Analyzers\Exprs\New_Analyzer;
 use Orklah\StrictTypes\Analyzers\Exprs\NullsafeMethodCallAnalyzer;
 use Orklah\StrictTypes\Analyzers\Exprs\StaticCallAnalyzer;
 use Orklah\StrictTypes\Exceptions\NeedRefinementException;
-use Orklah\StrictTypes\Exceptions\BadTypeFromSignatureException;
-use Orklah\StrictTypes\Exceptions\GoodTypeFromDocblockException;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
+use Orklah\StrictTypes\Hooks\StrictTypesHooks;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\ArrowFunction;
 use PhpParser\Node\Expr\Assign;
@@ -29,51 +28,50 @@ class ExprsAnalyzer
 {
     /**
      * @param array<Expr|Stmt> $history
-     * @throws BadTypeFromSignatureException
      * @throws NeedRefinementException
-     * @throws GoodTypeFromDocblockException
      * @throws ShouldNotHappenException
      */
     public static function customExprHandling(Expr $expr, array $history): void
     {
+        $file_context = StrictTypesHooks::$internal_file_context;
         //custom plugin code here
         if ($expr instanceof ArrowFunction) {
-            ArrowFunctionAnalyzer::analyze($expr, $history);
+            ArrowFunctionAnalyzer::analyze($file_context, $expr, $history);
             return;
         }
 
         if ($expr instanceof Closure) {
-            ClosureAnalyzer::analyze($expr, $history);
+            ClosureAnalyzer::analyze($file_context, $expr, $history);
             return;
         }
 
         if ($expr instanceof FuncCall) {
-            FuncCallAnalyzer::analyze($expr, $history);
+            FuncCallAnalyzer::analyze($file_context, $expr, $history);
             return;
         }
 
         if ($expr instanceof MethodCall) {
-            MethodCallAnalyzer::analyze($expr, $history);
+            MethodCallAnalyzer::analyze($file_context, $expr, $history);
             return;
         }
 
         if ($expr instanceof NullsafeMethodCall) {
-            NullsafeMethodCallAnalyzer::analyze($expr, $history);
+            NullsafeMethodCallAnalyzer::analyze($file_context, $expr, $history);
             return;
         }
 
         if ($expr instanceof StaticCall) {
-            StaticCallAnalyzer::analyze($expr, $history);
+            StaticCallAnalyzer::analyze($file_context, $expr, $history);
             return;
         }
 
         if ($expr instanceof Assign) {
-            AssignAnalyzer::analyze($expr, $history);
+            AssignAnalyzer::analyze($file_context, $expr, $history);
             return;
         }
 
         if ($expr instanceof New_) {
-            New_Analyzer::analyze($expr, $history);
+            New_Analyzer::analyze($file_context, $expr, $history);
             return;
         }
     }

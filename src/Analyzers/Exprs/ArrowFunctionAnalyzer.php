@@ -2,7 +2,8 @@
 
 namespace Orklah\StrictTypes\Analyzers\Exprs;
 
-use Orklah\StrictTypes\Exceptions\BadTypeFromSignatureException;
+use Orklah\StrictTypes\Core\FileContext;
+use Orklah\StrictTypes\Exceptions\NeedRefinementException;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\ArrowFunction;
 use PhpParser\Node\Stmt;
@@ -12,9 +13,8 @@ class ArrowFunctionAnalyzer{
 
     /**
      * @param array<Expr|Stmt> $history
-     * @throws BadTypeFromSignatureException
      */
-    public static function analyze(ArrowFunction $expr, array $history): void
+    public static function analyze(FileContext $file_context, ArrowFunction $expr, array $history): void
     {
         $has_params = false;
         if (count($expr->params) !== 0) {
@@ -27,6 +27,6 @@ class ArrowFunctionAnalyzer{
             return;
         }
 
-        throw BadTypeFromSignatureException::createWithNode('Found ArrowFunction', $expr);
+        throw NeedRefinementException::createWithNode('Found ArrowFunction', $expr);
     }
 }

@@ -12,6 +12,6 @@ abstract class BadTypeFromSignatureTestCase extends BaseTestCase
         parent::setUp();
 
         $this->expectException(CodeException::class);
-        $this->expectExceptionMessage('BadTypeFromSignatureIssue');
+        $this->expectExceptionMessage('BadType');
     }
 }

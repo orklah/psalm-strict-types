@@ -2,7 +2,7 @@
 
 namespace Orklah\StrictTypes\Analyzers\Exprs;
 
-use Orklah\StrictTypes\Exceptions\BadTypeFromSignatureException;
+use Orklah\StrictTypes\Core\FileContext;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
 use Orklah\StrictTypes\Utils\NodeNavigator;
 use Orklah\StrictTypes\Utils\StrictUnionsChecker;
@@ -17,17 +17,16 @@ class New_Analyzer{
 
     /**
      * @param array<Expr|Stmt> $history
-     * @throws BadTypeFromSignatureException
      * @throws ShouldNotHappenException
      */
-    public static function analyze(New_ $expr, array $history): void
+    public static function analyze(FileContext $file_context, New_ $expr, array $history): void
     {
         if (count($expr->args) === 0) {
             //no params. Easy
             return;
         }
 
-        $node_provider = NodeNavigator::getNodeProviderFromContext($history);
+        $node_provider = NodeNavigator::getNodeProviderFromContext($file_context, $history);
 
         if($expr->class instanceof Name){
             if($expr->class->parts[0] === 'self') {
@@ -48,7 +47,7 @@ class New_Analyzer{
         }
 
         //Ok, we have a single object here. Time to fetch parameters from method
-        $method_storage = NodeNavigator::getMethodStorageFromName(strtolower(NodeNavigator::resolveName($history, $object_name)), '__construct');
+        $method_storage = NodeNavigator::getMethodStorageFromName($file_context, strtolower(NodeNavigator::resolveName($file_context, $history, $object_name)), '__construct');
         if ($method_storage === null) {
             //weird.
             throw new ShouldNotHappenException('Could not find Method Storage for ' . $object_name . '::__construct');
@@ -57,7 +56,7 @@ class New_Analyzer{
 
         $method_params = $method_storage->params;
         try {
-            StrictUnionsChecker::checkValuesAgainstParams($expr->args, $method_params, $node_provider, $expr);
+            StrictUnionsChecker::checkValuesAgainstParams($file_context, $expr->args, $method_params, $node_provider, $expr);
         } catch (ShouldNotHappenException $e) {
             throw new ShouldNotHappenException('Method ' . $method_storage->cased_name . ': ' . $e->getMessage(), 0, $e);
         }

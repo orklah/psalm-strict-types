@@ -3,9 +3,9 @@
 namespace Orklah\StrictTypes\Utils;
 
 use Orklah\StrictTypes\Analyzers\Stmts\Use_Analyzer;
+use Orklah\StrictTypes\Core\FileContext;
 use Orklah\StrictTypes\Exceptions\NeedRefinementException;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
-use Orklah\StrictTypes\Hooks\StrictTypesHooks;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt;
@@ -79,21 +79,21 @@ class NodeNavigator
      * $method_storage = $codebase->methods->getStorage($method_id);
      * TODO: investigate namespaces here
      */
-    public static function getMethodStorageFromName(string $class_id, string $method_id, bool $take_parent = false): ?MethodStorage
+    public static function getMethodStorageFromName(FileContext $file_context, string $class_id, string $method_id, bool $take_parent = false): ?MethodStorage
     {
-        $class_storage = StrictTypesHooks::$codebase->classlike_storage_provider->get($class_id);
+        $class_storage = $file_context->getCodebase()->classlike_storage_provider->get($class_id);
         if ($take_parent) {
             $parent_class = $class_storage->parent_class;
             if ($parent_class === null) {
                 return null;
             }
-            $class_storage = StrictTypesHooks::$codebase->classlike_storage_provider->get($parent_class);
+            $class_storage = $file_context->getCodebase()->classlike_storage_provider->get($parent_class);
         }
         $method_storage = $class_storage->methods[$method_id] ?? null;
         if ($method_storage === null) {
             //We try on the parent
             foreach ($class_storage->parent_classes as $parent_class) {
-                $method_storage = self::getMethodStorageFromName($parent_class, $method_id);
+                $method_storage = self::getMethodStorageFromName($file_context, $parent_class, $method_id);
                 if ($method_storage !== null) {
                     break;
                 }
@@ -106,7 +106,7 @@ class NodeNavigator
      * @param array<Expr|Stmt> $history
      * @throws ShouldNotHappenException
      */
-    public static function getNodeProviderFromContext(array $history): NodeTypeProvider
+    public static function getNodeProviderFromContext(FileContext $file_context, array $history): NodeTypeProvider
     {
         $functionlike_stmt = self::getLastNodeByTypes($history, [Function_::class, ClassMethod::class]);
         if ($functionlike_stmt instanceof ClassMethod) {
@@ -115,14 +115,14 @@ class NodeNavigator
             //object context, we fetch the node type provider
             $class_name = strtolower((string)$class_stmt->name);
             $method_name = strtolower((string)$functionlike_stmt->name);
-            $node_provider = StrictTypesHooks::$current_node_type_providers[$class_name][$method_name] ?? null;
+            $node_provider = $file_context->getCurrentNodeTypeProviders()[$class_name][$method_name] ?? null;
             if ($node_provider === null) {
                 //unable to fetch node provider. Throw
                 throw new ShouldNotHappenException('Unable to retrieve Node Type Provider for ' . $class_name . '::' . $method_name);
             }
         } else {
             //outside of object context, standard node type provider should be enough
-            $node_provider = StrictTypesHooks::$statement_source->getNodeTypeProvider();
+            $node_provider = $file_context->getStatementsSource()->getNodeTypeProvider();
         }
 
         return $node_provider;
@@ -132,7 +132,7 @@ class NodeNavigator
      * @param array<Expr|Stmt> $history
      * @throws ShouldNotHappenException
      */
-    public static function getContext(array $history): ?Context
+    public static function getContext(FileContext $file_context, array $history): ?Context
     {
         $method_stmt = self::getLastNodeByType($history, ClassMethod::class);
         $class_stmt = self::getLastNodeByType($history, Class_::class);
@@ -141,7 +141,7 @@ class NodeNavigator
         }
         $class_name = strtolower((string)$class_stmt->name);
         $method_name = strtolower((string)$method_stmt->name);
-        $context = StrictTypesHooks::$current_context[$class_name][$method_name] ?? null;
+        $context = $file_context->getCurrentContext()[$class_name][$method_name] ?? null;
         if ($context === null) {
             //unable to context. Throw
             throw new ShouldNotHappenException('Unable to retrieve Context for ' . $class_name . '::' . $method_name);
@@ -155,12 +155,12 @@ class NodeNavigator
      * @param array<Expr|Stmt> $history
      * @param string|Name      $class
      */
-    public static function resolveName(array $history, $class): string
+    public static function resolveName(FileContext $file_context, array $history, $class): string
     {
         if ($class instanceof Name) {
             $resolved_name = $class->getAttribute('resolvedName');
             if ($resolved_name !== null) {
-                return $resolved_name;
+                return (string)$resolved_name;
             } else {
                 $class = implode('\\', $class->parts);
             }
@@ -171,7 +171,7 @@ class NodeNavigator
             return $class;
         }
 
-        $file_path = StrictTypesHooks::$statement_source->getFileAnalyzer()->getFilePath();
+        $file_path = $file_context->getStatementsSource()->getFileAnalyzer()->getFilePath();
         $uses = Use_Analyzer::$use_map[$file_path] ?? [];
 
         $exploded_class = explode('\\', $class);
@@ -265,12 +265,6 @@ class NodeNavigator
 
             //TODO: TTemplateParam could be restricted to the upper type. In the meantime, not eligible
             if ($atomic_type instanceof TTemplateParam) {
-                $valid_union = false;
-                break;
-            }
-
-            if ($atomic_type->canBeFullyExpressedInPhp(StrictTypesHooks::$codebase->php_major_version, StrictTypesHooks::$codebase->php_minor_version)) {
-                var_dump('==>type can be expressed and could be upgraded' . get_class($atomic_type));
                 $valid_union = false;
                 break;
             }

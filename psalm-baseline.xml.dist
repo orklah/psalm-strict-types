@@ -39,4 +39,10 @@
       <code>$node</code>
     </PropertyNotSetInConstructor>
   </file>
+  <file src="src/Utils/NodeNavigator.php">
+    <BadTypeFromSignatureOnStrictFileIssue occurrences="2">
+      <code>return $node;</code>
+      <code>return $node;</code>
+    </BadTypeFromSignatureOnStrictFileIssue>
+  </file>
 </files>

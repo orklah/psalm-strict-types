@@ -3,7 +3,7 @@
 namespace Orklah\StrictTypes\Analyzers\Stmts;
 
 
-use Orklah\StrictTypes\Hooks\StrictTypesHooks;
+use Orklah\StrictTypes\Core\FileContext;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Use_;
@@ -18,9 +18,9 @@ class Use_Analyzer
      * This analyzer is a little special. It won't find error but exists solely to make a map of known symbols and their namespaces
      * @param array<Expr|Stmt> $history
      */
-    public static function analyze(Use_ $stmt, array $history): void
+    public static function analyze(FileContext $file_context, Use_ $stmt, array $history): void
     {
-        $file_path = StrictTypesHooks::$statement_source->getFileAnalyzer()->getFilePath();
+        $file_path = $file_context->getStatementsSource()->getFileAnalyzer()->getFilePath();
         if (!isset(self::$use_map[$file_path])) {
             self::$use_map[$file_path] = [];
         }

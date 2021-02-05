@@ -2,8 +2,7 @@
 
 namespace Orklah\StrictTypes\Analyzers\Exprs;
 
-use Orklah\StrictTypes\Exceptions\NeedRefinementException;
-use Orklah\StrictTypes\Exceptions\BadTypeFromSignatureException;
+use Orklah\StrictTypes\Core\FileContext;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
 use Orklah\StrictTypes\Utils\NodeNavigator;
 use Orklah\StrictTypes\Utils\StrictUnionsChecker;
@@ -21,16 +20,15 @@ class NullsafeMethodCallAnalyzer
 
     /**
      * @param array<Expr|Stmt> $history
-     * @throws BadTypeFromSignatureException
      */
-    public static function analyze(NullsafeMethodCall $expr, array $history): void
+    public static function analyze(FileContext $file_context, NullsafeMethodCall $expr, array $history): void
     {
         if (count($expr->args) === 0) {
             //no params. Easy
             return;
         }
 
-        $node_provider = NodeNavigator::getNodeProviderFromContext($history);
+        $node_provider = NodeNavigator::getNodeProviderFromContext($file_context, $history);
 
         if ($expr->name instanceof Identifier) {
             $method_name = $expr->name->name;
@@ -41,7 +39,7 @@ class NullsafeMethodCallAnalyzer
 
         //object context, we fetch the node type provider or the context if the variable is $this
         if ($expr->var instanceof Variable && is_string($expr->var->name) && $expr->var->name === 'this') {
-            $context = NodeNavigator::getContext($history);
+            $context = NodeNavigator::getContext($file_context, $history);
             Assert::notNull($context);
             $object_type = $context->vars_in_scope['$this'];
         } else {
@@ -51,7 +49,7 @@ class NullsafeMethodCallAnalyzer
         $object_name = NodeNavigator::reduceUnionToString($object_type, $expr);
 
         //Ok, we have a single object here. Time to fetch parameters from method
-        $method_storage = NodeNavigator::getMethodStorageFromName(strtolower($object_name), strtolower($method_name));
+        $method_storage = NodeNavigator::getMethodStorageFromName($file_context, strtolower($object_name), strtolower($method_name));
         if ($method_storage === null) {
             //weird.
             throw new ShouldNotHappenException('Could not find Method Storage for ' . $object_name . '::' . $method_name);
@@ -59,7 +57,7 @@ class NullsafeMethodCallAnalyzer
 
         $method_params = $method_storage->params;
         try {
-            StrictUnionsChecker::checkValuesAgainstParams($expr->args, $method_params, $node_provider, $expr);
+            StrictUnionsChecker::checkValuesAgainstParams($file_context, $expr->args, $method_params, $node_provider, $expr);
         } catch (ShouldNotHappenException $e) {
             throw new ShouldNotHappenException('Method ' . $method_name . ': ' . $e->getMessage(), 0, $e);
         }

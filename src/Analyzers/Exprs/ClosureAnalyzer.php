@@ -2,8 +2,8 @@
 
 namespace Orklah\StrictTypes\Analyzers\Exprs;
 
+use Orklah\StrictTypes\Core\FileContext;
 use Orklah\StrictTypes\Exceptions\NeedRefinementException;
-use Orklah\StrictTypes\Exceptions\BadTypeFromSignatureException;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\Stmt;
@@ -13,9 +13,8 @@ class ClosureAnalyzer{
 
     /**
      * @param array<Expr|Stmt> $history
-     * @throws BadTypeFromSignatureException
      */
-    public static function analyze(Closure $expr, array $history): void
+    public static function analyze(FileContext $file_context, Closure $expr, array $history): void
     {
         $has_params = false;
         if (count($expr->params) !== 0) {

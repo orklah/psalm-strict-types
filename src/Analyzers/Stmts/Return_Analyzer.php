@@ -2,11 +2,9 @@
 
 namespace Orklah\StrictTypes\Analyzers\Stmts;
 
-use Orklah\StrictTypes\Exceptions\BadTypeFromDocblockException;
-use Orklah\StrictTypes\Exceptions\BadTypeFromSignatureException;
-use Orklah\StrictTypes\Exceptions\GoodTypeFromDocblockException;
+use Orklah\StrictTypes\Core\FileContext;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
-use Orklah\StrictTypes\Hooks\StrictTypesHooks;
+use Orklah\StrictTypes\Issues\StrictTypesIssue;
 use Orklah\StrictTypes\Utils\NodeNavigator;
 use Orklah\StrictTypes\Utils\StrictUnionsChecker;
 use PhpParser\Node\Expr;
@@ -22,11 +20,9 @@ class Return_Analyzer
 
     /**
      * @param array<Expr|Stmt> $history
-     * @throws BadTypeFromSignatureException
      * @throws ShouldNotHappenException
-     * @throws GoodTypeFromDocblockException
      */
-    public static function analyze(Return_ $stmt, array $history): void
+    public static function analyze(FileContext $file_context, Return_ $stmt, array $history): void
     {
         if ($stmt->expr === null) {
             // this happens on void methods. This has no impact on strict types
@@ -37,11 +33,11 @@ class Return_Analyzer
         Assert::notNull($functionlike_stmt);
         $functionlike_storage = null;
         if ($functionlike_stmt instanceof Function_) {
-            $functionlike_storage = StrictTypesHooks::$file_storage->functions[strtolower((string)$functionlike_stmt->name)] ?? null;
+            $functionlike_storage = $file_context->getFileStorage()->functions[strtolower((string)$functionlike_stmt->name)] ?? null;
         } else {
             $class_stmt = NodeNavigator::getLastNodeByType($history, Class_::class);
             Assert::notNull($class_stmt);
-            $functionlike_storage = NodeNavigator::getMethodStorageFromName(NodeNavigator::resolveName($history, (string)$class_stmt->name), strtolower((string)$functionlike_stmt->name));
+            $functionlike_storage = NodeNavigator::getMethodStorageFromName($file_context, NodeNavigator::resolveName($file_context, $history, (string)$class_stmt->name), strtolower((string)$functionlike_stmt->name));
         }
 
         if ($functionlike_storage === null) {
@@ -49,7 +45,7 @@ class Return_Analyzer
             throw new ShouldNotHappenException('Could not find Function Storage for ' . (string)$functionlike_stmt->name);
         }
 
-        $node_provider = NodeNavigator::getNodeProviderFromContext($history);
+        $node_provider = NodeNavigator::getNodeProviderFromContext($file_context, $history);
 
         $statement_return_type = $node_provider->getType($stmt->expr);
 
@@ -64,18 +60,16 @@ class Return_Analyzer
             throw new ShouldNotHappenException('Could not find Statement Return Type');
         }
 
-        if (!StrictUnionsChecker::strictUnionCheck($signature_return_type, $statement_return_type)) {
-            if ($statement_return_type->from_docblock) {
-                throw BadTypeFromDocblockException::createWithNode('Found return statement mismatching between ' . $signature_return_type->getKey() . ' and ' . $statement_return_type->getKey(), $stmt);
+        $result = StrictUnionsChecker::strictUnionCheck($signature_return_type, $statement_return_type);
+        if($result->is_correct){
+            if ($statement_return_type->from_docblock === true) {
+                //not trustworthy enough
+                $message = 'Found correct type but from docblock';
+                StrictTypesIssue::emitIssue($file_context, $stmt, $message, $result->is_correct, $statement_return_type->from_docblock, $result->is_partial, $result->is_mixed);
             }
-            throw BadTypeFromSignatureException::createWithNode('Found return statement mismatching between ' . $signature_return_type->getKey() . ' and ' . $statement_return_type->getKey(), $stmt);
+        } else {
+            $message = 'Found return statement mismatching between ' . $signature_return_type->getKey() . ' and ' . $statement_return_type->getKey();
+            StrictTypesIssue::emitIssue($file_context, $stmt, $message, $result->is_correct, $statement_return_type->from_docblock, $result->is_partial, $result->is_mixed);
         }
-
-        if ($statement_return_type->from_docblock === true) {
-            //not trustworthy enough
-            throw GoodTypeFromDocblockException::createWithNode('Found correct type but from docblock', $stmt);
-        }
-
-        //every potential mismatch would have been handled earlier
     }
 }

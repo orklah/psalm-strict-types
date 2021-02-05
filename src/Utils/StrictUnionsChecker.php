@@ -3,10 +3,9 @@ declare(strict_types=1);
 
 namespace Orklah\StrictTypes\Utils;
 
-use Orklah\StrictTypes\Exceptions\BadTypeFromDocblockException;
-use Orklah\StrictTypes\Exceptions\BadTypeFromSignatureException;
-use Orklah\StrictTypes\Exceptions\GoodTypeFromDocblockException;
+use Orklah\StrictTypes\Core\FileContext;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
+use Orklah\StrictTypes\Issues\StrictTypesIssue;
 use OutOfBoundsException;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr;
@@ -22,11 +21,9 @@ class StrictUnionsChecker
     /**
      * @param array<Arg>                   $values
      * @param array<FunctionLikeParameter> $params
-     * @throws BadTypeFromSignatureException
-     * @throws GoodTypeFromDocblockException
      * @throws ShouldNotHappenException
      */
-    public static function checkValuesAgainstParams(array $values, array $params, NodeTypeProvider $node_provider, Expr $expr): void
+    public static function checkValuesAgainstParams(FileContext $file_context, array $values, array $params, NodeTypeProvider $node_provider, Expr $expr): void
     {
         $i_valuesMax = self::getMaxValues($values);
         $is_unpacked = false;
@@ -53,16 +50,17 @@ class StrictUnionsChecker
                     continue;
                 }
 
-                if (!self::strictUnionCheck($param_type, $value_type)) {
-                    if ($value_type->from_docblock) {
-                        throw BadTypeFromDocblockException::createWithNode('Found argument ' . ($i_values + 1) . ' mismatching between param ' . $param_type->getKey() . ' and value ' . $value_type->getKey(), $expr);
+                $result = self::strictUnionCheck($param_type, $value_type);
+                if($result->is_correct){
+                    if ($value_type->from_docblock === true) {
+                        //not trustworthy enough
+                        $message = 'Found correct type for argument ' . ($i_values + 1) . ' but from docblock';
+                        StrictTypesIssue::emitIssue($file_context, $expr, $message, $result->is_correct, $value_type->from_docblock, $result->is_partial, $result->is_mixed);
                     }
-                    throw BadTypeFromSignatureException::createWithNode('Found argument ' . ($i_values + 1) . ' mismatching between param ' . $param_type->getKey() . ' and value ' . $value_type->getKey(), $expr);
-                }
-
-                if ($value_type->from_docblock === true) {
-                    //not trustworthy enough
-                    throw GoodTypeFromDocblockException::createWithNode('Found correct type but from docblock', $expr);
+                    continue;
+                } else {
+                    $message = 'Found argument ' . ($i_values + 1) . ' mismatching between param ' . $param_type->getKey() . ' and value ' . $value_type->getKey();
+                    StrictTypesIssue::emitIssue($file_context, $expr, $message, $result->is_correct, $value_type->from_docblock, $result->is_partial, $result->is_mixed);
                 }
 
                 if ($is_unpacked && $is_variadic) {
@@ -75,7 +73,7 @@ class StrictUnionsChecker
         }
     }
 
-    public static function strictUnionCheck(Union $container, Union $content): bool
+    public static function strictUnionCheck(Union $container, Union $content): StrictCheckResult
     {
         //the goal here is to check that every type in $content is compatible with a type in $container in a strict way
         //we know that $container comes from signature so it can only contain php-expressible types (including union types for php 8)
@@ -83,22 +81,27 @@ class StrictUnionsChecker
         $content_types = $content->getAtomicTypes();
         $container_types = $container->getAtomicTypes();
 
+        $is_mixed = $content->isMixed();
+        $found_one_content_in_a_container = false;
+        $found_one_content_outside_a_container = false;
         foreach ($content_types as $content_type) {
-            $found_this_content_in_a_container = false;
+            $found_this_content_in_any_container = false;
             foreach ($container_types as $container_type) {
                 if (self::strictTypeCheck($container_type, $content_type)) {
-                    $found_this_content_in_a_container = true;
-                    break;
+                    $found_one_content_in_a_container = true;
+                    $found_this_content_in_any_container = true;
                 }
             }
-
-            if (!$found_this_content_in_a_container) {
-                //this content was not in any container, this doesn't match
-                return false;
+            if(!$found_this_content_in_any_container){
+                $found_one_content_outside_a_container = true;
             }
         }
 
-        return true;
+        return new StrictCheckResult(
+            $found_one_content_in_a_container && !$found_one_content_outside_a_container,
+            $found_one_content_in_a_container && $found_one_content_outside_a_container,
+            $is_mixed
+        );
     }
 
     private static function strictTypeCheck(Atomic $container, Atomic $content): bool

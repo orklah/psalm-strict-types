@@ -4,21 +4,14 @@ namespace Orklah\StrictTypes\Hooks;
 
 use Error;
 use Exception;
-use Orklah\StrictTypes\Exceptions\BadTypeFromDocblockException;
+use Orklah\StrictTypes\Core\FileContext;
 use Orklah\StrictTypes\Exceptions\NeedRefinementException;
-use Orklah\StrictTypes\Exceptions\BadTypeFromSignatureException;
-use Orklah\StrictTypes\Exceptions\GoodTypeFromDocblockException;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
-use Orklah\StrictTypes\Issues\BadTypeFromDocblockIssue;
-use Orklah\StrictTypes\Issues\BadTypeFromSignatureIssue;
-use Orklah\StrictTypes\Issues\BadTypeFromSignatureOnStrictFileIssue;
-use Orklah\StrictTypes\Issues\GoodTypeFromDocblockIssue;
 use Orklah\StrictTypes\Issues\StrictDeclarationToAddIssue;
 use Orklah\StrictTypes\Traversers\StmtsTraverser;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Declare_;
 use PhpParser\Node\Stmt\Function_;
-use Psalm\Codebase;
 use Psalm\CodeLocation;
 use Psalm\Context;
 use Psalm\Internal\Analyzer\FileAnalyzer;
@@ -30,7 +23,6 @@ use Psalm\Plugin\EventHandler\AfterFileAnalysisInterface;
 use Psalm\Plugin\EventHandler\AfterFunctionLikeAnalysisInterface;
 use Psalm\Plugin\EventHandler\Event\AfterFileAnalysisEvent;
 use Psalm\Plugin\EventHandler\Event\AfterFunctionLikeAnalysisEvent;
-use Psalm\Storage\FileStorage;
 use Psalm\Storage\FunctionStorage;
 use Webmozart\Assert\Assert;
 use function assert;
@@ -38,29 +30,17 @@ use function get_class;
 
 class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeAnalysisInterface
 {
-    /** @var FileAnalyzer */
-    public static $statement_source;
-    /** @var Context|null */
-    public static $file_context;
-    /** @var FileStorage */
-    public static $file_storage;
-    /** @var Codebase */
-    public static $codebase;
     /** @var array<lowercase-string, array<lowercase-string, NodeTypeProvider>> */
     public static $node_type_providers_map = [];
     /** @var array<lowercase-string, array<lowercase-string, Context>> */
     public static $context_map = [];
-    /** @var array<lowercase-string, array<lowercase-string, NodeTypeProvider>> */
-    public static $current_node_type_providers = [];
-    /** @var array<lowercase-string, array<lowercase-string, Context>> */
-    public static $current_context = [];
     /** @var array<lowercase-string, FunctionStorage> */
     public static $function_storage_map = [];
+    /** @var FileContext */
+    public static $internal_file_context;
 
     /**
      * @throws NeedRefinementException
-     * @throws BadTypeFromSignatureException
-     * @throws GoodTypeFromDocblockException
      * @throws ShouldNotHappenException
      */
     public static function afterAnalyzeFile(AfterFileAnalysisEvent $event): void
@@ -73,55 +53,29 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
 
         Assert::isInstanceOf($statements_source, FileAnalyzer::class);
 
-        self::$statement_source = $statements_source;
-        self::$file_context = $file_context;
-        self::$file_storage = $file_storage;
-        self::$codebase = $codebase;
-
-        //we need to erase the maps as soon as possible. We make a copy and then erase the maps
-        self::$current_node_type_providers = self::$node_type_providers_map;
-        self::$current_context = self::$context_map;
-        self::$node_type_providers_map = [];
-        self::$context_map = [];
-
-        $have_declare_statement = false;
         $maybe_declare = $stmts[0] ?? null;
+        $have_declare_statement = false;
         if ($maybe_declare instanceof Declare_) {
             //assume this is strict_types. Will have to refine that later
             $have_declare_statement = true;
         }
 
+        self::$internal_file_context = new FileContext(
+            $statements_source,
+            $file_context,
+            $file_storage,
+            $codebase,
+            self::$node_type_providers_map,
+            self::$context_map,
+            self::$function_storage_map,
+            $have_declare_statement
+        );
+        //we need to erase the maps as soon as possible. We made a copy in file context and then erase the maps
+        self::$node_type_providers_map = [];
+        self::$context_map = [];
+
         try {
             StmtsTraverser::traverseStatements($stmts, []);
-        } catch (BadTypeFromSignatureException $e) {
-            if ($have_declare_statement) {
-                $issue = new BadTypeFromSignatureOnStrictFileIssue($e->getMessage(),
-                    new CodeLocation($statements_source, $e->getNode())
-                );
-            } else {
-                $issue = new BadTypeFromSignatureIssue($e->getMessage(),
-                    new CodeLocation($statements_source, $e->getNode())
-                );
-            }
-
-            IssueBuffer::accepts($issue, $statements_source->getSuppressedIssues());
-            return;
-        } catch (GoodTypeFromDocblockException $e) {
-            // This is not safe enough to do automatically
-            $issue = new GoodTypeFromDocblockIssue($e->getMessage(),
-                new CodeLocation($statements_source, $e->getNode())
-            );
-
-            IssueBuffer::accepts($issue, $statements_source->getSuppressedIssues());
-            return;
-        } catch (BadTypeFromDocblockException $e) {
-            // This is not safe enough to do automatically
-            $issue = new BadTypeFromDocblockIssue($e->getMessage(),
-                new CodeLocation($statements_source, $e->getNode())
-            );
-
-            IssueBuffer::accepts($issue, $statements_source->getSuppressedIssues());
-            return;
         } catch (ShouldNotHappenException $e) {
             // This is probably a bug I left
             if(ProjectAnalyzer::$instance->debug_lines) {
@@ -165,6 +119,9 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
         if (!$have_declare_statement) {
             if ($codebase->alter_code) {
                 $file_contents = file_get_contents($file_storage->file_path);
+                if($file_contents === false) {
+                    return;
+                }
 
                 $count = 0;
                 $new_file_contents = preg_replace('#^<\?php#', '<?php declare(strict_types=1);', $file_contents, 1, $count);

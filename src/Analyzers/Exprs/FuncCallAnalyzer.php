@@ -2,11 +2,9 @@
 
 namespace Orklah\StrictTypes\Analyzers\Exprs;
 
+use Orklah\StrictTypes\Core\FileContext;
 use Orklah\StrictTypes\Exceptions\NeedRefinementException;
-use Orklah\StrictTypes\Exceptions\BadTypeFromSignatureException;
-use Orklah\StrictTypes\Exceptions\GoodTypeFromDocblockException;
 use Orklah\StrictTypes\Exceptions\ShouldNotHappenException;
-use Orklah\StrictTypes\Hooks\StrictTypesHooks;
 use Orklah\StrictTypes\Utils\NodeNavigator;
 use Orklah\StrictTypes\Utils\StrictUnionsChecker;
 use PhpParser\Node\Arg;
@@ -27,11 +25,9 @@ class FuncCallAnalyzer
     /**
      * @param array<Expr|Stmt> $history
      * @throws NeedRefinementException
-     * @throws BadTypeFromSignatureException
-     * @throws GoodTypeFromDocblockException
      * @throws ShouldNotHappenException
      */
-    public static function analyze(FuncCall $expr, array $history): void
+    public static function analyze(FileContext $file_context, FuncCall $expr, array $history): void
     {
         if (count($expr->args) === 0) {
             //no params. Easy
@@ -68,18 +64,18 @@ class FuncCallAnalyzer
             }
         }
 
-        $node_provider = NodeNavigator::getNodeProviderFromContext($history);
+        $node_provider = NodeNavigator::getNodeProviderFromContext($file_context, $history);
 
         if ($function_name instanceof Expr) {
-            $function_id_type = StrictTypesHooks::$statement_source->getNodeTypeProvider()->getType($function_name);
+            $function_id_type = $file_context->getStatementsSource()->getNodeTypeProvider()->getType($function_name);
             $function_id = NodeNavigator::reduceUnionToString($function_id_type, $expr);
         } else {
             $original_function_id = strtolower(implode('\\', $function_name->parts));
 
             if (!$function_name instanceof FullyQualified) {
-                $function_id = StrictTypesHooks::$codebase->functions->getFullyQualifiedFunctionNameFromString(
+                $function_id = $file_context->getCodebase()->functions->getFullyQualifiedFunctionNameFromString(
                     $original_function_id,
-                    StrictTypesHooks::$statement_source
+                    $file_context->getStatementsSource()
                 );
             } else {
                 $function_id = $original_function_id;
@@ -87,29 +83,29 @@ class FuncCallAnalyzer
         }
         $function_id = strtolower($function_id);
 
-        if (isset(StrictTypesHooks::$codebase->functions->getAllStubbedFunctions()[$function_id]) || InternalCallMapHandler::inCallMap($function_id)) {
-            $function_params = self::buildParamsFromStubsAndCallMap($function_id);
-        } elseif (isset(StrictTypesHooks::$function_storage_map[$function_id])) {
-            $function_params = StrictTypesHooks::$function_storage_map[$function_id]->params;
+        if (isset($file_context->getCodebase()->functions->getAllStubbedFunctions()[$function_id]) || InternalCallMapHandler::inCallMap($function_id)) {
+            $function_params = self::buildParamsFromStubsAndCallMap($file_context, $function_id);
+        } elseif (isset($file_context->getFunctionStorageMap()[$function_id])) {
+            $function_params = $file_context->getFunctionStorageMap()[$function_id]->params;
         } else {
             throw new ShouldNotHappenException('Could not retrieve params for function ' . $function_id);
         }
 
         try {
-            StrictUnionsChecker::checkValuesAgainstParams($expr->args, $function_params, $node_provider, $expr);
+            StrictUnionsChecker::checkValuesAgainstParams($file_context, $expr->args, $function_params, $node_provider, $expr);
         } catch (ShouldNotHappenException $e) {
             throw new ShouldNotHappenException('Function ' . $function_id . ': ' . $e->getMessage(), 0, $e);
         }
     }
 
-    private static function buildParamsFromStubsAndCallMap(string $function_id): array
+    private static function buildParamsFromStubsAndCallMap(FileContext $file_context, string $function_id): array
     {
         $function_params_from_stubs = [];
         $callmap_callables = [];
         $final_params_array = [];
         $max_params = 0;
-        if (isset(StrictTypesHooks::$codebase->functions->getAllStubbedFunctions()[$function_id])) {
-            $function_storage = StrictTypesHooks::$codebase->functions->getAllStubbedFunctions()[$function_id];
+        if (isset($file_context->getCodebase()->functions->getAllStubbedFunctions()[$function_id])) {
+            $function_storage = $file_context->getCodebase()->functions->getAllStubbedFunctions()[$function_id];
             $function_params_from_stubs = $function_storage->params;
             $max_params = count($function_params_from_stubs);
         }
