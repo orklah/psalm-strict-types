@@ -57,7 +57,6 @@ class StrictUnionsChecker
                         $message = 'Found correct type for argument ' . ($i_values + 1) . ' but from docblock';
                         StrictTypesIssue::emitIssue($file_context, $expr, $message, $result->is_correct, $value_type->from_docblock, $result->is_partial, $result->is_mixed);
                     }
-                    continue;
                 } else {
                     $message = 'Found argument ' . ($i_values + 1) . ' mismatching between param ' . $param_type->getKey() . ' and value ' . $value_type->getKey();
                     StrictTypesIssue::emitIssue($file_context, $expr, $message, $result->is_correct, $value_type->from_docblock, $result->is_partial, $result->is_mixed);
