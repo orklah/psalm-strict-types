@@ -44,6 +44,10 @@ class FileContext
      * @var bool
      */
     private $have_declare_statement;
+    /**
+     * @var bool
+     */
+    public $declare_can_be_added = true;
 
     public function __construct(FileAnalyzer $statements_source, Context $file_context, FileStorage $file_storage, Codebase $codebase, array $current_node_type_providers, array $current_context, array $function_storage_map, bool $have_declare_statement)
     {

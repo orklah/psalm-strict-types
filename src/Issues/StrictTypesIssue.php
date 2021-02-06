@@ -86,5 +86,6 @@ abstract class StrictTypesIssue extends CodeIssue
         if(IssueBuffer::accepts($issue, $file_context->getStatementsSource()->getSuppressedIssues())){
             //one day, we may want to add declarations based on what the user suppressed (for example, PartialFromDocblock who is probably the badest issue)
         }
+        $file_context->declare_can_be_added = false;
     }
 }

@@ -116,7 +116,7 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
             return;
         }
 
-        if (!$have_declare_statement) {
+        if (!$have_declare_statement && self::$internal_file_context->declare_can_be_added) {
             if ($codebase->alter_code) {
                 $file_contents = file_get_contents($file_storage->file_path);
                 if($file_contents === false) {
