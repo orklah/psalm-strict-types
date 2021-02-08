@@ -76,6 +76,7 @@ class StrictUnionsChecker
     {
         //the goal here is to check that every type in $content is compatible with a type in $container in a strict way
         //we know that $container comes from signature so it can only contain php-expressible types (including union types for php 8)
+        $content = self::reduceComplexUnionToSimpleUnion($content);
 
         $content_types = $content->getAtomicTypes();
         $container_types = $container->getAtomicTypes();
@@ -294,5 +295,19 @@ class StrictUnionsChecker
         }
 
         return $param->signature_type ?? Type::getMixed();
+    }
+
+    private static function reduceComplexUnionToSimpleUnion(Union $container_types): Union
+    {
+        if ($container_types->hasArrayKey()) {
+            // with `array` in signature, the offset type will be an array-key from_docblock=false
+            // this plugin considers that we can't have an offset from signature and at least every array-key must be considered from docblock
+            $container_types->from_docblock = true;
+            $container_types->removeType('array-key');
+            $container_types->addType(new Atomic\TString());
+            $container_types->addType(new Atomic\TInt());
+        }
+
+        return $container_types;
     }
 }
