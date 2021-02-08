@@ -203,6 +203,10 @@ class StrictUnionsChecker
             return $content instanceof Atomic\TCallableObject;
         }
 
+        if ($container instanceof Atomic\TArrayKey) {
+            return $content instanceof Atomic\TArrayKey || $content instanceof Atomic\TInt || $content instanceof Atomic\TString;
+        }
+
         return false;
     }
 
