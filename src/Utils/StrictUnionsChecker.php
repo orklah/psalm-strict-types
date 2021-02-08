@@ -168,7 +168,9 @@ class StrictUnionsChecker
         }
 
         if ($container instanceof Atomic\TResource) {
-            return $content instanceof Atomic\TResource;
+            // No difference between a closed resource and a resource from a strict_types perspective.
+            // I don't think we need a case for closed resource container. May reconsider if good example
+            return $content instanceof Atomic\TResource || $content instanceof Atomic\TClosedResource;
         }
 
         if ($container instanceof Atomic\TCallable) {
