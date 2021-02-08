@@ -51,7 +51,7 @@ class StrictUnionsChecker
                 }
 
                 $result = self::strictUnionCheck($param_type, $value_type);
-                if($result->is_correct){
+                if ($result->is_correct) {
                     if ($value_type->from_docblock === true) {
                         //not trustworthy enough
                         $message = 'Found correct type for argument ' . ($i_values + 1) . ' but from docblock';
@@ -80,7 +80,7 @@ class StrictUnionsChecker
         $content_types = $content->getAtomicTypes();
         $container_types = $container->getAtomicTypes();
 
-        $is_mixed = $content->isMixed();
+        $is_mixed = $content->hasMixed();
         $found_one_content_in_a_container = false;
         $found_one_content_outside_a_container = false;
         foreach ($content_types as $content_type) {
@@ -91,7 +91,7 @@ class StrictUnionsChecker
                     $found_this_content_in_any_container = true;
                 }
             }
-            if(!$found_this_content_in_any_container){
+            if (!$found_this_content_in_any_container) {
                 $found_one_content_outside_a_container = true;
             }
         }
@@ -105,13 +105,19 @@ class StrictUnionsChecker
 
     private static function strictTypeCheck(Atomic $container, Atomic $content): bool
     {
-        if($content instanceof Atomic\TNull){
+        if ($content instanceof Atomic\TNull) {
             //This is a special case. If a container doesn't accept null, it will fail, even without strict_types.
             // This means that null value will never be the cause of a change of behaviour and thus we can always allow it
             return true;
         }
 
         //We have to go check the type in $content and check if it belong in the $container
+        if ($container instanceof Atomic\TMixed) {
+            // if a container accepts mixed, it accepts everything.
+            // Psalm has a notion of Mixed that exclude null but it doesn't play well with php 8 and strict_types
+            return true;
+        }
+
         if ($container instanceof Atomic\TNull) {
             return $content instanceof Atomic\TNull;
         }
