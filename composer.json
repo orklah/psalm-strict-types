@@ -1,6 +1,6 @@
 {
     "name": "orklah/psalm-strict-types",
-    "description": "Adds strict_types declaration when the file is provably safe",
+    "description": "Adds strict_types declaration when the file is probably safe",
     "type": "psalm-plugin",
     "minimum-stability": "dev",
     "prefer-stable": true,
