@@ -92,6 +92,7 @@ class NodeNavigator
         $method_storage = $class_storage->methods[$method_id] ?? null;
         if ($method_storage === null) {
             //We try on the parent
+            //TODO: check if we can do that without looping with other properties of class_storage
             foreach ($class_storage->parent_classes as $parent_class) {
                 $method_storage = self::getMethodStorageFromName($file_context, $parent_class, $method_id);
                 if ($method_storage !== null) {

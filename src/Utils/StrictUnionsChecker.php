@@ -300,9 +300,6 @@ class StrictUnionsChecker
     private static function reduceComplexUnionToSimpleUnion(Union $container_types): Union
     {
         if ($container_types->hasArrayKey()) {
-            // with `array` in signature, the offset type will be an array-key from_docblock=false
-            // this plugin considers that we can't have an offset from signature and at least every array-key must be considered from docblock
-            $container_types->from_docblock = true;
             $container_types->removeType('array-key');
             $container_types->addType(new Atomic\TString());
             $container_types->addType(new Atomic\TInt());

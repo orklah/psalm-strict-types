@@ -151,8 +151,6 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
         $method_name = strtolower($statements_source->getMethodName() ?? '');
 
         if ($stmt instanceof ClassMethod) {
-            //TODO: consider using namespace instead of file path. It would make more sense
-
             // This will only serve to store NodeTypeProviders for later
             if (!isset(self::$node_type_providers_map[$class_name])) {
                 self::$node_type_providers_map[$class_name] = [];
