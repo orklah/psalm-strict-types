@@ -16,7 +16,7 @@ $ vendor/bin/psalm
 ```
 To automatically add strict_types declarations
 ```console
-$ vendor/bin/psalm --alter --plugin=vendor\orklah\psalm-strict-types\src\Plugin.php
+$ vendor/bin/psalm --alter --plugin=vendor/orklah/psalm-strict-types/src/Plugin.php
 ```
 
 Explanation:

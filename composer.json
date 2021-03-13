@@ -16,8 +16,8 @@
         }
     },
     "require": {
-        "php": "^7.3",
-        "vimeo/psalm": "master"
+        "php": "^7.3|^8.0",
+        "vimeo/psalm": "^4.4.0"
     },
     "autoload": {
         "psr-4": {
