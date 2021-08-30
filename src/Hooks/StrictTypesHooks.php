@@ -18,6 +18,7 @@ use Psalm\Internal\Analyzer\FileAnalyzer;
 use Psalm\Internal\Analyzer\FunctionLikeAnalyzer;
 use Psalm\Internal\Analyzer\ProjectAnalyzer;
 use Psalm\IssueBuffer;
+use Psalm\Node\Stmt\VirtualDeclare;
 use Psalm\NodeTypeProvider;
 use Psalm\Plugin\EventHandler\AfterFileAnalysisInterface;
 use Psalm\Plugin\EventHandler\AfterFunctionLikeAnalysisInterface;
@@ -130,7 +131,7 @@ class StrictTypesHooks implements AfterFileAnalysisInterface, AfterFunctionLikeA
                 }
             } else {
                 $issue = new StrictDeclarationToAddIssue('This file can have a strict declaration added',
-                    new CodeLocation($statements_source, new Declare_([], null, ['startLine' => 0]))
+                    new CodeLocation($statements_source, new VirtualDeclare([], null, ['startLine' => 0]))
                 );
 
                 IssueBuffer::accepts($issue, $statements_source->getSuppressedIssues());
